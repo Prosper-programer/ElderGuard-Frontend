@@ -5,7 +5,7 @@ import {
   ViewStyle,
   GestureResponderEvent,
 } from 'react-native';
-import { Colors, BorderRadius, Layout } from '@/constants/theme';
+import { Colors, Layout } from '@/constants/theme';
 
 interface IconButtonProps {
   icon: React.ReactNode;

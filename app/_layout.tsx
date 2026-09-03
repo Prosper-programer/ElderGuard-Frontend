@@ -10,6 +10,7 @@ import {
   Inter_700Bold,
 } from '@expo-google-fonts/inter';
 import 'react-native-reanimated';
+import { AuthProvider } from '@/context/AuthContext';
 
 // Keep splash visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -33,11 +34,16 @@ export default function RootLayout() {
   }
 
   return (
-    <>
+    <AuthProvider>
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="(auth)" />
+        <Stack.Screen name="(parent)" />
+        <Stack.Screen name="(caregiver)" />
+        <Stack.Screen name="(admin)" />
+        <Stack.Screen name="design-system" />
       </Stack>
       <StatusBar style="dark" />
-    </>
+    </AuthProvider>
   );
 }

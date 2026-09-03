@@ -52,6 +52,7 @@ export function TextInput({
         {leftIcon && <View style={styles.iconLeft}>{leftIcon}</View>}
 
         <RNTextInput
+          {...inputProps}
           style={[
             styles.input,
             leftIcon ? styles.inputWithLeftIcon : undefined,
@@ -68,7 +69,6 @@ export function TextInput({
             inputProps.onBlur?.(e);
           }}
           secureTextEntry={effectiveSecure}
-          {...inputProps}
         />
 
         {isPassword && (

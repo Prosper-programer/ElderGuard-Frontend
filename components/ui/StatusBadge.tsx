@@ -1,6 +1,6 @@
 import React from 'react';
 import { View, Text, StyleSheet, ViewStyle } from 'react-native';
-import { Colors, StatusColors, Typography, BorderRadius, Spacing } from '@/constants/theme';
+import { StatusColors, Typography, BorderRadius, Spacing } from '@/constants/theme';
 import type { StatusType } from '@/constants/theme';
 
 interface StatusBadgeProps {

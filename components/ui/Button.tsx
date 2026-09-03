@@ -5,7 +5,6 @@ import {
   ActivityIndicator,
   StyleSheet,
   ViewStyle,
-  TextStyle,
   GestureResponderEvent,
 } from 'react-native';
 import { Colors, Typography, BorderRadius, Spacing, Layout } from '@/constants/theme';

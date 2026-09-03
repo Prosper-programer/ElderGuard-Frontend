@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Pill,
@@ -14,7 +14,7 @@ import {
   Sunrise,
   Moon,
 } from 'lucide-react-native';
-import { Card, StatusBadge, Button, BottomTabBar } from '@/components/ui';
+import { ScreenContainer, Card, StatusBadge, Button, BottomTabBar } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useCare } from '@/context/CareContext';
 import { useAuth } from '@/context/AuthContext';
@@ -105,13 +105,13 @@ export default function ParentCareScreen() {
   };
 
   return (
-    <View style={styles.outerContainer}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Top Header ──────────────────────────────────────── */}
+    <ScreenContainer
+      scrollable
+      padded
+      backgroundColor="#F8FAFC"
+      bottomBar={<BottomTabBar activeTab="care" role="parent" />}
+    >
+      {/* ── Top Header ──────────────────────────────────────── */}
         <View style={styles.topHeader}>
           <View>
             <Text style={styles.screenTitle}>Medications & Care</Text>
@@ -269,28 +269,12 @@ export default function ParentCareScreen() {
           leftIcon={<Plus size={18} color={Colors.white} />}
         />
 
-        <View style={{ height: Spacing['3xl'] }} />
-      </ScrollView>
-
-      {/* ── Pinned Bottom Tab Bar ────────────────────────────── */}
-      <BottomTabBar activeTab="care" role="parent" />
-    </View>
+        <View style={{ height: Spacing['2xl'] }} />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  outerContainer: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-  },
   topHeader: {
     flexDirection: 'row',
     alignItems: 'center',

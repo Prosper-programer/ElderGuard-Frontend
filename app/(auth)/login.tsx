@@ -102,12 +102,20 @@ export default function LoginScreen() {
     }
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(auth)/welcome' as any);
+    }
+  };
+
   return (
     <ScreenContainer scrollable keyboardAvoiding padded backgroundColor={Colors.background}>
       {/* Navigation Bar */}
       <View style={styles.navBar}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >

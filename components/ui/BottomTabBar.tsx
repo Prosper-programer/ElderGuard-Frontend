@@ -19,6 +19,7 @@ export function BottomTabBar({ activeTab, role }: BottomTabBarProps) {
   const { activeAlerts } = useAlerts();
 
   const accentColor = role === 'parent' ? Colors.primary : Colors.safe;
+  const activeIconBg = role === 'parent' ? 'rgba(60, 111, 219, 0.10)' : 'rgba(34, 197, 94, 0.12)';
 
   const tabs: { key: TabKey; label: string; icon: any; route: string }[] = [
     {
@@ -55,7 +56,7 @@ export function BottomTabBar({ activeTab, role }: BottomTabBarProps) {
   return (
     <View
       style={[
-        styles.container,
+        styles.barContainer,
         {
           paddingBottom: Math.max(insets.bottom, 12),
         },
@@ -71,33 +72,37 @@ export function BottomTabBar({ activeTab, role }: BottomTabBarProps) {
             <TouchableOpacity
               key={tab.key}
               onPress={() => handleTabPress(tab.route, tab.key)}
-              style={styles.tabButton}
+              style={styles.tabItem}
               activeOpacity={0.7}
             >
+              {/* Icon Container with soft active pill */}
               <View
                 style={[
                   styles.iconWrap,
-                  isActive && {
-                    backgroundColor: role === 'parent' ? Colors.primaryFaded : Colors.safeBg,
-                  },
+                  isActive && [styles.iconWrapActive, { backgroundColor: activeIconBg }],
                 ]}
               >
-                <Icon size={20} color={isActive ? accentColor : Colors.textTertiary} />
+                <Icon
+                  size={21}
+                  color={isActive ? accentColor : Colors.textTertiary}
+                  strokeWidth={isActive ? 2.4 : 1.9}
+                />
 
-                {/* Live Red Badge on Alerts */}
+                {/* Notification Badge on Alerts */}
                 {showBadge && (
-                  <View style={styles.badgeDot}>
+                  <View style={styles.badge}>
                     <Text style={styles.badgeText}>{activeAlerts.length}</Text>
                   </View>
                 )}
               </View>
 
+              {/* Label */}
               <Text
                 style={[
                   styles.tabLabel,
-                  isActive && {
-                    color: accentColor,
-                    fontWeight: '600',
+                  {
+                    color: isActive ? accentColor : Colors.textTertiary,
+                    fontWeight: isActive ? '600' : '500',
                   },
                 ]}
               >
@@ -112,14 +117,14 @@ export function BottomTabBar({ activeTab, role }: BottomTabBarProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: 'rgba(255, 255, 255, 0.97)',
+  barContainer: {
+    backgroundColor: '#FFFFFF',
     borderTopWidth: 1,
-    borderTopColor: Colors.borderLight,
+    borderTopColor: 'rgba(0, 0, 0, 0.06)',
     paddingTop: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 8,
   },
@@ -127,42 +132,47 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-around',
+    paddingHorizontal: 8,
   },
-  tabButton: {
+  tabItem: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     paddingVertical: 2,
   },
   iconWrap: {
-    width: 38,
+    width: 48,
     height: 30,
     borderRadius: BorderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
+    marginBottom: 2,
+  },
+  iconWrapActive: {
+    // Soft, clean pill behind active icon
   },
   tabLabel: {
     ...Typography.caption,
     fontSize: 11,
-    color: Colors.textTertiary,
-    marginTop: 3,
+    letterSpacing: -0.1,
   },
-  badgeDot: {
+  badge: {
     position: 'absolute',
-    top: -2,
-    right: 2,
+    top: -3,
+    right: 4,
     minWidth: 16,
     height: 16,
-    borderRadius: BorderRadius.full,
+    borderRadius: 8,
     backgroundColor: Colors.critical,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: 3,
     borderWidth: 1.5,
-    borderColor: Colors.white,
+    borderColor: '#FFFFFF',
   },
   badgeText: {
-    color: Colors.white,
+    color: '#FFFFFF',
     fontSize: 9,
     fontWeight: '700',
   },

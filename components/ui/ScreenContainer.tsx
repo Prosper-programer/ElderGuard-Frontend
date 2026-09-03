@@ -9,7 +9,7 @@ import {
   Platform,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Colors, Layout } from '@/constants/theme';
+import { Colors, Layout, Spacing } from '@/constants/theme';
 
 interface ScreenContainerProps {
   children: React.ReactNode;
@@ -23,6 +23,8 @@ interface ScreenContainerProps {
   keyboardAvoiding?: boolean;
   /** Extra bottom padding */
   bottomPadding?: number;
+  /** Optional pinned bottom bar / navigation */
+  bottomBar?: React.ReactNode;
   style?: ViewStyle;
   contentStyle?: ViewStyle;
 }
@@ -34,6 +36,7 @@ export function ScreenContainer({
   backgroundColor = Colors.background,
   keyboardAvoiding = false,
   bottomPadding,
+  bottomBar,
   style,
   contentStyle,
 }: ScreenContainerProps) {
@@ -50,7 +53,9 @@ export function ScreenContainer({
       paddingHorizontal: Layout.screenPaddingH,
     }),
     paddingTop: Layout.screenPaddingTop,
-    paddingBottom: (bottomPadding ?? Layout.screenPaddingBottom) + insets.bottom,
+    paddingBottom: bottomBar
+      ? Spacing.xl
+      : (bottomPadding ?? Layout.screenPaddingBottom) + insets.bottom,
   };
 
   const content = scrollable ? (
@@ -81,6 +86,7 @@ export function ScreenContainer({
       ) : (
         content
       )}
+      {bottomBar}
     </View>
   );
 }

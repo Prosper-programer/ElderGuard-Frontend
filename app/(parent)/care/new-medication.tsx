@@ -36,7 +36,15 @@ export default function NewMedicationScreen() {
       timesOfDay: [time.trim() || '08:00 AM'],
     });
 
-    router.back();
+    handleBack();
+  };
+
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(parent)/care' as any);
+    }
   };
 
   return (
@@ -44,7 +52,7 @@ export default function NewMedicationScreen() {
       {/* ── Top Navigation Bar ──────────────────────────────── */}
       <View style={styles.topNav}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
@@ -135,7 +143,7 @@ export default function NewMedicationScreen() {
 
         <Button
           title="Cancel"
-          onPress={() => router.back()}
+          onPress={handleBack}
           variant="secondary"
           size="lg"
           fullWidth

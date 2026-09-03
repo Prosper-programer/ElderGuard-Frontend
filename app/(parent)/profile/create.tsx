@@ -108,12 +108,20 @@ export default function CreateElderlyProfileScreen() {
     router.replace('/(parent)');
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(parent)/profile' as any);
+    }
+  };
+
   return (
     <ScreenContainer scrollable keyboardAvoiding padded backgroundColor={Colors.background}>
       {/* ── Top Navigation Bar ──────────────────────────────── */}
       <View style={styles.topNav}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
@@ -340,7 +348,7 @@ export default function CreateElderlyProfileScreen() {
 
         <Button
           title="Cancel"
-          onPress={() => router.back()}
+          onPress={handleBack}
           variant="secondary"
           size="lg"
           fullWidth

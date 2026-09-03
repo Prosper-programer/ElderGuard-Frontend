@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   ChevronRight,
@@ -13,6 +13,7 @@ import {
   Footprints,
 } from 'lucide-react-native';
 import {
+  ScreenContainer,
   Card,
   Avatar,
   HeroStatusRing,
@@ -47,13 +48,13 @@ export default function CaregiverHomeScreen() {
   const takenCount = todayDoses.filter((d) => d.status === 'taken').length;
 
   return (
-    <View style={styles.outerContainer}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── 1. Top Modern Header ────────────────────────────── */}
+    <ScreenContainer
+      scrollable
+      padded
+      backgroundColor="#F8FAFC"
+      bottomBar={<BottomTabBar activeTab="home" role="caregiver" />}
+    >
+      {/* ── 1. Top Modern Header ────────────────────────────── */}
         <View style={styles.headerRow}>
           <View style={styles.userInfo}>
             <Avatar name={user?.name || 'David Miller'} size={42} statusIndicator="safe" />
@@ -255,28 +256,12 @@ export default function CaregiverHomeScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={{ height: Spacing['3xl'] }} />
-      </ScrollView>
-
-      {/* ── Pinned Bottom Tab Bar ────────────────────────────── */}
-      <BottomTabBar activeTab="home" role="caregiver" />
-    </View>
+        <View style={{ height: Spacing['2xl'] }} />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  outerContainer: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',

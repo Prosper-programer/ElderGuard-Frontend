@@ -31,11 +31,19 @@ export default function AlertDetailScreen() {
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(parent)/alerts' as any);
+    }
+  };
+
   if (!alert) {
     return (
       <ScreenContainer padded backgroundColor={Colors.background}>
         <View style={styles.topNav}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <ArrowLeft size={22} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
@@ -43,7 +51,7 @@ export default function AlertDetailScreen() {
           <AlertTriangle size={32} color={Colors.warning} />
           <Text style={styles.notFoundTitle}>Alert Not Found</Text>
           <Text style={styles.notFoundSub}>This alert may have been archived or removed.</Text>
-          <Button title="Back to Alerts" onPress={() => router.back()} variant="secondary" />
+          <Button title="Back to Alerts" onPress={handleBack} variant="secondary" />
         </Card>
       </ScreenContainer>
     );
@@ -75,7 +83,7 @@ export default function AlertDetailScreen() {
       {/* ── Top Navigation Bar ──────────────────────────────── */}
       <View style={styles.topNav}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >

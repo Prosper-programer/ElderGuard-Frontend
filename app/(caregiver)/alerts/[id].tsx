@@ -31,18 +31,26 @@ export default function CaregiverAlertDetailScreen() {
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(caregiver)/alerts' as any);
+    }
+  };
+
   if (!alert) {
     return (
       <ScreenContainer padded backgroundColor="#F8FAFC">
         <View style={styles.topNav}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
+          <TouchableOpacity onPress={handleBack} style={styles.backButton}>
             <ArrowLeft size={22} color={Colors.textPrimary} />
           </TouchableOpacity>
         </View>
         <Card style={styles.notFoundCard}>
           <AlertTriangle size={32} color={Colors.warning} />
           <Text style={styles.notFoundTitle}>Incident Not Found</Text>
-          <Button title="Back to Alerts" onPress={() => router.back()} variant="secondary" />
+          <Button title="Back to Alerts" onPress={handleBack} variant="secondary" />
         </Card>
       </ScreenContainer>
     );
@@ -74,7 +82,7 @@ export default function CaregiverAlertDetailScreen() {
       {/* ── Top Navigation Bar ──────────────────────────────── */}
       <View style={styles.topNav}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >

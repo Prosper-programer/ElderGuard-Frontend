@@ -1,146 +1,152 @@
-import React, { useEffect } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ActivityIndicator } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Animated,
+} from 'react-native';
 import { useRouter } from 'expo-router';
-import { Shield } from 'lucide-react-native';
-import { ScreenContainer } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { StatusBar } from 'expo-status-bar';
+import Svg, { Path } from 'react-native-svg';
 
 export default function SplashScreen() {
   const router = useRouter();
 
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+
   useEffect(() => {
-    // Automatically transition to the onboarding tour after 2.2 seconds
+    // Gentle, natural fade-in
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 700,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 8,
+        tension: 50,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Transition to onboarding tour after 2 seconds
     const timer = setTimeout(() => {
       router.replace('/(auth)/onboarding');
-    }, 2200);
+    }, 2000);
 
     return () => clearTimeout(timer);
-  }, [router]);
+  }, [fadeAnim, scaleAnim, router]);
 
-  const handlePressToContinue = () => {
+  const handleSkip = () => {
     router.replace('/(auth)/onboarding');
   };
 
   return (
-    <ScreenContainer scrollable={false} padded={false} backgroundColor={Colors.white}>
+    <View style={styles.container}>
+      <StatusBar style="dark" />
+
       <TouchableOpacity
-        style={styles.touchContainer}
+        style={styles.touchArea}
         activeOpacity={1}
-        onPress={handlePressToContinue}
+        onPress={handleSkip}
       >
-        <View style={styles.centerContent}>
-          {/* Outer glow ring */}
-          <View style={styles.glowRing}>
-            <View style={styles.iconContainer}>
-              <Shield size={48} color={Colors.primary} strokeWidth={2.2} />
-              <View style={styles.accentDot} />
-            </View>
+        {/* Center Brand Identity */}
+        <Animated.View
+          style={[
+            styles.brandCenter,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          {/* Clean, Iconic Blue Shield with Heart & Pulse */}
+          <View style={styles.logoBadge}>
+            <Svg width={46} height={52} viewBox="0 0 46 52" fill="none">
+              {/* Solid Vibrant Shield */}
+              <Path
+                d="M23 2L42 9.5V25.5C42 38.5 33.8 47.8 23 51C12.2 47.8 4 38.5 4 25.5V9.5L23 2Z"
+                fill="#3C6FDB"
+              />
+              {/* Clean White Vital Pulse */}
+              <Path
+                d="M12 26.5H19L22 19L26 33L29 24.5L31 26.5H34"
+                stroke="#FFFFFF"
+                strokeWidth={2.6}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </Svg>
           </View>
 
+          {/* Typography */}
           <Text style={styles.brandTitle}>ElderGuard</Text>
-          <Text style={styles.tagline}>
-            Intelligent Elderly Monitoring & Care
-          </Text>
-          <Text style={styles.conceptPills}>
-            Monitor · Detect · Alert · Respond · Record
-          </Text>
-        </View>
+          <Text style={styles.brandTagline}>Connected care for loved ones</Text>
+        </Animated.View>
 
-        {/* Bottom Loading & Status */}
-        <View style={styles.bottomStatus}>
-          <ActivityIndicator size="small" color={Colors.primary} />
-          <Text style={styles.loadingText}>Initializing secure care networks…</Text>
-          <Text style={styles.tapPrompt}>Tap anywhere to continue</Text>
-        </View>
+        {/* Quiet, Human Bottom Footer */}
+        <Animated.View style={[styles.bottomFooter, { opacity: fadeAnim }]}>
+          <Text style={styles.footerNote}>Simple · Safe · Connected</Text>
+        </Animated.View>
       </TouchableOpacity>
-    </ScreenContainer>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  touchContainer: {
+  container: {
+    flex: 1,
+    backgroundColor: '#FFFFFF',
+  },
+  touchArea: {
     flex: 1,
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: Spacing['4xl'],
-    paddingHorizontal: Spacing.xl,
+    paddingVertical: 56,
+    paddingHorizontal: 24,
   },
-  centerContent: {
+  brandCenter: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  glowRing: {
-    width: 120,
-    height: 120,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primaryFaded,
-    borderWidth: 2,
-    borderColor: 'rgba(0, 251, 251, 0.35)', // Cyan accent highlight
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xl,
-  },
-  iconContainer: {
+  logoBadge: {
     width: 88,
     height: 88,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.white,
+    borderRadius: 24,
+    backgroundColor: '#EFF6FF', // Light subtle blue surface
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: Colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
+    marginBottom: 20,
+    shadowColor: '#3C6FDB',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.14,
+    shadowRadius: 16,
     elevation: 4,
-    position: 'relative',
-  },
-  accentDot: {
-    position: 'absolute',
-    top: 14,
-    right: 14,
-    width: 10,
-    height: 10,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.accent, // Cyan accent
-    borderWidth: 2,
-    borderColor: Colors.white,
   },
   brandTitle: {
-    ...Typography.h1,
-    fontSize: 34,
-    lineHeight: 40,
-    color: Colors.textPrimary,
-    letterSpacing: -0.8,
+    fontFamily: 'Inter_700Bold',
+    fontSize: 30,
+    color: '#0F172A', // Slate 900
+    letterSpacing: -0.6,
   },
-  tagline: {
-    ...Typography.bodyMedium,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+  brandTagline: {
+    fontFamily: 'Inter_400Regular',
+    fontSize: 15,
+    color: '#64748B', // Slate 500
+    marginTop: 6,
     textAlign: 'center',
   },
-  conceptPills: {
-    ...Typography.overline,
-    color: Colors.primary,
-    letterSpacing: 1.2,
-    marginTop: Spacing.base,
-    backgroundColor: Colors.primaryFaded,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.xs,
-    borderRadius: BorderRadius.xl,
-  },
-  bottomStatus: {
+  bottomFooter: {
     alignItems: 'center',
-    gap: Spacing.xs,
   },
-  loadingText: {
-    ...Typography.caption,
-    color: Colors.textTertiary,
-    marginTop: Spacing.xs,
-  },
-  tapPrompt: {
-    ...Typography.caption,
-    color: Colors.textTertiary,
-    opacity: 0.6,
+  footerNote: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: '#94A3B8', // Slate 400
+    letterSpacing: 0.8,
   },
 });

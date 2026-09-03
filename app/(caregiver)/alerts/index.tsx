@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   AlertTriangle,
@@ -8,7 +8,7 @@ import {
   ChevronRight,
   CheckCircle2,
 } from 'lucide-react-native';
-import { Card, StatusBadge, BottomTabBar } from '@/components/ui';
+import { ScreenContainer, Card, StatusBadge, BottomTabBar } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useAlerts } from '@/context/AlertContext';
 
@@ -24,14 +24,14 @@ export default function CaregiverAlertsScreen() {
   });
 
   return (
-    <View style={styles.outerContainer}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── Top Header ──────────────────────────────────────── */}
-        <View style={styles.topHeader}>
+    <ScreenContainer
+      scrollable
+      padded
+      backgroundColor="#F8FAFC"
+      bottomBar={<BottomTabBar activeTab="alerts" role="caregiver" />}
+    >
+      {/* ── Top Header ──────────────────────────────────────── */}
+      <View style={styles.topHeader}>
           <Text style={styles.screenTitle}>Assigned Incidents</Text>
           <Text style={styles.screenSub}>Margaret Johnson&apos;s active safety alerts</Text>
         </View>
@@ -134,28 +134,12 @@ export default function CaregiverAlertsScreen() {
           </View>
         )}
 
-        <View style={{ height: Spacing['3xl'] }} />
-      </ScrollView>
-
-      {/* ── Pinned Bottom Tab Bar ────────────────────────────── */}
-      <BottomTabBar activeTab="alerts" role="caregiver" />
-    </View>
+        <View style={{ height: Spacing['2xl'] }} />
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  outerContainer: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-  },
   topHeader: {
     marginBottom: Spacing.base,
   },

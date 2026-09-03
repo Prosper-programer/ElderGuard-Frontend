@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
@@ -15,7 +15,7 @@ import {
   UserCheck,
   Stethoscope,
 } from 'lucide-react-native';
-import { Button, Card, StatusBadge, Avatar, Divider, BottomTabBar } from '@/components/ui';
+import { ScreenContainer, Button, Card, StatusBadge, Avatar, Divider, BottomTabBar } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useElderly } from '@/context/ElderlyContext';
 
@@ -32,17 +32,25 @@ export default function ParentElderlyProfileScreen() {
     Linking.openURL(url).catch(() => {});
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(parent)' as any);
+    }
+  };
+
   return (
-    <View style={styles.outerContainer}>
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-      >
-        {/* ── 1. Top Navigation Bar ────────────────────────────── */}
-        <View style={styles.topNav}>
+    <ScreenContainer
+      scrollable
+      padded
+      backgroundColor="#F8FAFC"
+      bottomBar={<BottomTabBar activeTab="profile" role="parent" />}
+    >
+      {/* ── 1. Top Navigation Bar ────────────────────────────── */}
+      <View style={styles.topNav}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >
@@ -290,34 +298,18 @@ export default function ParentElderlyProfileScreen() {
 
         <Button
           title="Return to Dashboard"
-          onPress={() => router.back()}
+          onPress={handleBack}
           variant="secondary"
           size="lg"
           fullWidth
         />
       </View>
         <View style={{ height: Spacing['2xl'] }} />
-      </ScrollView>
-
-      {/* ── Pinned Bottom Tab Bar ────────────────────────────── */}
-      <BottomTabBar activeTab="profile" role="parent" />
-    </View>
+    </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  outerContainer: {
-    flex: 1,
-    backgroundColor: '#F8FAFC',
-  },
-  scrollView: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: Spacing.base,
-    paddingTop: Spacing.xl,
-    paddingBottom: Spacing.xl,
-  },
   topNav: {
     flexDirection: 'row',
     alignItems: 'center',

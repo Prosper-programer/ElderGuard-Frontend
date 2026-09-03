@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   ChevronRight,
@@ -7,7 +7,6 @@ import {
   Wifi,
   Heart,
   Activity,
-  Edit3,
   ShieldAlert,
   Pill,
   BarChart3,
@@ -15,7 +14,13 @@ import {
   Thermometer,
   Footprints,
 } from 'lucide-react-native';
-import { ScreenContainer, Card, StatusBadge, Avatar, Divider } from '@/components/ui';
+import {
+  Card,
+  Avatar,
+  HeroStatusRing,
+  VitalSparklineCard,
+  BottomTabBar,
+} from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useElderly } from '@/context/ElderlyContext';
@@ -34,302 +39,295 @@ export default function ParentHomeScreen() {
   const takenDoses = todayDoses.filter((d) => d.status === 'taken').length;
 
   return (
-    <ScreenContainer scrollable padded backgroundColor={Colors.background}>
-      {/* ── Top Header ──────────────────────────────────────── */}
-      <View style={styles.headerRow}>
-        <View style={styles.userInfo}>
-          <Avatar name={user?.name || 'Eleanor Vance'} size={44} statusIndicator="safe" />
-          <View>
-            <Text style={styles.userName}>{user?.name || 'Eleanor Vance'}</Text>
-            <View style={styles.badgeWrap}>
-              <StatusBadge status="safe" label="Parent Manager" size="sm" />
+    <View style={styles.outerContainer}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── 1. Top Modern Header ────────────────────────────── */}
+        <View style={styles.headerRow}>
+          <View style={styles.userInfo}>
+            <Avatar name={user?.name || 'Eleanor Vance'} size={42} statusIndicator="safe" />
+            <View>
+              <Text style={styles.greetingText}>Good afternoon,</Text>
+              <Text style={styles.userName}>{user?.name || 'Eleanor Vance'}</Text>
             </View>
           </View>
-        </View>
 
-        <TouchableOpacity
-          onPress={() => router.push('/(parent)/settings' as any)}
-          style={styles.settingsHeaderBtn}
-          activeOpacity={0.7}
-        >
-          <Settings size={20} color={Colors.textPrimary} />
-        </TouchableOpacity>
-      </View>
-
-      <Divider spacing={Spacing.md} />
-
-      {/* ── Active Critical Alert Banner (If Any) ────────────── */}
-      {activeAlerts.length > 0 && (
-        <TouchableOpacity
-          onPress={() => router.push('/(parent)/alerts' as any)}
-          activeOpacity={0.85}
-        >
-          <Card
-            elevated
-            style={[
-              styles.alertBannerCard,
-              activeAlerts[0].severity === 'critical'
-                ? styles.alertBannerCritical
-                : styles.alertBannerWarning,
-            ]}
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/settings' as any)}
+            style={styles.settingsHeaderBtn}
+            activeOpacity={0.7}
           >
-            <View style={styles.alertBannerHeader}>
-              <ShieldAlert
-                size={22}
-                color={activeAlerts[0].severity === 'critical' ? Colors.critical : Colors.warning}
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.alertBannerTitle}>{activeAlerts[0].title}</Text>
-                <Text style={styles.alertBannerSub}>
-                  {activeAlerts[0].location} · {activeAlerts[0].timestamp}
-                </Text>
-              </View>
-              <View style={styles.respondTag}>
-                <Text style={styles.respondTagText}>Respond</Text>
-                <ChevronRight size={14} color={Colors.white} />
-              </View>
-            </View>
-          </Card>
-        </TouchableOpacity>
-      )}
+            <Settings size={20} color={Colors.textPrimary} />
+          </TouchableOpacity>
+        </View>
 
-      {/* ── Managed Elderly Profile Card ────────────────────── */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>MANAGED ELDERLY PERSON</Text>
-        <TouchableOpacity
-          onPress={() => router.push('/(parent)/profile' as any)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.viewProfileLink}>View Profile</Text>
-        </TouchableOpacity>
-      </View>
+        {/* ── 2. Active Urgent Incident Banner (If Any) ───────── */}
+        {activeAlerts.length > 0 && (
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/alerts' as any)}
+            activeOpacity={0.88}
+          >
+            <Card
+              elevated
+              style={[
+                styles.alertBannerCard,
+                activeAlerts[0].severity === 'critical'
+                  ? styles.alertBannerCritical
+                  : styles.alertBannerWarning,
+              ]}
+            >
+              <View style={styles.alertBannerHeader}>
+                <View
+                  style={[
+                    styles.alertIconCircle,
+                    {
+                      backgroundColor:
+                        activeAlerts[0].severity === 'critical'
+                          ? 'rgba(239, 68, 68, 0.15)'
+                          : 'rgba(245, 158, 11, 0.15)',
+                    },
+                  ]}
+                >
+                  <ShieldAlert
+                    size={22}
+                    color={activeAlerts[0].severity === 'critical' ? Colors.critical : Colors.warning}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.alertBannerTitle}>{activeAlerts[0].title}</Text>
+                  <Text style={styles.alertBannerSub}>
+                    {activeAlerts[0].location} · {activeAlerts[0].timestamp}
+                  </Text>
+                </View>
+                <View style={styles.respondTag}>
+                  <Text style={styles.respondTagText}>Respond</Text>
+                  <ChevronRight size={14} color={Colors.white} />
+                </View>
+              </View>
+            </Card>
+          </TouchableOpacity>
+        )}
 
-      <Card elevated style={styles.elderlyCard}>
-        <View style={styles.elderlyTopRow}>
-          <Avatar
-            name={activeProfile.fullName}
-            imageUrl={activeProfile.imageUrl}
-            size={64}
-            statusIndicator={vitals.overallStatus}
+        {/* ── 3. Apple-Health Style Hero Status Ring ──────────── */}
+        <HeroStatusRing
+          name={activeProfile.preferredName || 'Margaret'}
+          imageUrl={activeProfile.imageUrl}
+          status={vitals.overallStatus}
+          heartRate={vitals.heartRate.value}
+          spo2={vitals.spo2.value}
+          medsCompleted={takenDoses}
+          medsTotal={todayDoses.length}
+          statusMessage={vitals.overallStatusMessage}
+          location="At Home — 142 Elm Street"
+        />
+
+        {/* ── 4. Paired Wearable IoT Health Strip ─────────────── */}
+        <View style={styles.hardwareStrip}>
+          <View style={styles.hwCol}>
+            <Battery size={14} color={Colors.safe} />
+            <Text style={styles.hwText}>{vitals.batteryLevel}% Battery</Text>
+          </View>
+          <View style={styles.hwDivider} />
+          <View style={styles.hwCol}>
+            <Wifi size={14} color={Colors.primary} />
+            <Text style={styles.hwText}>Synced {vitals.lastSyncTime}</Text>
+          </View>
+          <View style={styles.hwDivider} />
+          <View style={styles.hwCol}>
+            <Heart size={14} color={Colors.critical} />
+            <Text style={styles.hwText}>Blood: {activeProfile.medicalInfo.bloodType}</Text>
+          </View>
+        </View>
+
+        <View style={{ height: Spacing.lg }} />
+
+        {/* ── 5. Real-Time Vitals Telemetry (Sparklines) ──────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>REAL-TIME VITALS TELEMETRY</Text>
+          <Text style={styles.sectionSub}>Auto-refreshed live</Text>
+        </View>
+
+        <View style={styles.vitalsGrid}>
+          {/* Heart Rate */}
+          <VitalSparklineCard
+            label="Heart Rate"
+            value={vitals.heartRate.value}
+            unit="bpm"
+            status={vitals.heartRate.status}
+            statusLabel={vitals.heartRate.statusLabel}
+            normalRange={vitals.heartRate.normalRange}
+            icon={<Heart size={15} color={Colors.critical} />}
+            iconBg="rgba(239, 68, 68, 0.10)"
           />
-          <View style={styles.elderlyMeta}>
-            <View style={styles.nameRow}>
-              <Text style={styles.elderlyName}>{activeProfile.fullName}</Text>
-              <TouchableOpacity
-                onPress={() => router.push('/(parent)/profile/edit' as any)}
-                hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
-              >
-                <Edit3 size={16} color={Colors.primary} />
-              </TouchableOpacity>
-            </View>
-            <Text style={styles.elderlySub}>
-              {activeProfile.age} yrs · {activeProfile.gender} · &quot;{activeProfile.preferredName}&quot;
-            </Text>
-            <View style={styles.statusWrap}>
-              <StatusBadge
-                status={vitals.overallStatus}
-                label={vitals.overallStatus === 'safe' ? 'Wearable Online · Normal' : 'Anomaly Detected'}
-                size="sm"
-              />
-            </View>
-          </View>
+
+          {/* Blood Oxygen */}
+          <VitalSparklineCard
+            label="Blood Oxygen"
+            value={vitals.spo2.value}
+            unit="%"
+            status={vitals.spo2.status}
+            statusLabel={vitals.spo2.statusLabel}
+            normalRange={vitals.spo2.normalRange}
+            icon={<Activity size={15} color={Colors.primary} />}
+            iconBg={Colors.primaryFaded}
+          />
+
+          {/* Body Temperature */}
+          <VitalSparklineCard
+            label="Body Temp"
+            value={vitals.temperature.value}
+            unit="°C"
+            status={vitals.temperature.status}
+            statusLabel={vitals.temperature.statusLabel}
+            normalRange={vitals.temperature.normalRange}
+            icon={<Thermometer size={15} color={Colors.warning} />}
+            iconBg="rgba(245, 158, 11, 0.10)"
+          />
+
+          {/* Daily Steps */}
+          <VitalSparklineCard
+            label="Daily Steps"
+            value={vitals.steps.value}
+            unit="steps"
+            status={vitals.steps.status}
+            statusLabel={vitals.steps.statusLabel}
+            normalRange="Goal: 5,000"
+            icon={<Footprints size={15} color={Colors.safe} />}
+            iconBg={Colors.safeBg}
+          />
         </View>
 
-        {/* Live Hardware Telemetry Strip */}
-        <View style={styles.metricStrip}>
-          <View style={styles.metricItem}>
-            <Battery size={15} color={Colors.safe} />
-            <Text style={styles.metricLabel}>{vitals.batteryLevel}% Battery</Text>
-          </View>
-          <View style={styles.stripDivider} />
-          <View style={styles.metricItem}>
-            <Wifi size={15} color={Colors.primary} />
-            <Text style={styles.metricLabel}>{vitals.lastSyncTime}</Text>
-          </View>
-          <View style={styles.stripDivider} />
-          <View style={styles.metricItem}>
-            <Heart size={15} color={Colors.critical} />
-            <Text style={styles.metricLabel}>{activeProfile.medicalInfo.bloodType}</Text>
-          </View>
+        <View style={{ height: Spacing.md }} />
+
+        {/* ── 6. Operational Hub Shortcuts ────────────────────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>CARE & ANALYTICS WORKSPACES</Text>
         </View>
-      </Card>
 
-      <View style={{ height: Spacing.lg }} />
-
-      {/* ── Real-Time Vital Statistics (Phase 3) ─────────────── */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>REAL-TIME VITALS TELEMETRY</Text>
-        <StatusBadge status={vitals.overallStatus} label={vitals.overallStatus.toUpperCase()} size="sm" />
-      </View>
-
-      <View style={styles.vitalsGrid}>
-        {/* Heart Rate */}
-        <Card style={styles.vitalCard}>
-          <View style={styles.vitalTop}>
-            <View style={[styles.vitalIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.10)' }]}>
-              <Heart size={18} color={Colors.critical} />
+        <View style={styles.hubList}>
+          {/* Care & Medications */}
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/care' as any)}
+            style={styles.hubCard}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.hubIconWrap, { backgroundColor: Colors.primaryFaded }]}>
+              <Pill size={20} color={Colors.primary} />
             </View>
-            <StatusBadge status={vitals.heartRate.status} label={vitals.heartRate.statusLabel} size="sm" />
-          </View>
-          <Text style={styles.vitalValue}>
-            {vitals.heartRate.value} <Text style={styles.vitalUnit}>{vitals.heartRate.unit}</Text>
-          </Text>
-          <Text style={styles.vitalRange}>Normal: {vitals.heartRate.normalRange}</Text>
-        </Card>
-
-        {/* Blood Oxygen */}
-        <Card style={styles.vitalCard}>
-          <View style={styles.vitalTop}>
-            <View style={[styles.vitalIconWrap, { backgroundColor: Colors.primaryFaded }]}>
-              <Activity size={18} color={Colors.primary} />
+            <View style={styles.hubMeta}>
+              <Text style={styles.hubTitle}>Today&apos;s Medication & Care Schedule</Text>
+              <Text style={styles.hubSub}>
+                {takenDoses} of {todayDoses.length} doses logged today · Adherence on track
+              </Text>
             </View>
-            <StatusBadge status={vitals.spo2.status} label={vitals.spo2.statusLabel} size="sm" />
-          </View>
-          <Text style={styles.vitalValue}>
-            {vitals.spo2.value} <Text style={styles.vitalUnit}>{vitals.spo2.unit}</Text>
-          </Text>
-          <Text style={styles.vitalRange}>Normal: {vitals.spo2.normalRange}</Text>
-        </Card>
+            <ChevronRight size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
 
-        {/* Temperature */}
-        <Card style={styles.vitalCard}>
-          <View style={styles.vitalTop}>
-            <View style={[styles.vitalIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.10)' }]}>
-              <Thermometer size={18} color={Colors.warning} />
+          {/* Health Trends & Reports */}
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/reports' as any)}
+            style={styles.hubCard}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.hubIconWrap, { backgroundColor: Colors.safeBg }]}>
+              <BarChart3 size={20} color={Colors.safe} />
             </View>
-            <StatusBadge status={vitals.temperature.status} label={vitals.temperature.statusLabel} size="sm" />
-          </View>
-          <Text style={styles.vitalValue}>
-            {vitals.temperature.value} <Text style={styles.vitalUnit}>{vitals.temperature.unit}</Text>
-          </Text>
-          <Text style={styles.vitalRange}>Normal: {vitals.temperature.normalRange}</Text>
-        </Card>
-
-        {/* Daily Steps */}
-        <Card style={styles.vitalCard}>
-          <View style={styles.vitalTop}>
-            <View style={[styles.vitalIconWrap, { backgroundColor: Colors.safeBg }]}>
-              <Footprints size={18} color={Colors.safe} />
+            <View style={styles.hubMeta}>
+              <Text style={styles.hubTitle}>Health Trends & Physician Report</Text>
+              <Text style={styles.hubSub}>
+                24h/7d telemetry charts & Doctor Robert Chen care summary
+              </Text>
             </View>
-            <StatusBadge status={vitals.steps.status} label="Active" size="sm" />
-          </View>
-          <Text style={styles.vitalValue}>
-            {vitals.steps.value} <Text style={styles.vitalUnit}>steps</Text>
-          </Text>
-          <Text style={styles.vitalRange}>{vitals.steps.statusLabel}</Text>
-        </Card>
-      </View>
+            <ChevronRight size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
 
-      <View style={{ height: Spacing.lg }} />
+        <View style={{ height: Spacing['3xl'] }} />
+      </ScrollView>
 
-      {/* ── Quick Hub Shortcuts ─────────────────────────────── */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>MANAGEMENT WORKSPACES</Text>
-      </View>
-
-      <View style={styles.hubShortcuts}>
-        {/* Incident Alert Center */}
-        <TouchableOpacity
-          onPress={() => router.push('/(parent)/alerts' as any)}
-          style={styles.shortcutCard}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.shortcutIcon, { backgroundColor: 'rgba(239, 68, 68, 0.12)' }]}>
-            <ShieldAlert size={22} color={Colors.critical} />
-          </View>
-          <View style={styles.shortcutMeta}>
-            <Text style={styles.shortcutTitle}>Incidents & Fall Alerts</Text>
-            <Text style={styles.shortcutDesc}>
-              {activeAlerts.length} active incidents · Review response cycle
-            </Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textTertiary} />
-        </TouchableOpacity>
-
-        {/* Medications & Daily Care */}
-        <TouchableOpacity
-          onPress={() => router.push('/(parent)/care' as any)}
-          style={styles.shortcutCard}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.shortcutIcon, { backgroundColor: Colors.primaryFaded }]}>
-            <Pill size={22} color={Colors.primary} />
-          </View>
-          <View style={styles.shortcutMeta}>
-            <Text style={styles.shortcutTitle}>Medications & Daily Care</Text>
-            <Text style={styles.shortcutDesc}>
-              {takenDoses} of {todayDoses.length} doses logged today
-            </Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textTertiary} />
-        </TouchableOpacity>
-
-        {/* Health Analytics & Reports */}
-        <TouchableOpacity
-          onPress={() => router.push('/(parent)/reports' as any)}
-          style={styles.shortcutCard}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.shortcutIcon, { backgroundColor: Colors.safeBg }]}>
-            <BarChart3 size={22} color={Colors.safe} />
-          </View>
-          <View style={styles.shortcutMeta}>
-            <Text style={styles.shortcutTitle}>Health Trends & Physician Reports</Text>
-            <Text style={styles.shortcutDesc}>24h/7d vital analytics and doctor summary</Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textTertiary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ height: Spacing['3xl'] }} />
-    </ScreenContainer>
+      {/* ── Pinned Bottom Tab Bar ────────────────────────────── */}
+      <BottomTabBar activeTab="home" role="parent" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xl,
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.md,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
   },
+  greetingText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    fontSize: 12,
+  },
   userName: {
     ...Typography.h3,
     color: Colors.textPrimary,
-  },
-  badgeWrap: {
-    marginTop: 2,
+    fontSize: 17,
   },
   settingsHeaderBtn: {
     width: 40,
     height: 40,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surfaceSecondary,
+    backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   alertBannerCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#FFF5F5',
     marginBottom: Spacing.base,
     borderLeftWidth: 4,
+    borderLeftColor: Colors.critical,
   },
   alertBannerCritical: {
-    borderLeftColor: Colors.critical,
     backgroundColor: '#FFF5F5',
+    borderLeftColor: Colors.critical,
   },
   alertBannerWarning: {
-    borderLeftColor: Colors.warning,
     backgroundColor: '#FFFBEB',
+    borderLeftColor: Colors.warning,
   },
   alertBannerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
+  },
+  alertIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   alertBannerTitle: {
     ...Typography.bodySemiBold,
@@ -345,132 +343,75 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.critical,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.xs,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: BorderRadius.full,
     gap: 2,
   },
   respondTagText: {
     ...Typography.caption,
     fontSize: 11,
     color: Colors.white,
-    fontWeight: '600',
+    fontWeight: '700',
+  },
+  hardwareStrip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-around',
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.full,
+    paddingVertical: 10,
+    paddingHorizontal: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
+  },
+  hwCol: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  hwText: {
+    ...Typography.captionMedium,
+    fontSize: 11,
+    color: Colors.textSecondary,
+  },
+  hwDivider: {
+    width: 1,
+    height: 14,
+    backgroundColor: Colors.borderLight,
   },
   sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   sectionTitle: {
     ...Typography.overline,
     color: Colors.textTertiary,
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    fontSize: 11,
   },
-  viewProfileLink: {
-    ...Typography.captionMedium,
+  sectionSub: {
+    ...Typography.caption,
     color: Colors.primary,
-    fontWeight: '600',
-  },
-  elderlyCard: {
-    backgroundColor: Colors.white,
-  },
-  elderlyTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.base,
-  },
-  elderlyMeta: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  elderlyName: {
-    ...Typography.h3,
-    fontSize: 19,
-    color: Colors.textPrimary,
-  },
-  elderlySub: {
-    ...Typography.bodySmall,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  statusWrap: {
-    marginTop: Spacing.xs,
-    alignSelf: 'flex-start',
-  },
-  metricStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceSecondary,
-    borderRadius: BorderRadius.sm,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.base,
-  },
-  metricItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  metricLabel: {
-    ...Typography.captionMedium,
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  stripDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: Colors.border,
+    fontSize: 11,
+    fontWeight: '500',
   },
   vitalsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Spacing.md,
-  },
-  vitalCard: {
-    width: '47.5%',
-    backgroundColor: Colors.white,
-    padding: Spacing.md,
-  },
-  vitalTop: {
-    flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.sm,
   },
-  vitalIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
+  hubList: {
+    gap: Spacing.sm,
   },
-  vitalValue: {
-    ...Typography.h2,
-    fontSize: 22,
-    color: Colors.textPrimary,
-  },
-  vitalUnit: {
-    ...Typography.caption,
-    fontSize: 12,
-    color: Colors.textTertiary,
-  },
-  vitalRange: {
-    ...Typography.caption,
-    fontSize: 10,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  hubShortcuts: {
-    gap: Spacing.md,
-  },
-  shortcutCard: {
+  hubCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
@@ -478,24 +419,29 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     padding: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(0,0,0,0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  shortcutIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
+  hubIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: BorderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shortcutMeta: {
+  hubMeta: {
     flex: 1,
   },
-  shortcutTitle: {
+  hubTitle: {
     ...Typography.bodySemiBold,
     fontSize: 14,
     color: Colors.textPrimary,
   },
-  shortcutDesc: {
+  hubSub: {
     ...Typography.caption,
     color: Colors.textSecondary,
     marginTop: 2,

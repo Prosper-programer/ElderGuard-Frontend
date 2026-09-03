@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
@@ -15,7 +15,7 @@ import {
   UserCheck,
   Stethoscope,
 } from 'lucide-react-native';
-import { ScreenContainer, Button, Card, StatusBadge, Avatar, Divider } from '@/components/ui';
+import { Button, Card, StatusBadge, Avatar, Divider, BottomTabBar } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useElderly } from '@/context/ElderlyContext';
 
@@ -33,9 +33,14 @@ export default function ParentElderlyProfileScreen() {
   };
 
   return (
-    <ScreenContainer scrollable padded backgroundColor={Colors.background}>
-      {/* ── 1. Top Navigation Bar ────────────────────────────── */}
-      <View style={styles.topNav}>
+    <View style={styles.outerContainer}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── 1. Top Navigation Bar ────────────────────────────── */}
+        <View style={styles.topNav}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
@@ -291,11 +296,28 @@ export default function ParentElderlyProfileScreen() {
           fullWidth
         />
       </View>
-    </ScreenContainer>
+        <View style={{ height: Spacing['2xl'] }} />
+      </ScrollView>
+
+      {/* ── Pinned Bottom Tab Bar ────────────────────────────── */}
+      <BottomTabBar activeTab="profile" role="parent" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xl,
+  },
   topNav: {
     flexDirection: 'row',
     alignItems: 'center',

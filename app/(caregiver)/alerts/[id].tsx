@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   UserCheck,
+  Navigation,
 } from 'lucide-react-native';
 import { ScreenContainer, Button, Card, StatusBadge, TextInput, Divider } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
@@ -32,7 +33,7 @@ export default function CaregiverAlertDetailScreen() {
 
   if (!alert) {
     return (
-      <ScreenContainer padded backgroundColor={Colors.background}>
+      <ScreenContainer padded backgroundColor="#F8FAFC">
         <View style={styles.topNav}>
           <TouchableOpacity onPress={() => router.back()} style={styles.backButton}>
             <ArrowLeft size={22} color={Colors.textPrimary} />
@@ -69,7 +70,7 @@ export default function CaregiverAlertDetailScreen() {
   };
 
   return (
-    <ScreenContainer scrollable keyboardAvoiding padded backgroundColor={Colors.background}>
+    <ScreenContainer scrollable keyboardAvoiding padded backgroundColor="#F8FAFC">
       {/* ── Top Navigation Bar ──────────────────────────────── */}
       <View style={styles.topNav}>
         <TouchableOpacity
@@ -95,7 +96,7 @@ export default function CaregiverAlertDetailScreen() {
         />
       </View>
 
-      {/* ── Severity Banner ─────────────────────────────────── */}
+      {/* ── 1. Severity Banner ─────────────────────────────────── */}
       <Card
         elevated
         style={[
@@ -105,7 +106,7 @@ export default function CaregiverAlertDetailScreen() {
       >
         <View style={styles.bannerHeader}>
           <ShieldAlert
-            size={24}
+            size={26}
             color={alert.severity === 'critical' ? Colors.critical : Colors.warning}
           />
           <View style={{ flex: 1 }}>
@@ -118,7 +119,20 @@ export default function CaregiverAlertDetailScreen() {
 
       <View style={{ height: Spacing.md }} />
 
-      {/* ── Sensor Telemetry ────────────────────────────────── */}
+      {/* ── 2. Geofence & Location Card ───────────────────────── */}
+      <Card style={styles.mapCard}>
+        <View style={styles.mapHeader}>
+          <Navigation size={18} color={Colors.safe} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.mapAddress}>{alert.location}</Text>
+            <Text style={styles.mapCoords}>Location Coordinates: 40.7306° N, 74.2638° W</Text>
+          </View>
+        </View>
+      </Card>
+
+      <View style={{ height: Spacing.md }} />
+
+      {/* ── 3. Sensor Telemetry at Event ──────────────────────── */}
       <Card style={styles.sectionCard}>
         <Text style={styles.sectionLabel}>SENSOR TELEMETRY AT EVENT</Text>
         <View style={styles.telemetryGrid}>
@@ -150,26 +164,26 @@ export default function CaregiverAlertDetailScreen() {
         <Divider spacing={Spacing.md} />
 
         <View style={styles.metaRow}>
-          <Clock size={16} color={Colors.textTertiary} />
-          <Text style={styles.metaText}>{alert.timestamp}</Text>
+          <Clock size={15} color={Colors.textTertiary} />
+          <Text style={styles.metaText}>Recorded: {alert.timestamp}</Text>
         </View>
 
         <View style={styles.metaRow}>
-          <MapPin size={16} color={Colors.textTertiary} />
-          <Text style={styles.metaText}>{alert.location}</Text>
+          <MapPin size={15} color={Colors.textTertiary} />
+          <Text style={styles.metaText}>Location: {alert.location}</Text>
         </View>
       </Card>
 
       <View style={{ height: Spacing.md }} />
 
-      {/* ── Quick Emergency Dial Actions ────────────────────── */}
-      <Card style={styles.sectionCard}>
-        <Text style={styles.sectionLabel}>QUICK RESPONSE CALLS</Text>
+      {/* ── 4. Quick Response Emergency Call Dock ─────────────── */}
+      <Card style={styles.emergencyDockCard}>
+        <Text style={styles.sectionLabel}>CRISIS RESPONSE HOTLINES</Text>
         <View style={styles.dialActionsRow}>
           <TouchableOpacity
             onPress={() => handleCall('+1 (555) 234-5678')}
             style={styles.familyDialBtn}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             <Phone size={18} color={Colors.white} />
             <Text style={styles.familyDialText}>Call Eleanor (Parent)</Text>
@@ -178,7 +192,7 @@ export default function CaregiverAlertDetailScreen() {
           <TouchableOpacity
             onPress={() => handleCall('911')}
             style={styles.emergencyDialBtn}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
             <Phone size={18} color={Colors.critical} />
             <Text style={styles.emergencyDialText}>911 EMS</Text>
@@ -188,20 +202,20 @@ export default function CaregiverAlertDetailScreen() {
 
       <View style={{ height: Spacing.md }} />
 
-      {/* ── Response Lifecycle ──────────────────────────────── */}
+      {/* ── 5. Response Lifecycle ──────────────────────────────── */}
       <Card style={styles.sectionCard}>
         <Text style={styles.sectionLabel}>CARE RESPONSE STATUS</Text>
 
         {alert.status === 'active' && (
           <View style={styles.actionStateBox}>
             <Text style={styles.stateNoticeText}>
-              Acknowledge to confirm you are attending to Margaret Johnson.
+              Acknowledge to confirm you are actively attending to Margaret Johnson.
             </Text>
             <Button
               title="Acknowledge Alert"
               onPress={handleAcknowledge}
               variant="primary"
-              size="md"
+              size="lg"
               fullWidth
               style={{ backgroundColor: Colors.safe }}
               leftIcon={<CheckCircle2 size={18} color={Colors.white} />}
@@ -267,7 +281,7 @@ export default function CaregiverAlertDetailScreen() {
         )}
       </Card>
 
-      <View style={{ height: Spacing['2xl'] }} />
+      <View style={{ height: Spacing['3xl'] }} />
     </ScreenContainer>
   );
 }
@@ -286,7 +300,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceSecondary,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
   },
   navTitle: {
     ...Typography.bodySemiBold,
@@ -324,13 +340,32 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 4,
   },
+  mapCard: {
+    backgroundColor: Colors.white,
+  },
+  mapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  mapAddress: {
+    ...Typography.bodySemiBold,
+    fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  mapCoords: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
   sectionCard: {
     backgroundColor: Colors.white,
   },
   sectionLabel: {
     ...Typography.overline,
     color: Colors.textTertiary,
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    fontSize: 11,
     marginBottom: Spacing.base,
   },
   telemetryGrid: {
@@ -366,6 +401,12 @@ const styles = StyleSheet.create({
   metaText: {
     ...Typography.bodySmall,
     color: Colors.textSecondary,
+    fontSize: 12,
+  },
+  emergencyDockCard: {
+    backgroundColor: Colors.white,
+    borderColor: 'rgba(34, 197, 94, 0.25)',
+    borderWidth: 1,
   },
   dialActionsRow: {
     flexDirection: 'row',
@@ -373,23 +414,29 @@ const styles = StyleSheet.create({
   },
   familyDialBtn: {
     flex: 1.5,
-    height: 48,
-    borderRadius: BorderRadius.sm,
+    height: 52,
+    borderRadius: BorderRadius.full,
     backgroundColor: Colors.primary,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
+    shadowColor: Colors.primary,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
   familyDialText: {
     ...Typography.button,
     color: Colors.white,
     fontSize: 14,
+    fontWeight: '700',
   },
   emergencyDialBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: BorderRadius.sm,
+    height: 52,
+    borderRadius: BorderRadius.full,
     backgroundColor: 'rgba(239, 68, 68, 0.12)',
     flexDirection: 'row',
     alignItems: 'center',
@@ -400,6 +447,7 @@ const styles = StyleSheet.create({
     ...Typography.button,
     color: Colors.critical,
     fontSize: 14,
+    fontWeight: '700',
   },
   actionStateBox: {
     gap: Spacing.md,

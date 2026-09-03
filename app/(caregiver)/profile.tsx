@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform, ScrollView } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   ArrowLeft,
@@ -12,7 +12,7 @@ import {
   Info,
   MapPin,
 } from 'lucide-react-native';
-import { ScreenContainer, Button, Card, StatusBadge, Avatar } from '@/components/ui';
+import { Button, Card, StatusBadge, Avatar, BottomTabBar } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useElderly } from '@/context/ElderlyContext';
 
@@ -31,9 +31,14 @@ export default function CaregiverElderlyProfileScreen() {
   };
 
   return (
-    <ScreenContainer scrollable padded backgroundColor={Colors.background}>
-      {/* ── Top Navigation Bar ──────────────────────────────── */}
-      <View style={styles.topNav}>
+    <View style={styles.outerContainer}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── Top Navigation Bar ──────────────────────────────── */}
+        <View style={styles.topNav}>
         <TouchableOpacity
           onPress={() => router.back()}
           style={styles.backButton}
@@ -205,11 +210,27 @@ export default function CaregiverElderlyProfileScreen() {
       />
 
       <View style={{ height: Spacing['2xl'] }} />
-    </ScreenContainer>
+      </ScrollView>
+
+      {/* ── Pinned Bottom Tab Bar ────────────────────────────── */}
+      <BottomTabBar activeTab="profile" role="caregiver" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xl,
+  },
   topNav: {
     flexDirection: 'row',
     alignItems: 'center',

@@ -15,3 +15,6 @@ export { Divider } from './Divider';
 export { LoadingSpinner } from './LoadingSpinner';
 export { EmptyState } from './EmptyState';
 export { ScreenContainer } from './ScreenContainer';
+export { BottomTabBar } from './BottomTabBar';
+export { HeroStatusRing } from './HeroStatusRing';
+export { VitalSparklineCard } from './VitalSparklineCard';

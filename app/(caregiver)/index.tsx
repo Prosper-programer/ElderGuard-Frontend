@@ -1,10 +1,8 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Linking, Platform } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   ChevronRight,
-  Battery,
-  Wifi,
   Phone,
   Settings,
   ShieldAlert,
@@ -14,7 +12,13 @@ import {
   Thermometer,
   Footprints,
 } from 'lucide-react-native';
-import { ScreenContainer, Card, StatusBadge, Avatar, Divider } from '@/components/ui';
+import {
+  Card,
+  Avatar,
+  HeroStatusRing,
+  VitalSparklineCard,
+  BottomTabBar,
+} from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useElderly } from '@/context/ElderlyContext';
@@ -43,124 +47,96 @@ export default function CaregiverHomeScreen() {
   const takenCount = todayDoses.filter((d) => d.status === 'taken').length;
 
   return (
-    <ScreenContainer scrollable padded backgroundColor={Colors.background}>
-      {/* ── Top Header ──────────────────────────────────────── */}
-      <View style={styles.headerRow}>
-        <View style={styles.userInfo}>
-          <Avatar name={user?.name || 'David Miller'} size={44} statusIndicator="safe" />
-          <View>
-            <Text style={styles.userName}>{user?.name || 'David Miller'}</Text>
-            <View style={styles.badgeWrap}>
-              <StatusBadge status="safe" label="Caregiver (Active Duty)" size="sm" />
+    <View style={styles.outerContainer}>
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* ── 1. Top Modern Header ────────────────────────────── */}
+        <View style={styles.headerRow}>
+          <View style={styles.userInfo}>
+            <Avatar name={user?.name || 'David Miller'} size={42} statusIndicator="safe" />
+            <View>
+              <Text style={styles.greetingText}>On Active Care Duty,</Text>
+              <Text style={styles.userName}>{user?.name || 'David Miller'}</Text>
             </View>
           </View>
-        </View>
 
-        <TouchableOpacity
-          onPress={() => router.push('/(caregiver)/settings' as any)}
-          style={styles.settingsHeaderBtn}
-          activeOpacity={0.7}
-        >
-          <Settings size={20} color={Colors.textPrimary} />
-        </TouchableOpacity>
-      </View>
-
-      <Divider spacing={Spacing.md} />
-
-      {/* ── Active Critical Incident Banner (If Any) ────────── */}
-      {activeAlerts.length > 0 && (
-        <TouchableOpacity
-          onPress={() => router.push('/(caregiver)/alerts' as any)}
-          activeOpacity={0.85}
-        >
-          <Card
-            elevated
-            style={[
-              styles.alertBannerCard,
-              activeAlerts[0].severity === 'critical'
-                ? styles.alertBannerCritical
-                : styles.alertBannerWarning,
-            ]}
+          <TouchableOpacity
+            onPress={() => router.push('/(caregiver)/settings' as any)}
+            style={styles.settingsHeaderBtn}
+            activeOpacity={0.7}
           >
-            <View style={styles.alertBannerHeader}>
-              <ShieldAlert
-                size={22}
-                color={activeAlerts[0].severity === 'critical' ? Colors.critical : Colors.warning}
-              />
-              <View style={{ flex: 1 }}>
-                <Text style={styles.alertBannerTitle}>{activeAlerts[0].title}</Text>
-                <Text style={styles.alertBannerSub}>
-                  {activeAlerts[0].location} · {activeAlerts[0].timestamp}
-                </Text>
-              </View>
-              <View style={styles.respondTag}>
-                <Text style={styles.respondTagText}>Attend</Text>
-                <ChevronRight size={14} color={Colors.white} />
-              </View>
-            </View>
-          </Card>
-        </TouchableOpacity>
-      )}
-
-      {/* ── Assigned Elderly Care Recipient ─────────────────── */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>ASSIGNED CARE RECIPIENT</Text>
-        <TouchableOpacity
-          onPress={() => router.push('/(caregiver)/profile' as any)}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.viewProfileLink}>View Profile</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Card elevated style={styles.elderlyCard}>
-        <View style={styles.elderlyTopRow}>
-          <Avatar
-            name={activeProfile.fullName}
-            imageUrl={activeProfile.imageUrl}
-            size={64}
-            statusIndicator={vitals.overallStatus}
-          />
-          <View style={styles.elderlyMeta}>
-            <View style={styles.nameRow}>
-              <Text style={styles.elderlyName}>{activeProfile.fullName}</Text>
-            </View>
-            <Text style={styles.elderlySub}>
-              {activeProfile.age} yrs · {activeProfile.gender} · &quot;{activeProfile.preferredName}&quot;
-            </Text>
-            <View style={styles.statusWrap}>
-              <StatusBadge
-                status={vitals.overallStatus}
-                label={vitals.overallStatus === 'safe' ? 'IoT Wearable Normal' : 'Care Alert Active'}
-                size="sm"
-              />
-            </View>
-          </View>
+            <Settings size={20} color={Colors.textPrimary} />
+          </TouchableOpacity>
         </View>
 
-        {/* Quick Metrics Strip */}
-        <View style={styles.metricStrip}>
-          <View style={styles.metricItem}>
-            <Battery size={15} color={Colors.safe} />
-            <Text style={styles.metricLabel}>{vitals.batteryLevel}% Battery</Text>
-          </View>
-          <View style={styles.stripDivider} />
-          <View style={styles.metricItem}>
-            <Wifi size={15} color={Colors.primary} />
-            <Text style={styles.metricLabel}>{vitals.lastSyncTime}</Text>
-          </View>
-          <View style={styles.stripDivider} />
-          <View style={styles.metricItem}>
-            <Heart size={15} color={Colors.critical} />
-            <Text style={styles.metricLabel}>{activeProfile.medicalInfo.bloodType}</Text>
-          </View>
-        </View>
+        {/* ── 2. Active Urgent Incident Banner (If Any) ───────── */}
+        {activeAlerts.length > 0 && (
+          <TouchableOpacity
+            onPress={() => router.push('/(caregiver)/alerts' as any)}
+            activeOpacity={0.88}
+          >
+            <Card
+              elevated
+              style={[
+                styles.alertBannerCard,
+                activeAlerts[0].severity === 'critical'
+                  ? styles.alertBannerCritical
+                  : styles.alertBannerWarning,
+              ]}
+            >
+              <View style={styles.alertBannerHeader}>
+                <View
+                  style={[
+                    styles.alertIconCircle,
+                    {
+                      backgroundColor:
+                        activeAlerts[0].severity === 'critical'
+                          ? 'rgba(239, 68, 68, 0.15)'
+                          : 'rgba(245, 158, 11, 0.15)',
+                    },
+                  ]}
+                >
+                  <ShieldAlert
+                    size={22}
+                    color={activeAlerts[0].severity === 'critical' ? Colors.critical : Colors.warning}
+                  />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.alertBannerTitle}>{activeAlerts[0].title}</Text>
+                  <Text style={styles.alertBannerSub}>
+                    {activeAlerts[0].location} · {activeAlerts[0].timestamp}
+                  </Text>
+                </View>
+                <View style={styles.respondTag}>
+                  <Text style={styles.respondTagText}>Attend</Text>
+                  <ChevronRight size={14} color={Colors.white} />
+                </View>
+              </View>
+            </Card>
+          </TouchableOpacity>
+        )}
 
-        {/* Emergency Family Contact Strip */}
+        {/* ── 3. Apple-Health Style Hero Status Ring ──────────── */}
+        <HeroStatusRing
+          name={activeProfile.preferredName || 'Margaret'}
+          imageUrl={activeProfile.imageUrl}
+          status={vitals.overallStatus}
+          heartRate={vitals.heartRate.value}
+          spo2={vitals.spo2.value}
+          medsCompleted={takenCount}
+          medsTotal={todayDoses.length}
+          statusMessage={vitals.overallStatusMessage}
+          location="Assigned Recipient · 142 Elm Street"
+        />
+
+        {/* ── 4. Emergency Family Manager Call Bar ────────────── */}
         {primaryContact && (
           <View style={styles.emergencyBar}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.emergencyBarLabel}>Family Manager (Emergency)</Text>
+              <Text style={styles.emergencyBarLabel}>FAMILY MANAGER CONTACT</Text>
               <Text style={styles.emergencyBarName}>
                 {primaryContact.name} ({primaryContact.relationship})
               </Text>
@@ -171,172 +147,197 @@ export default function CaregiverHomeScreen() {
               activeOpacity={0.8}
             >
               <Phone size={14} color={Colors.white} />
-              <Text style={styles.emergencyCallText}>Call</Text>
+              <Text style={styles.emergencyCallText}>Call Eleanor</Text>
             </TouchableOpacity>
           </View>
         )}
-      </Card>
 
-      <View style={{ height: Spacing.lg }} />
+        <View style={{ height: Spacing.lg }} />
 
-      {/* ── Real-Time Vital Statistics ──────────────────────── */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>REAL-TIME VITALS TELEMETRY</Text>
-        <StatusBadge status={vitals.overallStatus} label={vitals.overallStatus.toUpperCase()} size="sm" />
-      </View>
+        {/* ── 5. Real-Time Vitals Telemetry (Sparklines) ──────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>REAL-TIME VITALS TELEMETRY</Text>
+          <Text style={styles.sectionSub}>Continuous IoT Stream</Text>
+        </View>
 
-      <View style={styles.vitalsGrid}>
-        {/* Heart Rate */}
-        <Card style={styles.vitalCard}>
-          <View style={styles.vitalTop}>
-            <View style={[styles.vitalIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.10)' }]}>
-              <Heart size={18} color={Colors.critical} />
+        <View style={styles.vitalsGrid}>
+          {/* Heart Rate */}
+          <VitalSparklineCard
+            label="Heart Rate"
+            value={vitals.heartRate.value}
+            unit="bpm"
+            status={vitals.heartRate.status}
+            statusLabel={vitals.heartRate.statusLabel}
+            normalRange={vitals.heartRate.normalRange}
+            icon={<Heart size={15} color={Colors.critical} />}
+            iconBg="rgba(239, 68, 68, 0.10)"
+          />
+
+          {/* Blood Oxygen */}
+          <VitalSparklineCard
+            label="Blood Oxygen"
+            value={vitals.spo2.value}
+            unit="%"
+            status={vitals.spo2.status}
+            statusLabel={vitals.spo2.statusLabel}
+            normalRange={vitals.spo2.normalRange}
+            icon={<Activity size={15} color={Colors.primary} />}
+            iconBg={Colors.primaryFaded}
+          />
+
+          {/* Body Temperature */}
+          <VitalSparklineCard
+            label="Body Temp"
+            value={vitals.temperature.value}
+            unit="°C"
+            status={vitals.temperature.status}
+            statusLabel={vitals.temperature.statusLabel}
+            normalRange={vitals.temperature.normalRange}
+            icon={<Thermometer size={15} color={Colors.warning} />}
+            iconBg="rgba(245, 158, 11, 0.10)"
+          />
+
+          {/* Daily Steps */}
+          <VitalSparklineCard
+            label="Daily Steps"
+            value={vitals.steps.value}
+            unit="steps"
+            status={vitals.steps.status}
+            statusLabel={vitals.steps.statusLabel}
+            normalRange="Goal: 5,000"
+            icon={<Footprints size={15} color={Colors.safe} />}
+            iconBg={Colors.safeBg}
+          />
+        </View>
+
+        <View style={{ height: Spacing.md }} />
+
+        {/* ── 6. Operational Care Actions ─────────────────────── */}
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionTitle}>ACTIVE CARE TASKS</Text>
+        </View>
+
+        <View style={styles.hubList}>
+          {/* Medication Administration */}
+          <TouchableOpacity
+            onPress={() => router.push('/(caregiver)/care' as any)}
+            style={styles.hubCard}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.hubIconWrap, { backgroundColor: Colors.safeBg }]}>
+              <Pill size={20} color={Colors.safe} />
             </View>
-            <StatusBadge status={vitals.heartRate.status} label={vitals.heartRate.statusLabel} size="sm" />
-          </View>
-          <Text style={styles.vitalValue}>
-            {vitals.heartRate.value} <Text style={styles.vitalUnit}>{vitals.heartRate.unit}</Text>
-          </Text>
-          <Text style={styles.vitalRange}>Normal: {vitals.heartRate.normalRange}</Text>
-        </Card>
-
-        {/* Blood Oxygen */}
-        <Card style={styles.vitalCard}>
-          <View style={styles.vitalTop}>
-            <View style={[styles.vitalIconWrap, { backgroundColor: Colors.primaryFaded }]}>
-              <Activity size={18} color={Colors.primary} />
+            <View style={styles.hubMeta}>
+              <Text style={styles.hubTitle}>Administer Prescribed Doses</Text>
+              <Text style={styles.hubSub}>
+                {takenCount} of {todayDoses.length} doses logged · 1 dose remaining
+              </Text>
             </View>
-            <StatusBadge status={vitals.spo2.status} label={vitals.spo2.statusLabel} size="sm" />
-          </View>
-          <Text style={styles.vitalValue}>
-            {vitals.spo2.value} <Text style={styles.vitalUnit}>{vitals.spo2.unit}</Text>
-          </Text>
-          <Text style={styles.vitalRange}>Normal: {vitals.spo2.normalRange}</Text>
-        </Card>
+            <ChevronRight size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
 
-        {/* Temperature */}
-        <Card style={styles.vitalCard}>
-          <View style={styles.vitalTop}>
-            <View style={[styles.vitalIconWrap, { backgroundColor: 'rgba(245, 158, 11, 0.10)' }]}>
-              <Thermometer size={18} color={Colors.warning} />
+          {/* Incident Response */}
+          <TouchableOpacity
+            onPress={() => router.push('/(caregiver)/alerts' as any)}
+            style={styles.hubCard}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.hubIconWrap, { backgroundColor: 'rgba(239, 68, 68, 0.12)' }]}>
+              <ShieldAlert size={20} color={Colors.critical} />
             </View>
-            <StatusBadge status={vitals.temperature.status} label={vitals.temperature.statusLabel} size="sm" />
-          </View>
-          <Text style={styles.vitalValue}>
-            {vitals.temperature.value} <Text style={styles.vitalUnit}>{vitals.temperature.unit}</Text>
-          </Text>
-          <Text style={styles.vitalRange}>Normal: {vitals.temperature.normalRange}</Text>
-        </Card>
-
-        {/* Daily Steps */}
-        <Card style={styles.vitalCard}>
-          <View style={styles.vitalTop}>
-            <View style={[styles.vitalIconWrap, { backgroundColor: Colors.safeBg }]}>
-              <Footprints size={18} color={Colors.safe} />
+            <View style={styles.hubMeta}>
+              <Text style={styles.hubTitle}>Incident & Alert Log</Text>
+              <Text style={styles.hubSub}>
+                {activeAlerts.length} active incident · Check Margaret&apos;s status
+              </Text>
             </View>
-            <StatusBadge status={vitals.steps.status} label="Active" size="sm" />
-          </View>
-          <Text style={styles.vitalValue}>
-            {vitals.steps.value} <Text style={styles.vitalUnit}>steps</Text>
-          </Text>
-          <Text style={styles.vitalRange}>{vitals.steps.statusLabel}</Text>
-        </Card>
-      </View>
+            <ChevronRight size={18} color={Colors.textTertiary} />
+          </TouchableOpacity>
+        </View>
 
-      <View style={{ height: Spacing.lg }} />
+        <View style={{ height: Spacing['3xl'] }} />
+      </ScrollView>
 
-      {/* ── Caregiver Operational Workspaces ─────────────────── */}
-      <View style={styles.sectionHeaderRow}>
-        <Text style={styles.sectionTitle}>DAILY CARE ACTIONS</Text>
-      </View>
-
-      <View style={styles.hubShortcuts}>
-        {/* Medication & Care Routine Logging */}
-        <TouchableOpacity
-          onPress={() => router.push('/(caregiver)/care' as any)}
-          style={styles.shortcutCard}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.shortcutIcon, { backgroundColor: Colors.safeBg }]}>
-            <Pill size={22} color={Colors.safe} />
-          </View>
-          <View style={styles.shortcutMeta}>
-            <Text style={styles.shortcutTitle}>Medication Administration & Routines</Text>
-            <Text style={styles.shortcutDesc}>
-              {takenCount} of {todayDoses.length} doses administered today
-            </Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textTertiary} />
-        </TouchableOpacity>
-
-        {/* Incident Alerts Center */}
-        <TouchableOpacity
-          onPress={() => router.push('/(caregiver)/alerts' as any)}
-          style={styles.shortcutCard}
-          activeOpacity={0.8}
-        >
-          <View style={[styles.shortcutIcon, { backgroundColor: 'rgba(239, 68, 68, 0.12)' }]}>
-            <ShieldAlert size={22} color={Colors.critical} />
-          </View>
-          <View style={styles.shortcutMeta}>
-            <Text style={styles.shortcutTitle}>Assigned Incident Alerts</Text>
-            <Text style={styles.shortcutDesc}>
-              {activeAlerts.length} active alerts · Review & Acknowledge
-            </Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textTertiary} />
-        </TouchableOpacity>
-      </View>
-
-      <View style={{ height: Spacing['3xl'] }} />
-    </ScreenContainer>
+      {/* ── Pinned Bottom Tab Bar ────────────────────────────── */}
+      <BottomTabBar activeTab="home" role="caregiver" />
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  outerContainer: {
+    flex: 1,
+    backgroundColor: '#F8FAFC',
+  },
+  scrollView: {
+    flex: 1,
+  },
+  scrollContent: {
+    paddingHorizontal: Spacing.base,
+    paddingTop: Spacing.xl,
+    paddingBottom: Spacing.xl,
+  },
   headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.md,
   },
   userInfo: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
   },
+  greetingText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    fontSize: 12,
+  },
   userName: {
     ...Typography.h3,
     color: Colors.textPrimary,
-  },
-  badgeWrap: {
-    marginTop: 2,
+    fontSize: 17,
   },
   settingsHeaderBtn: {
     width: 40,
     height: 40,
     borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surfaceSecondary,
+    backgroundColor: Colors.white,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 3,
+    elevation: 1,
   },
   alertBannerCard: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#FFF5F5',
     marginBottom: Spacing.base,
     borderLeftWidth: 4,
+    borderLeftColor: Colors.critical,
   },
   alertBannerCritical: {
-    borderLeftColor: Colors.critical,
     backgroundColor: '#FFF5F5',
+    borderLeftColor: Colors.critical,
   },
   alertBannerWarning: {
-    borderLeftColor: Colors.warning,
     backgroundColor: '#FFFBEB',
+    borderLeftColor: Colors.warning,
   },
   alertBannerHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
+  },
+  alertIconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: BorderRadius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   alertBannerTitle: {
     ...Typography.bodySemiBold,
@@ -352,116 +353,51 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: Colors.safe,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.xs,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: BorderRadius.full,
     gap: 2,
   },
   respondTagText: {
     ...Typography.caption,
     fontSize: 11,
     color: Colors.white,
-    fontWeight: '600',
-  },
-  sectionHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: Spacing.xs,
-  },
-  sectionTitle: {
-    ...Typography.overline,
-    color: Colors.textTertiary,
-    letterSpacing: 1,
-  },
-  viewProfileLink: {
-    ...Typography.captionMedium,
-    color: Colors.safe,
-    fontWeight: '600',
-  },
-  elderlyCard: {
-    backgroundColor: Colors.white,
-  },
-  elderlyTopRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.base,
-  },
-  elderlyMeta: {
-    flex: 1,
-  },
-  nameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  elderlyName: {
-    ...Typography.h3,
-    fontSize: 19,
-    color: Colors.textPrimary,
-  },
-  elderlySub: {
-    ...Typography.bodySmall,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  statusWrap: {
-    marginTop: Spacing.xs,
-    alignSelf: 'flex-start',
-  },
-  metricStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceSecondary,
-    borderRadius: BorderRadius.sm,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.base,
-  },
-  metricItem: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  metricLabel: {
-    ...Typography.captionMedium,
-    color: Colors.textSecondary,
-    fontSize: 12,
-  },
-  stripDivider: {
-    width: 1,
-    height: 16,
-    backgroundColor: Colors.border,
+    fontWeight: '700',
   },
   emergencyBar: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    backgroundColor: 'rgba(239, 68, 68, 0.08)',
-    borderRadius: BorderRadius.sm,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: Spacing.sm,
-    marginTop: Spacing.md,
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.md,
+    paddingHorizontal: Spacing.base,
+    paddingVertical: Spacing.md,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.03,
+    shadowRadius: 3,
+    elevation: 1,
   },
   emergencyBarLabel: {
     ...Typography.overline,
     fontSize: 9,
-    color: Colors.critical,
+    color: Colors.textTertiary,
+    letterSpacing: 0.5,
   },
   emergencyBarName: {
     ...Typography.bodySmallSemiBold,
     color: Colors.textPrimary,
-    marginTop: 1,
+    marginTop: 2,
   },
   emergencyCallBtn: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    backgroundColor: Colors.critical,
+    backgroundColor: Colors.primary,
     paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
+    paddingVertical: 7,
     borderRadius: BorderRadius.full,
   },
   emergencyCallText: {
@@ -469,49 +405,33 @@ const styles = StyleSheet.create({
     color: Colors.white,
     fontWeight: '600',
   },
-  vitalsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: Spacing.md,
-  },
-  vitalCard: {
-    width: '47.5%',
-    backgroundColor: Colors.white,
-    padding: Spacing.md,
-  },
-  vitalTop: {
+  sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: Spacing.sm,
   },
-  vitalIconWrap: {
-    width: 32,
-    height: 32,
-    borderRadius: BorderRadius.sm,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  vitalValue: {
-    ...Typography.h2,
-    fontSize: 22,
-    color: Colors.textPrimary,
-  },
-  vitalUnit: {
-    ...Typography.caption,
-    fontSize: 12,
+  sectionTitle: {
+    ...Typography.overline,
     color: Colors.textTertiary,
+    letterSpacing: 0.8,
+    fontSize: 11,
   },
-  vitalRange: {
+  sectionSub: {
     ...Typography.caption,
-    fontSize: 10,
-    color: Colors.textSecondary,
-    marginTop: 2,
+    color: Colors.safe,
+    fontSize: 11,
+    fontWeight: '500',
   },
-  hubShortcuts: {
-    gap: Spacing.md,
+  vitalsGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    justifyContent: 'space-between',
   },
-  shortcutCard: {
+  hubList: {
+    gap: Spacing.sm,
+  },
+  hubCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.md,
@@ -519,24 +439,29 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.md,
     padding: Spacing.base,
     borderWidth: 1,
-    borderColor: Colors.border,
+    borderColor: 'rgba(0,0,0,0.05)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04,
+    shadowRadius: 4,
+    elevation: 1,
   },
-  shortcutIcon: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
+  hubIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: BorderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  shortcutMeta: {
+  hubMeta: {
     flex: 1,
   },
-  shortcutTitle: {
+  hubTitle: {
     ...Typography.bodySemiBold,
     fontSize: 14,
     color: Colors.textPrimary,
   },
-  shortcutDesc: {
+  hubSub: {
     ...Typography.caption,
     color: Colors.textSecondary,
     marginTop: 2,

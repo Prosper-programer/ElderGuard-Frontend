@@ -12,6 +12,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   UserCheck,
+  Navigation,
 } from 'lucide-react-native';
 import { ScreenContainer, Button, Card, StatusBadge, TextInput, Divider } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
@@ -70,7 +71,7 @@ export default function AlertDetailScreen() {
   };
 
   return (
-    <ScreenContainer scrollable keyboardAvoiding padded backgroundColor={Colors.background}>
+    <ScreenContainer scrollable keyboardAvoiding padded backgroundColor="#F8FAFC">
       {/* ── Top Navigation Bar ──────────────────────────────── */}
       <View style={styles.topNav}>
         <TouchableOpacity
@@ -81,7 +82,7 @@ export default function AlertDetailScreen() {
           <ArrowLeft size={22} color={Colors.textPrimary} />
         </TouchableOpacity>
 
-        <Text style={styles.navTitle}>Incident Details</Text>
+        <Text style={styles.navTitle}>Incident Response</Text>
 
         <StatusBadge
           status={
@@ -96,7 +97,7 @@ export default function AlertDetailScreen() {
         />
       </View>
 
-      {/* ── 1. Severity Banner ──────────────────────────────── */}
+      {/* ── 1. Severity Header Banner ───────────────────────── */}
       <Card
         elevated
         style={[
@@ -110,7 +111,7 @@ export default function AlertDetailScreen() {
       >
         <View style={styles.bannerHeader}>
           <ShieldAlert
-            size={24}
+            size={26}
             color={
               alert.severity === 'critical'
                 ? Colors.critical
@@ -129,15 +130,28 @@ export default function AlertDetailScreen() {
 
       <View style={{ height: Spacing.md }} />
 
-      {/* ── 2. Telemetry & Sensor Readings at Event ─────────── */}
+      {/* ── 2. GPS Location & Mini-Map Card ─────────────────── */}
+      <Card style={styles.mapCard}>
+        <View style={styles.mapHeader}>
+          <Navigation size={18} color={Colors.primary} />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.mapAddress}>{alert.location}</Text>
+            <Text style={styles.mapCoords}>Coordinates: 40.7306° N, 74.2638° W (Within Living Room Geofence)</Text>
+          </View>
+        </View>
+      </Card>
+
+      <View style={{ height: Spacing.md }} />
+
+      {/* ── 3. Sensor Telemetry at Moment of Event ───────────── */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionLabel}>INCIDENT SENSOR TELEMETRY</Text>
+        <Text style={styles.sectionLabel}>TELEMETRY READINGS AT MOMENT OF IMPACT</Text>
         <View style={styles.telemetryGrid}>
           {alert.vitalReadings?.heartRate && (
             <View style={styles.telemetryBox}>
               <Heart size={18} color={Colors.critical} />
               <Text style={styles.telemetryVal}>{alert.vitalReadings.heartRate} bpm</Text>
-              <Text style={styles.telemetryLbl}>Pulse at Impact</Text>
+              <Text style={styles.telemetryLbl}>Heart Rate</Text>
             </View>
           )}
 
@@ -145,7 +159,7 @@ export default function AlertDetailScreen() {
             <View style={styles.telemetryBox}>
               <Activity size={18} color={Colors.primary} />
               <Text style={styles.telemetryVal}>{alert.vitalReadings.spo2}%</Text>
-              <Text style={styles.telemetryLbl}>Oxygen Saturation</Text>
+              <Text style={styles.telemetryLbl}>Blood Oxygen</Text>
             </View>
           )}
 
@@ -153,7 +167,7 @@ export default function AlertDetailScreen() {
             <View style={styles.telemetryBox}>
               <AlertTriangle size={18} color={Colors.critical} />
               <Text style={styles.telemetryVal}>{alert.vitalReadings.impactGForce}G</Text>
-              <Text style={styles.telemetryLbl}>Impact Force</Text>
+              <Text style={styles.telemetryLbl}>G-Force Impact</Text>
             </View>
           )}
         </View>
@@ -161,37 +175,37 @@ export default function AlertDetailScreen() {
         <Divider spacing={Spacing.md} />
 
         <View style={styles.metaRow}>
-          <Clock size={16} color={Colors.textTertiary} />
-          <Text style={styles.metaText}>{alert.timestamp}</Text>
+          <Clock size={15} color={Colors.textTertiary} />
+          <Text style={styles.metaText}>Detected: {alert.timestamp}</Text>
         </View>
 
         <View style={styles.metaRow}>
-          <MapPin size={16} color={Colors.textTertiary} />
-          <Text style={styles.metaText}>{alert.location}</Text>
+          <MapPin size={15} color={Colors.textTertiary} />
+          <Text style={styles.metaText}>Location: {alert.location}</Text>
         </View>
       </Card>
 
       <View style={{ height: Spacing.md }} />
 
-      {/* ── 3. Emergency Quick Dial Actions ─────────────────── */}
-      <Card style={styles.sectionCard}>
-        <Text style={styles.sectionLabel}>EMERGENCY RESPONSE CALLS</Text>
+      {/* ── 4. Calm-in-Crisis Emergency Call Dock ────────────── */}
+      <Card style={styles.emergencyDockCard}>
+        <Text style={styles.sectionLabel}>CRISIS RESPONSE HOTLINES</Text>
         <View style={styles.dialActionsRow}>
           <TouchableOpacity
             onPress={() => handleCallEmergency('911')}
             style={styles.emergencyDialBtn}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Phone size={18} color={Colors.white} />
+            <Phone size={20} color={Colors.white} />
             <Text style={styles.emergencyDialText}>Call 911 / EMS</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
             onPress={() => handleCallEmergency('+1 (555) 782-9012')}
             style={styles.caregiverDialBtn}
-            activeOpacity={0.8}
+            activeOpacity={0.85}
           >
-            <Phone size={18} color={Colors.primary} />
+            <Phone size={20} color={Colors.primary} />
             <Text style={styles.caregiverDialText}>Call Margaret</Text>
           </TouchableOpacity>
         </View>
@@ -199,20 +213,20 @@ export default function AlertDetailScreen() {
 
       <View style={{ height: Spacing.md }} />
 
-      {/* ── 4. Incident Response Lifecycle ──────────────────── */}
+      {/* ── 5. Incident Resolution Lifecycle ────────────────── */}
       <Card style={styles.sectionCard}>
-        <Text style={styles.sectionLabel}>INCIDENT RESOLUTION TIMELINE</Text>
+        <Text style={styles.sectionLabel}>RESOLUTION & AUDIT TRAIL</Text>
 
         {alert.status === 'active' && (
           <View style={styles.actionStateBox}>
             <Text style={styles.stateNoticeText}>
-              This incident is currently ACTIVE. Please acknowledge receipt to notify other caregivers that assistance is underway.
+              This incident is currently active. Tap below to acknowledge receipt and alert other care team members that you are responding.
             </Text>
             <Button
               title="Acknowledge Alert"
               onPress={handleAcknowledge}
               variant="primary"
-              size="md"
+              size="lg"
               fullWidth
               leftIcon={<CheckCircle2 size={18} color={Colors.white} />}
             />
@@ -234,15 +248,15 @@ export default function AlertDetailScreen() {
             {showNoteInput ? (
               <View>
                 <TextInput
-                  label="Resolution & Check Notes *"
+                  label="Care Resolution Notes *"
                   value={notes}
                   onChangeText={setNotes}
-                  placeholder="e.g. Senior is safe on couch, vitals normalized, no injuries."
+                  placeholder="e.g. Arrived on scene, Margaret is seated safely on couch, vitals normal."
                   multiline
                 />
                 <View style={{ height: Spacing.sm }} />
                 <Button
-                  title="Submit & Mark Resolved"
+                  title="Submit & Close Incident"
                   onPress={handleResolve}
                   variant="primary"
                   size="md"
@@ -266,7 +280,7 @@ export default function AlertDetailScreen() {
           <View style={styles.resolvedBox}>
             <CheckCircle2 size={22} color={Colors.safe} />
             <View style={{ flex: 1 }}>
-              <Text style={styles.resolvedTitle}>Incident Resolved</Text>
+              <Text style={styles.resolvedTitle}>Incident Successfully Resolved</Text>
               <Text style={styles.resolvedBy}>Resolved by: {alert.resolvedBy}</Text>
               {alert.resolutionNotes && (
                 <Text style={styles.resolvedNotes}>&quot;{alert.resolutionNotes}&quot;</Text>
@@ -276,7 +290,7 @@ export default function AlertDetailScreen() {
         )}
       </Card>
 
-      <View style={{ height: Spacing['2xl'] }} />
+      <View style={{ height: Spacing['3xl'] }} />
     </ScreenContainer>
   );
 }
@@ -295,7 +309,9 @@ const styles = StyleSheet.create({
     borderRadius: BorderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceSecondary,
+    backgroundColor: Colors.white,
+    borderWidth: 1,
+    borderColor: 'rgba(0,0,0,0.06)',
   },
   navTitle: {
     ...Typography.bodySemiBold,
@@ -336,13 +352,32 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 4,
   },
+  mapCard: {
+    backgroundColor: Colors.white,
+  },
+  mapHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+  },
+  mapAddress: {
+    ...Typography.bodySemiBold,
+    fontSize: 14,
+    color: Colors.textPrimary,
+  },
+  mapCoords: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 2,
+  },
   sectionCard: {
     backgroundColor: Colors.white,
   },
   sectionLabel: {
     ...Typography.overline,
     color: Colors.textTertiary,
-    letterSpacing: 1,
+    letterSpacing: 0.8,
+    fontSize: 11,
     marginBottom: Spacing.base,
   },
   telemetryGrid: {
@@ -378,6 +413,12 @@ const styles = StyleSheet.create({
   metaText: {
     ...Typography.bodySmall,
     color: Colors.textSecondary,
+    fontSize: 12,
+  },
+  emergencyDockCard: {
+    backgroundColor: Colors.white,
+    borderColor: 'rgba(239, 68, 68, 0.25)',
+    borderWidth: 1,
   },
   dialActionsRow: {
     flexDirection: 'row',
@@ -385,33 +426,40 @@ const styles = StyleSheet.create({
   },
   emergencyDialBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: BorderRadius.sm,
+    height: 52,
+    borderRadius: BorderRadius.full,
     backgroundColor: Colors.critical,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
+    shadowColor: Colors.critical,
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    elevation: 3,
   },
   emergencyDialText: {
     ...Typography.button,
     color: Colors.white,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '700',
   },
   caregiverDialBtn: {
     flex: 1,
-    height: 48,
-    borderRadius: BorderRadius.sm,
+    height: 52,
+    borderRadius: BorderRadius.full,
     backgroundColor: Colors.primaryFaded,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 6,
+    gap: 8,
   },
   caregiverDialText: {
     ...Typography.button,
     color: Colors.primary,
-    fontSize: 14,
+    fontSize: 15,
+    fontWeight: '700',
   },
   actionStateBox: {
     gap: Spacing.md,

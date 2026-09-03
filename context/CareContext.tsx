@@ -1,6 +1,30 @@
+/**
+ * ============================================================================
+ * ElderGuard — CareContext.tsx
+ * ============================================================================
+ * 
+ * PURPOSE:
+ * Manages daily care plans, prescribed medications, scheduled dosages, and
+ * wellness activities (Hydration, Mobility Walks, Blood Pressure Checks).
+ * 
+ * CORE ENTITIES:
+ * 1. `Medication`: The standing clinical prescription (e.g. Lisinopril 10mg, Once daily).
+ * 2. `MedicationDose`: Today's specific dose instance (e.g. 08:00 AM, status: 'taken').
+ * 3. `CareActivity`: Daily wellness targets with progress increments (+250ml, +5 mins).
+ * 
+ * ADHERENCE FORMULA:
+ *   Adherence % = (Count of doses with status === 'taken' / Total scheduled doses) * 100
+ */
+
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { Medication, MedicationDose, CareActivity, CareContextValue, DoseStatus } from '@/types/care';
 
+/**
+ * Baseline doctor prescriptions for Margaret Johnson:
+ * - Lisinopril (Morning hypertension control)
+ * - Calcium + D3 (Midday bone density support)
+ * - Metformin (Evening blood sugar regulation)
+ */
 const INITIAL_MEDICATIONS: Medication[] = [
   {
     id: 'med-1',
@@ -28,6 +52,11 @@ const INITIAL_MEDICATIONS: Medication[] = [
   },
 ];
 
+/**
+ * Today's dosage instances:
+ * Morning and afternoon doses have already been marked 'taken' by caregiver David.
+ * Evening Metformin is 'pending'.
+ */
 const INITIAL_DOSES: MedicationDose[] = [
   {
     id: 'dose-1',
@@ -59,6 +88,9 @@ const INITIAL_DOSES: MedicationDose[] = [
   },
 ];
 
+/**
+ * Today's non-pharmacological care and wellness activities:
+ */
 const INITIAL_ACTIVITIES: CareActivity[] = [
   {
     id: 'act-1',
@@ -94,13 +126,22 @@ const INITIAL_ACTIVITIES: CareActivity[] = [
   },
 ];
 
+// React Context definition for care operations
 const CareContext = createContext<CareContextValue | undefined>(undefined);
 
+/**
+ * CareProvider Component
+ * Exposes prescription state, daily doses, and mutation methods to log medication and care progress.
+ */
 export function CareProvider({ children }: { children: React.ReactNode }) {
   const [medications, setMedications] = useState<Medication[]>(INITIAL_MEDICATIONS);
   const [todayDoses, setTodayDoses] = useState<MedicationDose[]>(INITIAL_DOSES);
   const [activities, setActivities] = useState<CareActivity[]>(INITIAL_ACTIVITIES);
 
+  /**
+   * Updates the administration status of a medication dose (e.g. 'taken', 'missed', 'pending').
+   * Attaches responder name and current local timestamp for clinical compliance logs.
+   */
   const markDoseStatus = useCallback(
     (doseId: string, status: DoseStatus, loggedByName: string) => {
       setTodayDoses((prev) =>
@@ -120,6 +161,10 @@ export function CareProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  /**
+   * Increments the progress of a daily wellness activity (e.g. adding 250ml water or 5 min walk).
+   * Automatically marks the activity 'completed' if the target goal is reached or exceeded.
+   */
   const updateActivityProgress = useCallback(
     (activityId: string, incrementValue: number, loggedByName: string) => {
       setActivities((prev) =>
@@ -142,6 +187,9 @@ export function CareProvider({ children }: { children: React.ReactNode }) {
     []
   );
 
+  /**
+   * Adds a new prescribed medication and immediately schedules today's doses.
+   */
   const addMedication = useCallback((medicationData: Omit<Medication, 'id'>) => {
     const newMed: Medication = {
       ...medicationData,
@@ -149,7 +197,7 @@ export function CareProvider({ children }: { children: React.ReactNode }) {
     };
     setMedications((prev) => [...prev, newMed]);
 
-    // Also add scheduled doses for today
+    // Generate matching dose records for today
     const newDoses: MedicationDose[] = medicationData.timesOfDay.map((time, idx) => ({
       id: `dose-${Date.now()}-${idx}`,
       medicationId: newMed.id,
@@ -179,6 +227,10 @@ export function CareProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * useCare Custom Hook
+ * Provides direct access to prescriptions, doses, adherence rates, and logging methods.
+ */
 export function useCare(): CareContextValue {
   const context = useContext(CareContext);
   if (!context) {

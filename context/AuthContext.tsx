@@ -1,14 +1,41 @@
+/**
+ * ============================================================================
+ * ElderGuard — AuthContext.tsx
+ * ============================================================================
+ * 
+ * PURPOSE:
+ * Manages user authentication, session state, and role-based permissions:
+ * 
+ * THE 3 USER ROLES:
+ * 1. `parent`    : Family member / Senior Care Manager (Theme: Blue #3C6FDB)
+ *                   - Full permissions: Vitals, prescriptions, doctor reports, configuration.
+ * 2. `caregiver` : Professional nurse, aide, or assisted living staff (Theme: Green #22C55E)
+ *                   - Care administration: Vitals, daypart dose logging, incident responses.
+ * 3. `admin`     : System / Medical Facility Administrator (Theme: Amber #F59E0B)
+ *                   - Enterprise console: Fleet status, user directory, uptime, audit logs.
+ * 
+ * PRODUCTION API POINT:
+ * In production, replace the simulated credential check with your JWT endpoint:
+ *   const res = await fetch('https://api.elderguard.com/v1/auth/login', { ... });
+ *   await SecureStore.setItemAsync('user_token', res.data.token);
+ */
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, AuthContextValue } from '@/types/auth';
 import { MOCK_USERS } from '@/services/mockData';
 
+// React Context for authentication session state
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 
+/**
+ * AuthProvider Component
+ * Exposes current user object, role, login/signup handlers, and session persistence.
+ */
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
-  // Initialize initial auth state (simulating reading cached session)
+  // Simulates reading cached JWT token on initial app boot
   useEffect(() => {
     const timer = setTimeout(() => {
       setIsLoading(false);
@@ -16,12 +43,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return () => clearTimeout(timer);
   }, []);
 
+  /**
+   * Logs in a user using email and password.
+   * Matches pre-seeded demo accounts (parent, caregiver, admin) or generates a flexible demo user.
+   */
   const login = async (
     email: string,
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
-    // Artificial latency for realistic async feedback
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    await new Promise((resolve) => setTimeout(resolve, 600)); // Simulates network roundtrip
 
     const normalizedEmail = email.trim().toLowerCase();
 
@@ -39,7 +69,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { success: true };
     }
 
-    // Flexible MVP fallback: if valid email format and password >= 6 chars, assign Parent role
+    // Flexible fallback: if valid email format and password >= 6 chars, assign Parent role
     if (normalizedEmail.includes('@') && password.length >= 6) {
       const newUser: User = {
         id: `usr-${Date.now()}`,
@@ -58,6 +88,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     };
   };
 
+  /**
+   * Registers a new user account with role assignment.
+   */
   const signup = async (
     name: string,
     email: string,
@@ -89,6 +122,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
+  /**
+   * Quick 1-tap role switcher for rapid developer testing.
+   */
   const quickLogin = async (role: UserRole): Promise<void> => {
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 300));
@@ -96,6 +132,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setIsLoading(false);
   };
 
+  /**
+   * Clears active session and signs out the user.
+   */
   const logout = async (): Promise<void> => {
     setIsLoading(true);
     await new Promise((resolve) => setTimeout(resolve, 200));
@@ -120,6 +159,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * useAuth Custom Hook
+ * Provides direct access to current user identity, active role, and auth methods.
+ */
 export function useAuth(): AuthContextValue {
   const context = useContext(AuthContext);
   if (!context) {

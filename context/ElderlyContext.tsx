@@ -1,6 +1,26 @@
+/**
+ * ============================================================================
+ * ElderGuard — ElderlyContext.tsx
+ * ============================================================================
+ * 
+ * PURPOSE:
+ * Stores and manages the senior profile (Margaret Johnson), including:
+ * 1. Demographic and contact data (Name, address, phone, avatar).
+ * 2. Clinical and medical history (Blood type, allergies, chronic conditions, physician).
+ * 3. Emergency contacts hierarchy (Primary vs. secondary family responders).
+ * 4. Paired IoT hardware telemetry status (Device ID, battery %, connection status).
+ * 
+ * ROLE ACCESS:
+ * - Parent: Full Read/Write access (can edit contacts, medical notes, add new seniors).
+ * - Caregiver: Read-Only access (displays assigned senior care instructions).
+ */
+
 import React, { createContext, useContext, useState } from 'react';
 import { ElderlyProfile, ElderlyContextValue } from '@/types/elderly';
 
+/**
+ * Baseline demonstration profile for Margaret Johnson (Age 78):
+ */
 const INITIAL_PROFILES: ElderlyProfile[] = [
   {
     id: 'eld-01',
@@ -12,9 +32,11 @@ const INITIAL_PROFILES: ElderlyProfile[] = [
     address: '142 Elm Street, Maplewood, NJ 07040',
     phone: '+1 (555) 782-9012',
     imageUrl: require('@/assets/images/elderly_margaret.jpg'),
-    parentManagerId: 'usr-parent-01',
-    primaryCaregiverId: 'usr-caregiver-01',
+    parentManagerId: 'usr-parent-01', // Eleanor Vance
+    primaryCaregiverId: 'usr-caregiver-01', // David Miller
     primaryCaregiverName: 'David Miller',
+
+    // Clinical Information
     medicalInfo: {
       bloodType: 'O+',
       allergies: ['Penicillin', 'Sulfa drugs'],
@@ -24,6 +46,8 @@ const INITIAL_PROFILES: ElderlyProfile[] = [
       physicianPhone: '+1 (555) 890-1234',
       hospitalPreference: 'Saint Luke Memorial Medical Center',
     },
+
+    // Emergency Contact Chain
     emergencyContacts: [
       {
         id: 'ec-1',
@@ -40,6 +64,8 @@ const INITIAL_PROFILES: ElderlyProfile[] = [
         isPrimary: false,
       },
     ],
+
+    // Hardware Telemetry & Pairing
     deviceStatus: {
       deviceId: 'EG-IOT-4892',
       deviceName: 'ElderGuard Wearable Band V2',
@@ -54,15 +80,24 @@ const INITIAL_PROFILES: ElderlyProfile[] = [
   },
 ];
 
+// React Context definition for elderly profile management
 const ElderlyContext = createContext<ElderlyContextValue | undefined>(undefined);
 
+/**
+ * ElderlyProvider Component
+ * Exposes the active senior profile, list of profiles, and update/creation handlers.
+ */
 export function ElderlyProvider({ children }: { children: React.ReactNode }) {
   const [profiles, setProfiles] = useState<ElderlyProfile[]>(INITIAL_PROFILES);
   const [activeProfileId, setActiveProfileId] = useState<string>('eld-01');
 
+  // Currently selected senior profile
   const activeProfile =
     profiles.find((p) => p.id === activeProfileId) || profiles[0] || INITIAL_PROFILES[0];
 
+  /**
+   * Updates an existing senior's profile with partial attributes.
+   */
   const updateProfile = (id: string, updates: Partial<ElderlyProfile>) => {
     setProfiles((prev) =>
       prev.map((profile) => {
@@ -78,6 +113,9 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
+  /**
+   * Creates and registers a new senior profile into the system.
+   */
   const createProfile = (
     data: Omit<ElderlyProfile, 'id' | 'createdAt' | 'updatedAt'>
   ): ElderlyProfile => {
@@ -93,6 +131,9 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
     return newProfile;
   };
 
+  /**
+   * Retrieves the senior assigned to a specific professional caregiver.
+   */
   const getAssignedProfileForCaregiver = (caregiverId: string): ElderlyProfile | undefined => {
     return profiles.find((p) => p.primaryCaregiverId === caregiverId) || profiles[0];
   };
@@ -112,6 +153,10 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
+/**
+ * useElderly Custom Hook
+ * Provides direct access to senior demographic, clinical, and hardware pairing state.
+ */
 export function useElderly(): ElderlyContextValue {
   const context = useContext(ElderlyContext);
   if (!context) {

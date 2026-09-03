@@ -5,19 +5,23 @@ import {
   StyleSheet,
   TouchableOpacity,
   Animated,
+  Dimensions,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import Svg, { Path } from 'react-native-svg';
+import Svg, { Path, Defs, LinearGradient, Stop, Circle } from 'react-native-svg';
+
+const { width } = Dimensions.get('window');
 
 export default function SplashScreen() {
   const router = useRouter();
 
   const fadeAnim = useRef(new Animated.Value(0)).current;
-  const scaleAnim = useRef(new Animated.Value(0.95)).current;
+  const scaleAnim = useRef(new Animated.Value(0.94)).current;
+  const pulseAnim = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
-    // Gentle, natural fade-in
+    // Gentle natural reveal
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
@@ -27,18 +31,34 @@ export default function SplashScreen() {
       Animated.spring(scaleAnim, {
         toValue: 1,
         friction: 8,
-        tension: 50,
+        tension: 45,
         useNativeDriver: true,
       }),
     ]).start();
 
-    // Transition to onboarding tour after 2 seconds
+    // Breathing glow pulse
+    Animated.loop(
+      Animated.sequence([
+        Animated.timing(pulseAnim, {
+          toValue: 1,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+        Animated.timing(pulseAnim, {
+          toValue: 0.7,
+          duration: 1200,
+          useNativeDriver: true,
+        }),
+      ])
+    ).start();
+
+    // Transition to onboarding tour after 2.2 seconds
     const timer = setTimeout(() => {
       router.replace('/(auth)/onboarding');
-    }, 2000);
+    }, 2200);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim, scaleAnim, router]);
+  }, [fadeAnim, scaleAnim, pulseAnim, router]);
 
   const handleSkip = () => {
     router.replace('/(auth)/onboarding');
@@ -46,13 +66,24 @@ export default function SplashScreen() {
 
   return (
     <View style={styles.container}>
-      <StatusBar style="dark" />
+      <StatusBar style="light" />
 
       <TouchableOpacity
         style={styles.touchArea}
         activeOpacity={1}
         onPress={handleSkip}
       >
+        {/* Ambient background glow ring */}
+        <Animated.View
+          style={[
+            styles.ambientGlow,
+            {
+              opacity: pulseAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        />
+
         {/* Center Brand Identity */}
         <Animated.View
           style={[
@@ -63,33 +94,49 @@ export default function SplashScreen() {
             },
           ]}
         >
-          {/* Clean, Iconic Blue Shield with Heart & Pulse */}
+          {/* Luminous Shield Emblem */}
           <View style={styles.logoBadge}>
-            <Svg width={46} height={52} viewBox="0 0 46 52" fill="none">
-              {/* Solid Vibrant Shield */}
+            <Svg width={54} height={60} viewBox="0 0 54 60" fill="none">
+              <Defs>
+                <LinearGradient id="pulseGrad" x1="0" y1="30" x2="54" y2="30" gradientUnits="userSpaceOnUse">
+                  <Stop offset="0%" stopColor="#00FBFB" />
+                  <Stop offset="100%" stopColor="#FFFFFF" />
+                </LinearGradient>
+              </Defs>
+
+              {/* Solid White Guardian Shield */}
               <Path
-                d="M23 2L42 9.5V25.5C42 38.5 33.8 47.8 23 51C12.2 47.8 4 38.5 4 25.5V9.5L23 2Z"
-                fill="#3C6FDB"
+                d="M27 3L49 11.5V30C49 44.5 39.5 55.2 27 59C14.5 55.2 5 44.5 5 30V11.5L27 3Z"
+                fill="#FFFFFF"
               />
-              {/* Clean White Vital Pulse */}
+
+              {/* Heart Pulse Line in Vibrant Brand Blue */}
               <Path
-                d="M12 26.5H19L22 19L26 33L29 24.5L31 26.5H34"
-                stroke="#FFFFFF"
-                strokeWidth={2.6}
+                d="M14 31H22L25.5 21L30.5 39L34.5 28L37 31H40"
+                stroke="#1D4ED8"
+                strokeWidth={3}
                 strokeLinecap="round"
                 strokeLinejoin="round"
               />
+
+              {/* Satellite Indicator Dot */}
+              <Circle cx={27} cy={16} r={2.5} fill="#00FBFB" />
             </Svg>
           </View>
 
           {/* Typography */}
           <Text style={styles.brandTitle}>ElderGuard</Text>
-          <Text style={styles.brandTagline}>Connected care for loved ones</Text>
+          <Text style={styles.brandTagline}>Intelligent Care & Safety for Loved Ones</Text>
+
+          <View style={styles.conceptPill}>
+            <View style={styles.statusDot} />
+            <Text style={styles.conceptPillText}>Safe · Monitored · Connected</Text>
+          </View>
         </Animated.View>
 
-        {/* Quiet, Human Bottom Footer */}
+        {/* Human, Reassuring Footer */}
         <Animated.View style={[styles.bottomFooter, { opacity: fadeAnim }]}>
-          <Text style={styles.footerNote}>Simple · Safe · Connected</Text>
+          <Text style={styles.footerNote}>Tap anywhere to continue</Text>
         </Animated.View>
       </TouchableOpacity>
     </View>
@@ -99,7 +146,7 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#FFFFFF',
+    backgroundColor: '#1E3A8A', // Rich Deep Sapphire / Cobalt Blue
   },
   touchArea: {
     flex: 1,
@@ -108,45 +155,81 @@ const styles = StyleSheet.create({
     paddingVertical: 56,
     paddingHorizontal: 24,
   },
+  ambientGlow: {
+    position: 'absolute',
+    top: '28%',
+    width: width * 0.85,
+    height: width * 0.85,
+    borderRadius: (width * 0.85) / 2,
+    backgroundColor: 'rgba(37, 99, 235, 0.35)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 251, 251, 0.15)',
+  },
   brandCenter: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   logoBadge: {
-    width: 88,
-    height: 88,
-    borderRadius: 24,
-    backgroundColor: '#EFF6FF', // Light subtle blue surface
+    width: 96,
+    height: 96,
+    borderRadius: 28,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(255, 255, 255, 0.28)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 20,
-    shadowColor: '#3C6FDB',
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.14,
-    shadowRadius: 16,
-    elevation: 4,
+    marginBottom: 22,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.25,
+    shadowRadius: 20,
+    elevation: 8,
   },
   brandTitle: {
     fontFamily: 'Inter_700Bold',
-    fontSize: 30,
-    color: '#0F172A', // Slate 900
-    letterSpacing: -0.6,
+    fontSize: 32,
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
   },
   brandTagline: {
     fontFamily: 'Inter_400Regular',
     fontSize: 15,
-    color: '#64748B', // Slate 500
-    marginTop: 6,
+    color: '#BFDBFE', // Light soft sky blue
+    marginTop: 8,
     textAlign: 'center',
+  },
+  conceptPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(255, 255, 255, 0.12)',
+    paddingHorizontal: 14,
+    paddingVertical: 6,
+    borderRadius: 20,
+    marginTop: 18,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.18)',
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#22C55E', // Green status
+  },
+  conceptPillText: {
+    fontFamily: 'Inter_500Medium',
+    fontSize: 12,
+    color: '#FFFFFF',
+    letterSpacing: 0.3,
   },
   bottomFooter: {
     alignItems: 'center',
   },
   footerNote: {
-    fontFamily: 'Inter_500Medium',
+    fontFamily: 'Inter_400Regular',
     fontSize: 12,
-    color: '#94A3B8', // Slate 400
-    letterSpacing: 0.8,
+    color: 'rgba(255, 255, 255, 0.6)',
+    letterSpacing: 0.4,
   },
 });

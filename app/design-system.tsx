@@ -25,12 +25,20 @@ import { Colors, Typography, Spacing } from '@/constants/theme';
 export default function DesignSystemScreen() {
   const router = useRouter();
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(parent)' as any);
+    }
+  };
+
   return (
     <ScreenContainer>
       {/* Top Bar with Back Button */}
       <View style={styles.topBar}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
           activeOpacity={0.7}
         >

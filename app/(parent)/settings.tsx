@@ -29,12 +29,20 @@ export default function ParentSettingsScreen() {
     router.replace('/(auth)/welcome');
   };
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(parent)' as any);
+    }
+  };
+
   return (
     <ScreenContainer scrollable padded backgroundColor={Colors.background}>
       {/* ── Top Navigation Bar ──────────────────────────────── */}
       <View style={styles.topNav}>
         <TouchableOpacity
-          onPress={() => router.back()}
+          onPress={handleBack}
           style={styles.backButton}
           hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
         >

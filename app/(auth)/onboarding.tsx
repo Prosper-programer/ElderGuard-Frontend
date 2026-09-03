@@ -206,7 +206,7 @@ export default function OnboardingScreen() {
             activeOpacity={0.85}
           >
             <Text style={[styles.primaryActionText, isLastSlide && styles.getStartedText]}>
-              {isLastSlide ? 'Get Started' : 'Continue'}
+              {isLastSlide ? 'Enter ElderGuard' : 'Continue'}
             </Text>
             {isLastSlide ? (
               <Sparkles size={18} color="#0B132B" />

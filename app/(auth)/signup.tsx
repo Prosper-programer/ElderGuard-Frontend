@@ -1,7 +1,17 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, User as UserIcon, Mail, Lock, Shield, HeartHandshake, AlertCircle } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  User as UserIcon,
+  Mail,
+  Lock,
+  Shield,
+  HeartHandshake,
+  Check,
+  AlertCircle,
+  Sparkles,
+} from 'lucide-react-native';
 import { ScreenContainer, Button, TextInput } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
@@ -65,93 +75,161 @@ export default function SignUpScreen() {
       <View style={styles.header}>
         <Text style={styles.title}>Create Account</Text>
         <Text style={styles.subtitle}>
-          Choose your role to get started with ElderGuard.
+          Choose your account type to get started with ElderGuard.
         </Text>
       </View>
 
-      {/* Role Selection */}
-      <Text style={styles.sectionLabel}>Select Your Role</Text>
-      <View style={styles.roleSelectionContainer}>
-        {/* Parent Role Card */}
+      {/* ── Modern 2-Box Role Selector In A Row ─────────────── */}
+      <Text style={styles.sectionLabel}>CHOOSE YOUR ROLE</Text>
+      <View style={styles.roleBoxesRow}>
+        {/* Parent Role Box */}
         <TouchableOpacity
           style={[
-            styles.roleCard,
-            selectedRole === 'parent' && styles.roleCardSelected,
+            styles.roleBox,
+            selectedRole === 'parent' && styles.roleBoxParentActive,
           ]}
-          onPress={() => setSelectedRole('parent')}
+          onPress={() => {
+            setSelectedRole('parent');
+            if (error) setError(null);
+          }}
           activeOpacity={0.8}
         >
-          <View style={styles.roleHeader}>
-            <View
-              style={[
-                styles.roleIconCircle,
-                selectedRole === 'parent' ? styles.roleIconCircleSelected : styles.roleIconCircleDefault,
-              ]}
-            >
-              <Shield
-                size={20}
-                color={selectedRole === 'parent' ? Colors.primary : Colors.textSecondary}
-              />
+          {selectedRole === 'parent' && (
+            <View style={[styles.checkBubble, { backgroundColor: Colors.primary }]}>
+              <Check size={10} color={Colors.white} strokeWidth={3} />
             </View>
-            <View style={styles.roleTitleCol}>
-              <Text style={styles.roleTitle}>Parent / Family Manager</Text>
-              <Text style={styles.roleSub}>Primary profile & care admin</Text>
-            </View>
-            <View
-              style={[
-                styles.radioOuter,
-                selectedRole === 'parent' && styles.radioOuterSelected,
-              ]}
-            >
-              {selectedRole === 'parent' && <View style={styles.radioInner} />}
-            </View>
+          )}
+
+          <View
+            style={[
+              styles.iconCircle,
+              selectedRole === 'parent'
+                ? { backgroundColor: Colors.white }
+                : { backgroundColor: Colors.surfaceSecondary },
+            ]}
+          >
+            <Shield
+              size={22}
+              color={selectedRole === 'parent' ? Colors.primary : Colors.textSecondary}
+            />
           </View>
-          <Text style={styles.roleDescription}>
-            Create elderly profiles, configure geofences, monitor vitals, receive alerts, and generate reports.
+
+          <Text
+            style={[
+              styles.roleTitle,
+              selectedRole === 'parent' && { color: Colors.primary },
+            ]}
+          >
+            Parent
           </Text>
+          <Text style={styles.roleSubtitle}>Family Manager</Text>
+
+          <View
+            style={[
+              styles.miniBadge,
+              selectedRole === 'parent'
+                ? { backgroundColor: Colors.primary }
+                : { backgroundColor: Colors.surfaceSecondary },
+            ]}
+          >
+            <Text
+              style={[
+                styles.miniBadgeText,
+                selectedRole === 'parent'
+                  ? { color: Colors.white }
+                  : { color: Colors.textTertiary },
+              ]}
+            >
+              Full Control
+            </Text>
+          </View>
         </TouchableOpacity>
 
-        {/* Caregiver Role Card */}
+        {/* Caregiver Role Box */}
         <TouchableOpacity
           style={[
-            styles.roleCard,
-            selectedRole === 'caregiver' && styles.roleCardSelected,
+            styles.roleBox,
+            selectedRole === 'caregiver' && styles.roleBoxCaregiverActive,
           ]}
-          onPress={() => setSelectedRole('caregiver')}
+          onPress={() => {
+            setSelectedRole('caregiver');
+            if (error) setError(null);
+          }}
           activeOpacity={0.8}
         >
-          <View style={styles.roleHeader}>
-            <View
-              style={[
-                styles.roleIconCircle,
-                selectedRole === 'caregiver' ? styles.roleIconCircleCaregiver : styles.roleIconCircleDefault,
-              ]}
-            >
-              <HeartHandshake
-                size={20}
-                color={selectedRole === 'caregiver' ? Colors.safe : Colors.textSecondary}
-              />
+          {selectedRole === 'caregiver' && (
+            <View style={[styles.checkBubble, { backgroundColor: Colors.safe }]}>
+              <Check size={10} color={Colors.white} strokeWidth={3} />
             </View>
-            <View style={styles.roleTitleCol}>
-              <Text style={styles.roleTitle}>Caregiver</Text>
-              <Text style={styles.roleSub}>Assigned daily care partner</Text>
-            </View>
-            <View
-              style={[
-                styles.radioOuter,
-                selectedRole === 'caregiver' && styles.radioOuterSelected,
-              ]}
-            >
-              {selectedRole === 'caregiver' && <View style={styles.radioInner} />}
-            </View>
+          )}
+
+          <View
+            style={[
+              styles.iconCircle,
+              selectedRole === 'caregiver'
+                ? { backgroundColor: Colors.white }
+                : { backgroundColor: Colors.surfaceSecondary },
+            ]}
+          >
+            <HeartHandshake
+              size={22}
+              color={selectedRole === 'caregiver' ? Colors.safe : Colors.textSecondary}
+            />
           </View>
-          <Text style={styles.roleDescription}>
-            View assigned elderly person, track medication adherence, and record daily care activities.
+
+          <Text
+            style={[
+              styles.roleTitle,
+              selectedRole === 'caregiver' && { color: Colors.safe },
+            ]}
+          >
+            Caregiver
           </Text>
+          <Text style={styles.roleSubtitle}>Care Assistant</Text>
+
+          <View
+            style={[
+              styles.miniBadge,
+              selectedRole === 'caregiver'
+                ? { backgroundColor: Colors.safe }
+                : { backgroundColor: Colors.surfaceSecondary },
+            ]}
+          >
+            <Text
+              style={[
+                styles.miniBadgeText,
+                selectedRole === 'caregiver'
+                  ? { color: Colors.white }
+                  : { color: Colors.textTertiary },
+              ]}
+            >
+              Assigned Care
+            </Text>
+          </View>
         </TouchableOpacity>
       </View>
 
-      {/* Form Fields */}
+      {/* ── Dynamic Role Capability Note ────────────────────── */}
+      <View style={styles.roleDetailCard}>
+        <View style={styles.roleDetailHeader}>
+          <Sparkles
+            size={15}
+            color={selectedRole === 'parent' ? Colors.primary : Colors.safe}
+          />
+          <Text style={styles.roleDetailHeading}>
+            {selectedRole === 'parent'
+              ? 'Parent Manager Privileges'
+              : 'Caregiver Assistant Privileges'}
+          </Text>
+        </View>
+        <Text style={styles.roleDetailText}>
+          {selectedRole === 'parent'
+            ? 'You can create elderly profiles, configure geofencing boundaries, monitor live vital statistics, and generate formal health & safety reports.'
+            : 'You will access assigned elderly loved ones to log medication adherence, record daily routine completions, and view live status updates.'}
+        </Text>
+      </View>
+
+      {/* ── Form Fields ─────────────────────────────────────── */}
       <View style={styles.form}>
         {error && (
           <View style={styles.errorBanner}>
@@ -242,8 +320,8 @@ export default function SignUpScreen() {
 
 const styles = StyleSheet.create({
   navBar: {
-    paddingVertical: Spacing.sm,
-    marginBottom: Spacing.md,
+    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   backButton: {
     width: 40,
@@ -263,84 +341,109 @@ const styles = StyleSheet.create({
   subtitle: {
     ...Typography.body,
     color: Colors.textSecondary,
-    marginTop: Spacing.xs,
+    marginTop: 2,
+    lineHeight: 20,
   },
   sectionLabel: {
     ...Typography.overline,
     color: Colors.textTertiary,
-    marginBottom: Spacing.sm,
+    marginBottom: Spacing.xs,
+    letterSpacing: 1,
   },
-  roleSelectionContainer: {
+  roleBoxesRow: {
+    flexDirection: 'row',
     gap: Spacing.md,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.md,
   },
-  roleCard: {
-    backgroundColor: Colors.surface,
+  roleBox: {
+    flex: 1,
+    backgroundColor: Colors.white,
     borderRadius: BorderRadius.md,
     borderWidth: 1.5,
     borderColor: Colors.border,
-    padding: Spacing.base,
-  },
-  roleCardSelected: {
-    borderColor: Colors.primary,
-    backgroundColor: 'rgba(60, 111, 219, 0.03)',
-  },
-  roleHeader: {
-    flexDirection: 'row',
+    paddingVertical: Spacing.base,
+    paddingHorizontal: Spacing.sm,
     alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.xs,
+    position: 'relative',
   },
-  roleIconCircle: {
-    width: 36,
-    height: 36,
-    borderRadius: BorderRadius.sm,
+  roleBoxParentActive: {
+    borderColor: Colors.primary,
+    backgroundColor: Colors.primaryFaded,
+    shadowColor: Colors.primary,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  roleBoxCaregiverActive: {
+    borderColor: Colors.safe,
+    backgroundColor: Colors.safeBg,
+    shadowColor: Colors.safe,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  checkBubble: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 16,
+    height: 16,
+    borderRadius: BorderRadius.full,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  roleIconCircleDefault: {
-    backgroundColor: Colors.surfaceSecondary,
-  },
-  roleIconCircleSelected: {
-    backgroundColor: Colors.primaryFaded,
-  },
-  roleIconCircleCaregiver: {
-    backgroundColor: Colors.safeBg,
-  },
-  roleTitleCol: {
-    flex: 1,
+  iconCircle: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
   },
   roleTitle: {
     ...Typography.bodySemiBold,
+    fontSize: 15,
     color: Colors.textPrimary,
   },
-  roleSub: {
+  roleSubtitle: {
     ...Typography.caption,
-    color: Colors.textTertiary,
-  },
-  radioOuter: {
-    width: 20,
-    height: 20,
-    borderRadius: BorderRadius.full,
-    borderWidth: 2,
-    borderColor: Colors.border,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  radioOuterSelected: {
-    borderColor: Colors.primary,
-  },
-  radioInner: {
-    width: 10,
-    height: 10,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primary,
-  },
-  roleDescription: {
-    ...Typography.bodySmall,
     color: Colors.textSecondary,
-    lineHeight: 18,
-    marginTop: 2,
+    marginTop: 1,
+  },
+  miniBadge: {
+    marginTop: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.xl,
+  },
+  miniBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  roleDetailCard: {
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.md,
+    marginBottom: Spacing.xl,
+  },
+  roleDetailHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 4,
+  },
+  roleDetailHeading: {
+    ...Typography.bodySmallSemiBold,
+    color: Colors.textPrimary,
+    fontSize: 13,
+  },
+  roleDetailText: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    lineHeight: 17,
   },
   form: {
     width: '100%',

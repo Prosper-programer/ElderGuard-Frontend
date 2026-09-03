@@ -1,20 +1,84 @@
 import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, Mail, Lock, ShieldCheck, UserCheck, AlertCircle } from 'lucide-react-native';
-import { ScreenContainer, Button, TextInput, Card } from '@/components/ui';
+import {
+  ArrowLeft,
+  Mail,
+  Lock,
+  Shield,
+  HeartHandshake,
+  Users,
+  Check,
+  AlertCircle,
+} from 'lucide-react-native';
+import { ScreenContainer, Button, TextInput } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { UserRole } from '@/types/auth';
 
+interface RolePreset {
+  role: UserRole;
+  label: string;
+  badge: string;
+  name: string;
+  email: string;
+  icon: React.ComponentType<{ size: number; color: string }>;
+  accentColor: string;
+  accentBg: string;
+}
+
+const ROLE_PRESETS: RolePreset[] = [
+  {
+    role: 'parent',
+    label: 'Parent',
+    badge: 'Manager',
+    name: 'Eleanor Vance',
+    email: 'parent@elderguard.com',
+    icon: Shield,
+    accentColor: Colors.primary,
+    accentBg: Colors.primaryFaded,
+  },
+  {
+    role: 'caregiver',
+    label: 'Caregiver',
+    badge: 'Assistant',
+    name: 'David Miller',
+    email: 'caregiver@elderguard.com',
+    icon: HeartHandshake,
+    accentColor: Colors.safe,
+    accentBg: Colors.safeBg,
+  },
+  {
+    role: 'admin',
+    label: 'Admin',
+    badge: 'Console',
+    name: 'Sarah Jenkins',
+    email: 'admin@elderguard.com',
+    icon: Users,
+    accentColor: Colors.warning,
+    accentBg: Colors.warningBg,
+  },
+];
+
 export default function LoginScreen() {
   const router = useRouter();
-  const { login, quickLogin } = useAuth();
+  const { login } = useAuth();
 
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [selectedRole, setSelectedRole] = useState<UserRole>('parent');
+  const activePreset = ROLE_PRESETS.find((p) => p.role === selectedRole)!;
+  const ActiveIcon = activePreset.icon;
+
+  const [email, setEmail] = useState(activePreset.email);
+  const [password, setPassword] = useState('password123');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const handleSelectRole = (role: UserRole) => {
+    setSelectedRole(role);
+    const preset = ROLE_PRESETS.find((p) => p.role === role)!;
+    setEmail(preset.email);
+    setError(null);
+  };
 
   const handleLogin = async () => {
     setError(null);
@@ -32,19 +96,10 @@ export default function LoginScreen() {
     setLoading(false);
 
     if (!result.success) {
-      setError(result.error || 'Failed to log in. Please check your credentials.');
+      setError(result.error || 'Failed to sign in. Please check your credentials.');
     } else {
-      // Upon successful login, root index will automatically route based on role
       router.replace('/');
     }
-  };
-
-  const handleQuickLogin = async (role: UserRole) => {
-    setError(null);
-    setLoading(true);
-    await quickLogin(role);
-    setLoading(false);
-    router.replace('/');
   };
 
   return (
@@ -62,103 +117,159 @@ export default function LoginScreen() {
 
       {/* Screen Header */}
       <View style={styles.header}>
-        <Text style={styles.title}>Welcome Back</Text>
+        <Text style={styles.title}>Sign In</Text>
         <Text style={styles.subtitle}>
-          Sign in to access real-time monitoring and care coordination.
+          Select your account role to access your dedicated workspace.
         </Text>
       </View>
 
-      {/* Quick Demo Login Box */}
-      <Card style={styles.demoCard}>
-        <View style={styles.demoHeader}>
-          <ShieldCheck size={16} color={Colors.primary} />
-          <Text style={styles.demoTitle}>Quick Demo Logins</Text>
+      {/* ── Modern 3-Box Role Selector In A Row ─────────────── */}
+      <Text style={styles.selectorLabel}>SELECT ACCOUNT ROLE</Text>
+      <View style={styles.roleBoxesRow}>
+        {ROLE_PRESETS.map((preset) => {
+          const isSelected = preset.role === selectedRole;
+          const RoleIcon = preset.icon;
+
+          return (
+            <TouchableOpacity
+              key={preset.role}
+              onPress={() => handleSelectRole(preset.role)}
+              activeOpacity={0.8}
+              style={[
+                styles.roleBox,
+                isSelected && {
+                  borderColor: preset.accentColor,
+                  backgroundColor: preset.accentBg,
+                  shadowColor: preset.accentColor,
+                  shadowOpacity: 0.25,
+                  shadowRadius: 8,
+                  elevation: 4,
+                },
+              ]}
+            >
+              {/* Active Checkmark Bubble */}
+              {isSelected && (
+                <View style={[styles.checkBubble, { backgroundColor: preset.accentColor }]}>
+                  <Check size={10} color={Colors.white} strokeWidth={3} />
+                </View>
+              )}
+
+              {/* Icon Circle */}
+              <View
+                style={[
+                  styles.iconWrap,
+                  {
+                    backgroundColor: isSelected ? Colors.white : Colors.surfaceSecondary,
+                  },
+                ]}
+              >
+                <RoleIcon
+                  size={20}
+                  color={isSelected ? preset.accentColor : Colors.textSecondary}
+                />
+              </View>
+
+              {/* Title & Badge */}
+              <Text
+                style={[
+                  styles.roleTitle,
+                  isSelected && { color: preset.accentColor },
+                ]}
+                numberOfLines={1}
+              >
+                {preset.label}
+              </Text>
+
+              <View
+                style={[
+                  styles.miniBadge,
+                  isSelected
+                    ? { backgroundColor: preset.accentColor }
+                    : { backgroundColor: Colors.surfaceSecondary },
+                ]}
+              >
+                <Text
+                  style={[
+                    styles.miniBadgeText,
+                    isSelected ? { color: Colors.white } : { color: Colors.textTertiary },
+                  ]}
+                >
+                  {preset.badge}
+                </Text>
+              </View>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      {/* ── Active Role Account Card & Login Form ────────────── */}
+      <View style={styles.accountCard}>
+        {/* Selected Profile Summary */}
+        <View style={styles.profileSummaryRow}>
+          <View style={[styles.profileAvatar, { backgroundColor: activePreset.accentBg }]}>
+            <ActiveIcon size={22} color={activePreset.accentColor} />
+          </View>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{activePreset.name}</Text>
+            <Text style={styles.profileRoleLabel}>
+              Signing in as {activePreset.label} ({activePreset.badge})
+            </Text>
+          </View>
         </View>
-        <Text style={styles.demoDescription}>
-          Tap any role below to instantly log in for testing:
-        </Text>
-        <View style={styles.roleChipsRow}>
-          <TouchableOpacity
-            style={[styles.roleChip, styles.roleChipParent]}
-            onPress={() => handleQuickLogin('parent')}
-            activeOpacity={0.7}
-          >
-            <UserCheck size={14} color={Colors.primary} />
-            <Text style={styles.roleChipTextParent}>Parent (Eleanor)</Text>
-          </TouchableOpacity>
 
-          <TouchableOpacity
-            style={[styles.roleChip, styles.roleChipCaregiver]}
-            onPress={() => handleQuickLogin('caregiver')}
-            activeOpacity={0.7}
-          >
-            <UserCheck size={14} color={Colors.safe} />
-            <Text style={styles.roleChipTextCaregiver}>Caregiver (David)</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.roleChip, styles.roleChipAdmin]}
-            onPress={() => handleQuickLogin('admin')}
-            activeOpacity={0.7}
-          >
-            <UserCheck size={14} color={Colors.textSecondary} />
-            <Text style={styles.roleChipTextAdmin}>Admin (Sarah)</Text>
-          </TouchableOpacity>
-        </View>
-      </Card>
-
-      {/* Login Form */}
-      <View style={styles.form}>
+        {/* Error Alert */}
         {error && (
           <View style={styles.errorBanner}>
-            <AlertCircle size={18} color={Colors.critical} />
+            <AlertCircle size={16} color={Colors.critical} />
             <Text style={styles.errorBannerText}>{error}</Text>
           </View>
         )}
 
-        <TextInput
-          label="Email address"
-          placeholder="e.g. parent@elderguard.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={email}
-          onChangeText={(text) => {
-            setEmail(text);
-            if (error) setError(null);
-          }}
-          leftIcon={<Mail size={18} color={Colors.textTertiary} />}
-        />
+        {/* Standard Credentials Form */}
+        <View style={styles.formSection}>
+          <TextInput
+            label="Email address"
+            value={email}
+            onChangeText={(text) => {
+              setEmail(text);
+              if (error) setError(null);
+            }}
+            keyboardType="email-address"
+            autoCapitalize="none"
+            autoCorrect={false}
+            leftIcon={<Mail size={16} color={Colors.textTertiary} />}
+          />
 
-        <View style={styles.spacing} />
+          <View style={{ height: Spacing.md }} />
 
-        <TextInput
-          label="Password"
-          placeholder="Enter your password"
-          secureTextEntry
-          value={password}
-          onChangeText={(text) => {
-            setPassword(text);
-            if (error) setError(null);
-          }}
-          leftIcon={<Lock size={18} color={Colors.textTertiary} />}
-        />
+          <TextInput
+            label="Password"
+            value={password}
+            onChangeText={(text) => {
+              setPassword(text);
+              if (error) setError(null);
+            }}
+            secureTextEntry
+            leftIcon={<Lock size={16} color={Colors.textTertiary} />}
+          />
 
-        <View style={styles.forgotPasswordContainer}>
-          <TouchableOpacity activeOpacity={0.7}>
-            <Text style={styles.forgotPasswordText}>Forgot password?</Text>
-          </TouchableOpacity>
+          <View style={styles.forgotRow}>
+            <TouchableOpacity activeOpacity={0.7}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </TouchableOpacity>
+          </View>
+
+          {/* Unified Primary Brand Button (Identical to Sign Up) */}
+          <Button
+            title="Sign In"
+            onPress={handleLogin}
+            variant="primary"
+            size="lg"
+            fullWidth
+            loading={loading}
+            style={styles.submitButton}
+          />
         </View>
-
-        <Button
-          title="Sign In"
-          onPress={handleLogin}
-          variant="primary"
-          size="lg"
-          fullWidth
-          loading={loading}
-          style={styles.submitButton}
-        />
       </View>
 
       {/* Switch to Sign Up */}
@@ -177,8 +288,8 @@ export default function LoginScreen() {
 
 const styles = StyleSheet.create({
   navBar: {
-    paddingVertical: Spacing.sm,
-    marginBottom: Spacing.md,
+    paddingVertical: Spacing.xs,
+    marginBottom: Spacing.sm,
   },
   backButton: {
     width: 40,
@@ -189,7 +300,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.surfaceSecondary,
   },
   header: {
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
   },
   title: {
     ...Typography.h1,
@@ -198,71 +309,121 @@ const styles = StyleSheet.create({
   subtitle: {
     ...Typography.body,
     color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-  },
-  demoCard: {
-    backgroundColor: Colors.surface,
-    borderColor: 'rgba(60, 111, 219, 0.25)',
-    marginBottom: Spacing.xl,
-  },
-  demoHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-  },
-  demoTitle: {
-    ...Typography.bodySemiBold,
-    color: Colors.primary,
-  },
-  demoDescription: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
     marginTop: 2,
-    marginBottom: Spacing.md,
+    lineHeight: 20,
   },
-  roleChipsRow: {
+  selectorLabel: {
+    ...Typography.overline,
+    color: Colors.textTertiary,
+    marginBottom: Spacing.xs,
+    letterSpacing: 1,
+  },
+  roleBoxesRow: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
     gap: Spacing.sm,
+    marginBottom: Spacing.base,
   },
-  roleChip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingVertical: 6,
-    paddingHorizontal: Spacing.md,
-    borderRadius: BorderRadius.xl,
-    borderWidth: 1,
-  },
-  roleChipParent: {
-    backgroundColor: Colors.primaryFaded,
-    borderColor: Colors.primaryLight,
-  },
-  roleChipTextParent: {
-    ...Typography.captionMedium,
-    color: Colors.primary,
-  },
-  roleChipCaregiver: {
-    backgroundColor: Colors.safeBg,
-    borderColor: Colors.safe,
-  },
-  roleChipTextCaregiver: {
-    ...Typography.captionMedium,
-    color: '#15803D',
-  },
-  roleChipAdmin: {
-    backgroundColor: Colors.surfaceSecondary,
+  roleBox: {
+    flex: 1,
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.md,
+    borderWidth: 1.5,
     borderColor: Colors.border,
+    paddingVertical: Spacing.md,
+    paddingHorizontal: Spacing.xs,
+    alignItems: 'center',
+    position: 'relative',
   },
-  roleChipTextAdmin: {
-    ...Typography.captionMedium,
+  checkBubble: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 16,
+    height: 16,
+    borderRadius: BorderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  iconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: BorderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: Spacing.xs,
+  },
+  roleTitle: {
+    ...Typography.bodySemiBold,
+    fontSize: 14,
     color: Colors.textPrimary,
   },
-  form: {
+  miniBadge: {
+    marginTop: 4,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: BorderRadius.xl,
+  },
+  miniBadgeText: {
+    ...Typography.caption,
+    fontSize: 10,
+    fontWeight: '600',
+  },
+  accountCard: {
+    backgroundColor: Colors.white,
+    borderRadius: BorderRadius.lg,
+    borderWidth: 1,
+    borderColor: Colors.border,
+    padding: Spacing.base,
+    shadowColor: Colors.textPrimary,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
+    marginBottom: Spacing.xl,
+  },
+  profileSummaryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.md,
+    paddingBottom: Spacing.md,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.borderLight,
+    marginBottom: Spacing.md,
+  },
+  profileAvatar: {
+    width: 44,
+    height: 44,
+    borderRadius: BorderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    ...Typography.bodySemiBold,
+    color: Colors.textPrimary,
+    fontSize: 15,
+  },
+  profileRoleLabel: {
+    ...Typography.caption,
+    color: Colors.textSecondary,
+    marginTop: 1,
+  },
+  formSection: {
     width: '100%',
   },
-  spacing: {
-    height: Spacing.md,
+  forgotRow: {
+    alignItems: 'flex-end',
+    marginTop: Spacing.sm,
+    marginBottom: Spacing.base,
+  },
+  forgotText: {
+    ...Typography.bodySmallMedium,
+    color: Colors.primary,
+  },
+  submitButton: {
+    marginTop: Spacing.xs,
   },
   errorBanner: {
     flexDirection: 'row',
@@ -271,7 +432,7 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.criticalBg,
     borderColor: Colors.critical,
     borderWidth: 1,
-    padding: Spacing.md,
+    padding: Spacing.sm,
     borderRadius: BorderRadius.sm,
     marginBottom: Spacing.base,
   },
@@ -280,24 +441,12 @@ const styles = StyleSheet.create({
     color: Colors.critical,
     flex: 1,
   },
-  forgotPasswordContainer: {
-    alignItems: 'flex-end',
-    marginTop: Spacing.sm,
-    marginBottom: Spacing.lg,
-  },
-  forgotPasswordText: {
-    ...Typography.bodySmallMedium,
-    color: Colors.primary,
-  },
-  submitButton: {
-    marginTop: Spacing.xs,
-  },
   footer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     gap: Spacing.xs,
-    paddingVertical: Spacing.xl,
+    paddingVertical: Spacing.lg,
     marginTop: 'auto',
   },
   footerText: {

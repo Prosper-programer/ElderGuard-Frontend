@@ -294,13 +294,16 @@ export default function SignUpScreen() {
         />
 
         <Button
-          title="Create Account"
+          title={`Create Account as ${selectedRole === 'parent' ? 'Parent' : 'Caregiver'}`}
           onPress={handleSignUp}
           variant="primary"
           size="lg"
           fullWidth
           loading={loading}
-          style={styles.submitButton}
+          style={{
+            backgroundColor: selectedRole === 'parent' ? Colors.primary : Colors.safe,
+            marginTop: Spacing.xl,
+          }}
         />
       </View>
 

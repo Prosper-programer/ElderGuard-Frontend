@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, StyleSheet, ViewStyle } from 'react-native';
+import { View, StyleSheet, StyleProp, ViewStyle } from 'react-native';
 import { Colors, BorderRadius, Spacing, Shadows } from '@/constants/theme';
 
 interface CardProps {
@@ -8,7 +8,7 @@ interface CardProps {
   noPadding?: boolean;
   /** Add subtle shadow */
   elevated?: boolean;
-  style?: ViewStyle;
+  style?: StyleProp<ViewStyle>;
 }
 
 export function Card({ children, noPadding, elevated, style }: CardProps) {

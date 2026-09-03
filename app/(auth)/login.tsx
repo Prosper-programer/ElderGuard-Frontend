@@ -259,15 +259,15 @@ export default function LoginScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Unified Primary Brand Button (Identical to Sign Up) */}
+          {/* Role-colored Sign In Button */}
           <Button
-            title="Sign In"
+            title={`Sign In as ${activePreset.label}`}
             onPress={handleLogin}
             variant="primary"
             size="lg"
             fullWidth
             loading={loading}
-            style={styles.submitButton}
+            style={{ backgroundColor: activePreset.accentColor, marginTop: Spacing.xs }}
           />
         </View>
       </View>
@@ -304,7 +304,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...Typography.h1,
-    color: Colors.textPrimary,
+    color: Colors.primary,
   },
   subtitle: {
     ...Typography.body,

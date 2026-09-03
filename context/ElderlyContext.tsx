@@ -1,0 +1,121 @@
+import React, { createContext, useContext, useState } from 'react';
+import { ElderlyProfile, ElderlyContextValue } from '@/types/elderly';
+
+const INITIAL_PROFILES: ElderlyProfile[] = [
+  {
+    id: 'eld-01',
+    fullName: 'Margaret Johnson',
+    preferredName: 'Margaret',
+    age: 78,
+    dateOfBirth: '1948-03-22',
+    gender: 'Female',
+    address: '142 Elm Street, Maplewood, NJ 07040',
+    phone: '+1 (555) 782-9012',
+    imageUrl: require('@/assets/images/elderly_margaret.jpg'),
+    parentManagerId: 'usr-parent-01',
+    primaryCaregiverId: 'usr-caregiver-01',
+    primaryCaregiverName: 'David Miller',
+    medicalInfo: {
+      bloodType: 'O+',
+      allergies: ['Penicillin', 'Sulfa drugs'],
+      chronicConditions: ['Hypertension (Stage 1)', 'Mild Osteoarthritis'],
+      medicationNotes: 'Lisinopril 10mg every morning at 08:00 AM. Calcium supplement with lunch.',
+      physicianName: 'Dr. Robert Chen, MD',
+      physicianPhone: '+1 (555) 890-1234',
+      hospitalPreference: 'Saint Luke Memorial Medical Center',
+    },
+    emergencyContacts: [
+      {
+        id: 'ec-1',
+        name: 'Eleanor Vance',
+        relationship: 'Daughter (Primary Care Manager)',
+        phone: '+1 (555) 234-5678',
+        isPrimary: true,
+      },
+      {
+        id: 'ec-2',
+        name: 'James Johnson',
+        relationship: 'Son',
+        phone: '+1 (555) 678-9012',
+        isPrimary: false,
+      },
+    ],
+    deviceStatus: {
+      deviceId: 'EG-IOT-4892',
+      deviceName: 'ElderGuard Wearable Band V2',
+      connected: true,
+      batteryLevel: 87,
+      lastSync: '2 minutes ago',
+      signalStrength: 'strong',
+      firmwareVersion: 'v2.4.1',
+    },
+    createdAt: '2026-01-16T10:00:00.000Z',
+    updatedAt: '2026-09-02T14:30:00.000Z',
+  },
+];
+
+const ElderlyContext = createContext<ElderlyContextValue | undefined>(undefined);
+
+export function ElderlyProvider({ children }: { children: React.ReactNode }) {
+  const [profiles, setProfiles] = useState<ElderlyProfile[]>(INITIAL_PROFILES);
+  const [activeProfileId, setActiveProfileId] = useState<string>('eld-01');
+
+  const activeProfile =
+    profiles.find((p) => p.id === activeProfileId) || profiles[0] || INITIAL_PROFILES[0];
+
+  const updateProfile = (id: string, updates: Partial<ElderlyProfile>) => {
+    setProfiles((prev) =>
+      prev.map((profile) => {
+        if (profile.id === id) {
+          return {
+            ...profile,
+            ...updates,
+            updatedAt: new Date().toISOString(),
+          };
+        }
+        return profile;
+      })
+    );
+  };
+
+  const createProfile = (
+    data: Omit<ElderlyProfile, 'id' | 'createdAt' | 'updatedAt'>
+  ): ElderlyProfile => {
+    const newProfile: ElderlyProfile = {
+      ...data,
+      id: `eld-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+
+    setProfiles((prev) => [newProfile, ...prev]);
+    setActiveProfileId(newProfile.id);
+    return newProfile;
+  };
+
+  const getAssignedProfileForCaregiver = (caregiverId: string): ElderlyProfile | undefined => {
+    return profiles.find((p) => p.primaryCaregiverId === caregiverId) || profiles[0];
+  };
+
+  return (
+    <ElderlyContext.Provider
+      value={{
+        activeProfile,
+        profiles,
+        updateProfile,
+        createProfile,
+        getAssignedProfileForCaregiver,
+      }}
+    >
+      {children}
+    </ElderlyContext.Provider>
+  );
+}
+
+export function useElderly(): ElderlyContextValue {
+  const context = useContext(ElderlyContext);
+  if (!context) {
+    throw new Error('useElderly must be used within an ElderlyProvider');
+  }
+  return context;
+}

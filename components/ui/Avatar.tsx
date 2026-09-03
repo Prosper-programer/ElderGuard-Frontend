@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, ViewStyle } from 'react-native';
+import { View, Text, Image, StyleSheet, ViewStyle } from 'react-native';
 import { Colors, Typography, StatusColors } from '@/constants/theme';
 import type { StatusType } from '@/constants/theme';
 
@@ -8,6 +8,8 @@ interface AvatarProps {
   name: string;
   /** Size in px */
   size?: number;
+  /** Optional image URL or required asset */
+  imageUrl?: any;
   /** Optional status dot overlay */
   statusIndicator?: StatusType;
   style?: ViewStyle;
@@ -16,6 +18,7 @@ interface AvatarProps {
 export function Avatar({
   name,
   size = 44,
+  imageUrl,
   statusIndicator,
   style,
 }: AvatarProps) {
@@ -35,18 +38,26 @@ export function Avatar({
           },
         ]}
       >
-        <Text
-          style={[
-            Typography.bodySemiBold,
-            {
-              fontSize,
-              lineHeight: fontSize * 1.2,
-              color: Colors.primary,
-            },
-          ]}
-        >
-          {initials}
-        </Text>
+        {imageUrl ? (
+          <Image
+            source={typeof imageUrl === 'string' ? { uri: imageUrl } : imageUrl}
+            style={{ width: size, height: size, borderRadius: size / 2 }}
+            resizeMode="cover"
+          />
+        ) : (
+          <Text
+            style={[
+              Typography.bodySemiBold,
+              {
+                fontSize,
+                lineHeight: fontSize * 1.2,
+                color: Colors.primary,
+              },
+            ]}
+          >
+            {initials}
+          </Text>
+        )}
       </View>
 
       {statusIndicator && (

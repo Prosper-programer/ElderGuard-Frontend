@@ -11,6 +11,10 @@ import {
 } from '@expo-google-fonts/inter';
 import 'react-native-reanimated';
 import { AuthProvider } from '@/context/AuthContext';
+import { ElderlyProvider } from '@/context/ElderlyContext';
+import { VitalsProvider } from '@/context/VitalsContext';
+import { AlertProvider } from '@/context/AlertContext';
+import { CareProvider } from '@/context/CareContext';
 
 // Keep splash visible while fonts load
 SplashScreen.preventAutoHideAsync();
@@ -35,15 +39,23 @@ export default function RootLayout() {
 
   return (
     <AuthProvider>
-      <Stack screenOptions={{ headerShown: false }}>
-        <Stack.Screen name="index" />
-        <Stack.Screen name="(auth)" />
-        <Stack.Screen name="(parent)" />
-        <Stack.Screen name="(caregiver)" />
-        <Stack.Screen name="(admin)" />
-        <Stack.Screen name="design-system" />
-      </Stack>
-      <StatusBar style="dark" />
+      <ElderlyProvider>
+        <VitalsProvider>
+          <AlertProvider>
+            <CareProvider>
+              <Stack screenOptions={{ headerShown: false }}>
+                <Stack.Screen name="index" />
+                <Stack.Screen name="(auth)" />
+                <Stack.Screen name="(parent)" />
+                <Stack.Screen name="(caregiver)" />
+                <Stack.Screen name="(admin)" />
+                <Stack.Screen name="design-system" />
+              </Stack>
+              <StatusBar style="dark" />
+            </CareProvider>
+          </AlertProvider>
+        </VitalsProvider>
+      </ElderlyProvider>
     </AuthProvider>
   );
 }

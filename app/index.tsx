@@ -7,7 +7,7 @@ import { useAuth } from '@/context/AuthContext';
  * Root Gateway — Authentication & Role-Based Router
  *
  * Directs users to the appropriate flow depending on their authentication
- * status and role (Parent, Caregiver, Admin).
+ * status and role (Parent, Caregiver).
  */
 export default function IndexGateway() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -29,8 +29,6 @@ export default function IndexGateway() {
       return <Redirect href="/(parent)" />;
     case 'caregiver':
       return <Redirect href="/(caregiver)" />;
-    case 'admin':
-      return <Redirect href="/(admin)" />;
     default:
       return <Redirect href="/(auth)/welcome" />;
   }

@@ -1,7 +1,7 @@
 /**
  * ElderGuard Centralized Mock Data
  *
- * Provides realistic initial mock profiles and records for Parent, Caregiver, and Admin.
+ * Provides realistic initial mock profiles and records for Parent and Caregiver.
  * Used during MVP phases until real backend and IoT stream integrations are connected.
  */
 
@@ -25,14 +25,6 @@ export const MOCK_USERS: Record<string, User> = {
     phone: '+1 (555) 345-6789',
     assignedElderlyCount: 1,
     createdAt: '2026-02-01T09:30:00.000Z',
-  },
-  admin: {
-    id: 'usr-admin-01',
-    name: 'Sarah Jenkins',
-    email: 'admin@elderguard.com',
-    role: 'admin',
-    phone: '+1 (555) 456-7890',
-    createdAt: '2025-11-10T12:00:00.000Z',
   },
 };
 

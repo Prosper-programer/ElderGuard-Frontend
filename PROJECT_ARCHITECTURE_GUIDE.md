@@ -47,11 +47,11 @@ ElderGuard operates as a **three-tier ecosystem**:
                             ▼
 ┌─────────────────────────────────────────────────────────┐
 │                     FRONTEND TIER                       │
-│  ElderGuard Cross-Platform Client (Expo SDK 54)        │
+│  ElderGuard Mobile Client (Expo SDK 54)                 │
 │  • Parent Console: Monitoring, Profile, Reports, Config │
 │  • Caregiver Console: Vitals, Daypart Meds, Incidents   │
-│  • Admin Console: Fleet Status, User Roles, Audit Logs  │
 │  • Real-Time Reactive Context State Store               │
+│  *(Admin Console is implemented on the Web Browser)*   │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -154,7 +154,7 @@ The mobile app is built with **Expo SDK 54** using the **Clean Context / Provide
 
 ```
 app/_layout.tsx (Root Provider Stack)
-  ├── AuthProvider (User session: Parent / Caregiver / Admin)
+  ├── AuthProvider (User session: Parent / Caregiver)
   ├── ElderlyProvider (Senior profile: Margaret Johnson, contacts, hardware)
   ├── VitalsProvider (Real-time telemetry, sparklines, simulation engine)
   ├── AlertProvider (Active incidents, fall detection lifecycle)
@@ -177,7 +177,7 @@ app/_layout.tsx (Root Provider Stack)
 
 ### Global Context Providers (`context/`)
 * **[`context/AuthContext.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/context/AuthContext.tsx)**:
-  - Manages authentication state, current user profile (`User`), active role (`parent` | `caregiver` | `admin`), login, registration, and logout operations.
+  - Manages authentication state, current user profile (`User`), active role (`parent` | `caregiver`), login, registration, and logout operations.
 * **[`context/ElderlyContext.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/context/ElderlyContext.tsx)**:
   - Manages senior profiles (Margaret Johnson, age 78), emergency contacts, paired IoT hardware band (`EG-IOT-4892`), and clinical care notes.
 * **[`context/VitalsContext.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/context/VitalsContext.tsx)**:
@@ -241,7 +241,7 @@ app/_layout.tsx (Root Provider Stack)
 * **[`app/(auth)/splash.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(auth)/splash.tsx)**: Rich Royal Sapphire (`#1E3A8A`) launch screen with glowing biometric shield mark.
 * **[`app/(auth)/onboarding.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(auth)/onboarding.tsx)**: 4-slide interactive onboarding tour illustrating safety, vitals, alerts, and care routines.
 * **[`app/(auth)/welcome.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(auth)/welcome.tsx)**: Welcome landing page with hero illustration, feature overview cards, and Sign In / Sign Up triggers.
-* **[`app/(auth)/login.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(auth)/login.tsx)**: Modern credentials sign-in with 3 role selector boxes (Parent, Caregiver, Admin).
+* **[`app/(auth)/login.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(auth)/login.tsx)**: Modern credentials sign-in with 2 role selector boxes (Parent, Caregiver).
 * **[`app/(auth)/signup.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(auth)/signup.tsx)**: Account registration screen with role selection and input validation.
 
 #### Parent Console (`app/(parent)/`)
@@ -266,9 +266,7 @@ app/_layout.tsx (Root Provider Stack)
 * **[`app/(caregiver)/profile.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(caregiver)/profile.tsx)**: Read-only care profile for Margaret.
 * **[`app/(caregiver)/settings.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(caregiver)/settings.tsx)**: Caregiver on-duty status toggle and notification preferences.
 
-#### Admin Console (`app/(admin)/`)
-* **[`app/(admin)/_layout.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(admin)/_layout.tsx)**: Stack layout for Administrator console.
-* **[`app/(admin)/index.tsx`](file:///c:/Users/User/Desktop/Prosper-files/ElderGuard-Frontend/app/(admin)/index.tsx)**: Enterprise console managing user directory, IoT hardware fleet status, uptime metric (99.9%), and system audit trail.
+*(Note: The Admin Console for fleet management and audit logs is deployed separately as a browser web application).*
 
 ---
 

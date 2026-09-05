@@ -7,7 +7,6 @@ import {
   Lock,
   Shield,
   HeartHandshake,
-  Users,
   Check,
   AlertCircle,
 } from 'lucide-react-native';
@@ -47,16 +46,6 @@ const ROLE_PRESETS: RolePreset[] = [
     icon: HeartHandshake,
     accentColor: Colors.safe,
     accentBg: Colors.safeBg,
-  },
-  {
-    role: 'admin',
-    label: 'Admin',
-    badge: 'Console',
-    name: 'Sarah Jenkins',
-    email: 'admin@elderguard.com',
-    icon: Users,
-    accentColor: Colors.warning,
-    accentBg: Colors.warningBg,
   },
 ];
 

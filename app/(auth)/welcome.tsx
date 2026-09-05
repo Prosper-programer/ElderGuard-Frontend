@@ -130,7 +130,7 @@ export default function WelcomeScreen() {
         {/* Reassurance text */}
         <View style={styles.footerNote}>
           <Text style={styles.footerNoteText}>
-            Secured IoT connection · Role-based access for Parent, Caregiver & Admin
+            Secured IoT connection · Role-based access for Parent & Caregiver
           </Text>
         </View>
       </View>

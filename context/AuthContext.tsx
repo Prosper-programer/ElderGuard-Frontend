@@ -6,13 +6,11 @@
  * PURPOSE:
  * Manages user authentication, session state, and role-based permissions:
  * 
- * THE 3 USER ROLES:
+ * THE 2 USER ROLES:
  * 1. `parent`    : Family member / Senior Care Manager (Theme: Blue #3C6FDB)
  *                   - Full permissions: Vitals, prescriptions, doctor reports, configuration.
  * 2. `caregiver` : Professional nurse, aide, or assisted living staff (Theme: Green #22C55E)
  *                   - Care administration: Vitals, daypart dose logging, incident responses.
- * 3. `admin`     : System / Medical Facility Administrator (Theme: Amber #F59E0B)
- *                   - Enterprise console: Fleet status, user directory, uptime, audit logs.
  * 
  * PRODUCTION API POINT:
  * In production, replace the simulated credential check with your JWT endpoint:
@@ -45,7 +43,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   /**
    * Logs in a user using email and password.
-   * Matches pre-seeded demo accounts (parent, caregiver, admin) or generates a flexible demo user.
+   * Matches pre-seeded demo accounts (parent, caregiver) or generates a flexible demo user.
    */
   const login = async (
     email: string,
@@ -62,10 +60,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
     if (normalizedEmail === 'caregiver@elderguard.com') {
       setUser(MOCK_USERS.caregiver);
-      return { success: true };
-    }
-    if (normalizedEmail === 'admin@elderguard.com') {
-      setUser(MOCK_USERS.admin);
       return { success: true };
     }
 

@@ -48,7 +48,6 @@ export default function RootLayout() {
                 <Stack.Screen name="(auth)" />
                 <Stack.Screen name="(parent)" />
                 <Stack.Screen name="(caregiver)" />
-                <Stack.Screen name="(admin)" />
                 <Stack.Screen name="design-system" />
               </Stack>
               <StatusBar style="dark" />

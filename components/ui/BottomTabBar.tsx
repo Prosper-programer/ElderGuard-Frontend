@@ -38,7 +38,7 @@ import { useAlerts } from "@/context/AlertContext";
 import { useRouter } from "expo-router";
 import { Activity, Pill, ShieldAlert, User } from "lucide-react-native";
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 // Public tab identifiers shared by route screens and the navigation bar.
@@ -56,7 +56,10 @@ export function BottomTabBar({ activeTab, role }: BottomTabBarProps) {
   // Navigation and device-inset services used by the rendered tab bar.
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const { width: windowWidth } = useWindowDimensions();
   const { activeAlerts } = useAlerts();
+
+  const isNarrow = windowWidth < 360;
 
   // Derive the active-state palette from the workspace role supplied by the caller.
   const accentColor = role === "parent" ? Colors.primary : Colors.safe;
@@ -126,6 +129,7 @@ export function BottomTabBar({ activeTab, role }: BottomTabBarProps) {
               <View
                 style={[
                   styles.iconWrap,
+                  isNarrow && styles.iconWrapNarrow,
                   isActive && [
                     styles.iconWrapActive,
                     { backgroundColor: activeIconBg },
@@ -133,7 +137,7 @@ export function BottomTabBar({ activeTab, role }: BottomTabBarProps) {
                 ]}
               >
                 <Icon
-                  size={21}
+                  size={isNarrow ? 19 : 21}
                   color={isActive ? accentColor : Colors.textTertiary}
                   strokeWidth={isActive ? 2.4 : 1.9}
                 />
@@ -148,8 +152,10 @@ export function BottomTabBar({ activeTab, role }: BottomTabBarProps) {
 
               {/* Text label identifying the destination represented by the icon. */}
               <Text
+                numberOfLines={1}
                 style={[
                   styles.tabLabel,
+                  isNarrow && styles.tabLabelNarrow,
                   {
                     color: isActive ? accentColor : Colors.textTertiary,
                     fontWeight: isActive ? "600" : "500",
@@ -179,19 +185,23 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 8,
   },
-  // Horizontal distribution for the four tab buttons.
+  // Horizontal distribution for the four tab buttons (constrained on wide tablets).
   tabsRow: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-around",
     paddingHorizontal: 8,
+    width: "100%",
+    maxWidth: 600,
+    alignSelf: "center",
   },
-  // Stable touch target shared by every tab.
+  // Stable touch target shared by every tab (complies with 44pt HIG).
   tabItem: {
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
     paddingVertical: 2,
+    minHeight: 44,
   },
   // Fixed icon area prevents the label and badge from shifting the layout.
   iconWrap: {
@@ -203,6 +213,10 @@ const styles = StyleSheet.create({
     position: "relative",
     marginBottom: 2,
   },
+  iconWrapNarrow: {
+    width: 40,
+    height: 28,
+  },
   iconWrapActive: {
     // Background color is injected dynamically from the workspace role.
   },
@@ -211,6 +225,10 @@ const styles = StyleSheet.create({
     ...Typography.caption,
     fontSize: 11,
     letterSpacing: -0.1,
+  },
+  tabLabelNarrow: {
+    fontSize: 10,
+    letterSpacing: -0.2,
   },
   // Position the alert count over the Alerts icon.
   badge: {

@@ -70,6 +70,8 @@ export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { width: screenWidth, height: screenHeight } = useWindowDimensions();
 
+  const isCompact = screenHeight < 750;
+
   const [currentIndex, setCurrentIndex] = useState(0);
 
   const currentSlide = SLIDES[currentIndex];
@@ -150,72 +152,77 @@ export default function OnboardingScreen() {
           { paddingBottom: Math.max(insets.bottom, 24) + Spacing.sm },
         ]}
       >
-        {/* Category Badge */}
-        <View style={styles.badgeContainer}>
-          <View style={[styles.badgeIconDot, { backgroundColor: currentSlide.accentColor }]}>
-            <SlideIcon size={12} color="#0B132B" />
-          </View>
-          <Text style={[styles.badgeText, { color: currentSlide.accentColor }]}>
-            {currentSlide.category}
-          </Text>
-        </View>
-
-        {/* Slide Title */}
-        <Text style={styles.title}>{currentSlide.title}</Text>
-
-        {/* Slide Description */}
-        <Text style={styles.description}>{currentSlide.description}</Text>
-
-        {/* Pagination Dots Row */}
-        <View style={styles.paginationRow}>
-          {SLIDES.map((slide, index) => {
-            const isActive = index === currentIndex;
-            return (
-              <TouchableOpacity
-                key={slide.id}
-                onPress={() => setCurrentIndex(index)}
-                activeOpacity={0.8}
-                style={[
-                  styles.pageIndicator,
-                  isActive ? styles.pageIndicatorActive : styles.pageIndicatorInactive,
-                ]}
-              />
-            );
-          })}
-        </View>
-
-        {/* Controls: Cool Action Buttons */}
-        <View style={styles.buttonsRow}>
-          {currentIndex > 0 && (
-            <TouchableOpacity
-              onPress={handleBack}
-              style={styles.backGlassButton}
-              activeOpacity={0.7}
-            >
-              <ArrowLeft size={22} color={Colors.white} />
-            </TouchableOpacity>
-          )}
-
-          <TouchableOpacity
-            onPress={handleNext}
-            style={[
-              styles.primaryActionButton,
-              isLastSlide ? styles.getStartedButton : undefined,
-              currentIndex === 0 && styles.fullWidthButton,
-            ]}
-            activeOpacity={0.85}
-          >
-            <Text style={[styles.primaryActionText, isLastSlide && styles.getStartedText]}>
-              {isLastSlide ? 'Enter ElderGuard' : 'Continue'}
+        <View style={styles.bottomInnerContent}>
+          {/* Category Badge */}
+          <View style={[styles.badgeContainer, isCompact && { marginBottom: Spacing.sm }]}>
+            <View style={[styles.badgeIconDot, { backgroundColor: currentSlide.accentColor }]}>
+              <SlideIcon size={12} color="#0B132B" />
+            </View>
+            <Text style={[styles.badgeText, { color: currentSlide.accentColor }]}>
+              {currentSlide.category}
             </Text>
-            {isLastSlide ? (
-              <Sparkles size={18} color="#0B132B" />
-            ) : (
-              <View style={styles.arrowIconBubble}>
-                <ArrowRight size={16} color={Colors.primary} />
-              </View>
+          </View>
+
+          {/* Slide Title */}
+          <Text style={[styles.title, isCompact && styles.titleCompact]}>{currentSlide.title}</Text>
+
+          {/* Slide Description */}
+          <Text style={[styles.description, isCompact && styles.descriptionCompact]}>
+            {currentSlide.description}
+          </Text>
+
+          {/* Pagination Dots Row */}
+          <View style={[styles.paginationRow, isCompact && { marginBottom: Spacing.md }]}>
+            {SLIDES.map((slide, index) => {
+              const isActive = index === currentIndex;
+              return (
+                <TouchableOpacity
+                  key={slide.id}
+                  onPress={() => setCurrentIndex(index)}
+                  activeOpacity={0.8}
+                  style={[
+                    styles.pageIndicator,
+                    isActive ? styles.pageIndicatorActive : styles.pageIndicatorInactive,
+                  ]}
+                />
+              );
+            })}
+          </View>
+
+          {/* Controls: Cool Action Buttons */}
+          <View style={styles.buttonsRow}>
+            {currentIndex > 0 && (
+              <TouchableOpacity
+                onPress={handleBack}
+                style={[styles.backGlassButton, isCompact && styles.backGlassButtonCompact]}
+                activeOpacity={0.7}
+              >
+                <ArrowLeft size={isCompact ? 19 : 22} color={Colors.white} />
+              </TouchableOpacity>
             )}
-          </TouchableOpacity>
+
+            <TouchableOpacity
+              onPress={handleNext}
+              style={[
+                styles.primaryActionButton,
+                isCompact && styles.primaryActionButtonCompact,
+                isLastSlide ? styles.getStartedButton : undefined,
+                currentIndex === 0 && styles.fullWidthButton,
+              ]}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.primaryActionText, isLastSlide && styles.getStartedText]}>
+                {isLastSlide ? 'Enter ElderGuard' : 'Continue'}
+              </Text>
+              {isLastSlide ? (
+                <Sparkles size={18} color="#0B132B" />
+              ) : (
+                <View style={styles.arrowIconBubble}>
+                  <ArrowRight size={16} color={Colors.primary} />
+                </View>
+              )}
+            </TouchableOpacity>
+          </View>
         </View>
       </View>
     </View>
@@ -276,6 +283,11 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
+    alignItems: 'center',
+  },
+  bottomInnerContent: {
+    width: '100%',
+    maxWidth: 560,
     paddingHorizontal: Spacing.xl,
   },
   badgeContainer: {
@@ -311,11 +323,21 @@ const styles = StyleSheet.create({
     letterSpacing: -0.4,
     marginBottom: Spacing.sm,
   },
+  titleCompact: {
+    fontSize: 23,
+    lineHeight: 29,
+    marginBottom: Spacing.xs,
+  },
   description: {
     ...Typography.body,
     color: 'rgba(241, 245, 249, 0.88)', // Soft slate white
     lineHeight: 22,
     marginBottom: Spacing.xl,
+  },
+  descriptionCompact: {
+    fontSize: 13.5,
+    lineHeight: 19,
+    marginBottom: Spacing.md,
   },
   paginationRow: {
     flexDirection: 'row',
@@ -356,6 +378,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
+  backGlassButtonCompact: {
+    width: 48,
+    height: 48,
+  },
   primaryActionButton: {
     flex: 1,
     height: 54,
@@ -373,6 +399,10 @@ const styles = StyleSheet.create({
     elevation: 5,
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  primaryActionButtonCompact: {
+    height: 48,
+    paddingHorizontal: Spacing.lg,
   },
   getStartedButton: {
     backgroundColor: Colors.accent, // Cyan accent for the final "Get Started" CTA

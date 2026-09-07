@@ -21,6 +21,7 @@ interface ButtonProps {
   loading?: boolean;
   disabled?: boolean;
   fullWidth?: boolean;
+  maxWidth?: number;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
@@ -34,6 +35,7 @@ export function Button({
   loading = false,
   disabled = false,
   fullWidth = false,
+  maxWidth,
   leftIcon,
   rightIcon,
   style,
@@ -45,6 +47,7 @@ export function Button({
     sizeStyles[size],
     variantStyles[variant],
     fullWidth && styles.fullWidth,
+    Boolean(maxWidth) && { maxWidth },
     isDisabled && styles.disabled,
     isDisabled && variant === 'primary' && styles.disabledPrimary,
     isDisabled && variant === 'danger' && styles.disabledDanger,
@@ -57,8 +60,9 @@ export function Button({
     <TouchableOpacity
       onPress={onPress}
       disabled={isDisabled}
-      activeOpacity={0.7}
+      activeOpacity={0.75}
       style={containerStyles}
+      hitSlop={size === 'sm' ? { top: 6, bottom: 6, left: 6, right: 6 } : undefined}
     >
       {loading ? (
         <ActivityIndicator
@@ -70,8 +74,10 @@ export function Button({
         leftIcon && <>{leftIcon}</>
       )}
       <Text
+        numberOfLines={2}
         style={[
           size === 'sm' ? Typography.buttonSmall : Typography.button,
+          styles.buttonText,
           { color: textColor },
         ]}
       >
@@ -109,8 +115,13 @@ const styles = StyleSheet.create({
     gap: Spacing.sm,
     minHeight: Layout.minTouchTarget,
   },
+  buttonText: {
+    textAlign: 'center',
+    flexShrink: 1,
+  },
   fullWidth: {
     width: '100%',
+    alignSelf: 'stretch',
   },
   disabled: {
     opacity: 0.55,
@@ -130,17 +141,20 @@ const styles = StyleSheet.create({
 
 const sizeStyles: Record<ButtonSize, ViewStyle> = {
   sm: {
-    height: 36,
+    minHeight: 38,
+    paddingVertical: Spacing.xs + 2,
     paddingHorizontal: Spacing.md,
     borderRadius: BorderRadius.sm,
   },
   md: {
-    height: 48,
+    minHeight: 48,
+    paddingVertical: Spacing.sm + 2,
     paddingHorizontal: Spacing.lg,
     borderRadius: BorderRadius.sm,
   },
   lg: {
-    height: 54,
+    minHeight: 54,
+    paddingVertical: Spacing.md,
     paddingHorizontal: Spacing.xl,
     borderRadius: BorderRadius.md,
   },

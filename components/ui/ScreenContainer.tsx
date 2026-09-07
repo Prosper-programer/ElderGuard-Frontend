@@ -84,6 +84,9 @@ export function ScreenContainer({
     paddingBottom: bottomBar
       ? Spacing.xl
       : (bottomPadding ?? Layout.screenPaddingBottom) + insets.bottom,
+    width: '100%',
+    maxWidth: 680,
+    alignSelf: 'center',
   };
 
   // Render scrollable or static content container based on prop

@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image } from 'react-native';
+import { View, Text, StyleSheet, Image, useWindowDimensions } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Activity,
@@ -14,11 +14,15 @@ import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 
 export default function WelcomeScreen() {
   const router = useRouter();
+  const { height: windowHeight } = useWindowDimensions();
+
+  const isCompact = windowHeight < 750;
+  const heroHeight = Math.min(Math.max(windowHeight * 0.28, 190), 270);
 
   return (
     <ScreenContainer scrollable padded backgroundColor={Colors.background}>
       {/* ── 1. Hero Image with Enhanced Design ──────────────── */}
-      <View style={styles.heroCard}>
+      <View style={[styles.heroCard, { height: heroHeight }]}>
         <Image
           source={require('@/assets/images/auth_welcome_hero.jpg')}
           style={styles.heroImage}
@@ -113,7 +117,7 @@ export default function WelcomeScreen() {
           title="Create Account"
           onPress={() => router.push('/(auth)/signup')}
           variant="primary"
-          size="lg"
+          size={isCompact ? 'md' : 'lg'}
           fullWidth
           rightIcon={<ArrowRight size={18} color={Colors.white} />}
         />
@@ -122,9 +126,9 @@ export default function WelcomeScreen() {
           title="Sign In to Existing Account"
           onPress={() => router.push('/(auth)/login')}
           variant="outline"
-          size="lg"
+          size={isCompact ? 'md' : 'lg'}
           fullWidth
-          style={styles.signInButton}
+          style={[styles.signInButton, isCompact && { marginTop: Spacing.sm }]}
         />
 
         {/* Reassurance text */}
@@ -141,14 +145,15 @@ export default function WelcomeScreen() {
 const styles = StyleSheet.create({
   heroCard: {
     width: '100%',
-    height: 270, // Increased length/height as requested
+    maxWidth: 560,
+    alignSelf: 'center',
     borderRadius: BorderRadius.xl,
     overflow: 'hidden',
     backgroundColor: Colors.surfaceSecondary,
     position: 'relative',
     borderWidth: 1.5,
     borderColor: Colors.border,
-    marginBottom: Spacing.xl,
+    marginBottom: Spacing.lg,
     shadowColor: Colors.textPrimary,
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.12,
@@ -262,7 +267,10 @@ const styles = StyleSheet.create({
   },
   featuresSection: {
     gap: Spacing.md,
-    marginBottom: Spacing['2xl'],
+    marginBottom: Spacing.xl,
+    width: '100%',
+    maxWidth: 560,
+    alignSelf: 'center',
   },
   sectionLabel: {
     ...Typography.overline,
@@ -300,7 +308,10 @@ const styles = StyleSheet.create({
   },
   actionSection: {
     marginTop: 'auto',
-    paddingBottom: Spacing.xl,
+    paddingBottom: Spacing.lg,
+    width: '100%',
+    maxWidth: 480,
+    alignSelf: 'center',
   },
   signInButton: {
     marginTop: Spacing.md,

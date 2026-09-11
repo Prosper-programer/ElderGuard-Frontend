@@ -14,8 +14,10 @@ type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'danger';
 type ButtonSize = 'sm' | 'md' | 'lg';
 
 interface ButtonProps {
-  title: string;
+  title?: string;
+  children?: React.ReactNode;
   onPress?: (event: GestureResponderEvent) => void;
+  onClick?: (event: any) => void;
   variant?: ButtonVariant;
   size?: ButtonSize;
   loading?: boolean;
@@ -25,11 +27,14 @@ interface ButtonProps {
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
   style?: StyleProp<ViewStyle>;
+  className?: string;
 }
 
 export function Button({
   title,
+  children,
   onPress,
+  onClick,
   variant = 'primary',
   size = 'md',
   loading = false,
@@ -40,6 +45,7 @@ export function Button({
   rightIcon,
   style,
 }: ButtonProps) {
+  const handlePress = onPress || onClick;
   const isDisabled = disabled || loading;
 
   const containerStyles: ViewStyle[] = [
@@ -58,7 +64,7 @@ export function Button({
 
   return (
     <TouchableOpacity
-      onPress={onPress}
+      onPress={handlePress}
       disabled={isDisabled}
       activeOpacity={0.75}
       style={containerStyles}
@@ -73,16 +79,33 @@ export function Button({
       ) : (
         leftIcon && <>{leftIcon}</>
       )}
-      <Text
-        numberOfLines={2}
-        style={[
-          size === 'sm' ? Typography.buttonSmall : Typography.button,
-          styles.buttonText,
-          { color: textColor },
-        ]}
-      >
-        {title}
-      </Text>
+      {children ? (
+        typeof children === 'string' ? (
+          <Text
+            numberOfLines={2}
+            style={[
+              size === 'sm' ? Typography.buttonSmall : Typography.button,
+              styles.buttonText,
+              { color: textColor },
+            ]}
+          >
+            {children}
+          </Text>
+        ) : (
+          children
+        )
+      ) : (
+        <Text
+          numberOfLines={2}
+          style={[
+            size === 'sm' ? Typography.buttonSmall : Typography.button,
+            styles.buttonText,
+            { color: textColor },
+          ]}
+        >
+          {title}
+        </Text>
+      )}
       {!loading && rightIcon && <>{rightIcon}</>}
     </TouchableOpacity>
   );

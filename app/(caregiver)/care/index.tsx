@@ -1,469 +1,396 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
 import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Modal,
+  TextInput,
+  ScrollView,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import {
+  Plus,
+  X,
+  CheckCircle,
   Pill,
-  CheckCircle2,
-  XCircle,
   Clock,
-  Droplets,
-  Activity,
   Heart,
-  Sun,
-  Sunrise,
-  Moon,
+  Activity,
+  Check,
 } from 'lucide-react-native';
-import { ScreenContainer, Card, StatusBadge, BottomTabBar } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
-import { useCare } from '@/context/CareContext';
-import { useAuth } from '@/context/AuthContext';
-import { MedicationDose } from '@/types/care';
+import {
+  ScreenContainer,
+  BottomTabBar,
+  Card,
+  TopBar,
+  SectionHeader,
+  Button,
+} from '@/components/ui';
+import { Colors, Spacing } from '@/constants/theme';
+import { MOCK_CARE_ACTIVITIES } from '@/services/mockData';
 
 export default function CaregiverCareScreen() {
-  const { user } = useAuth();
-  const { todayDoses, activities, markDoseStatus, updateActivityProgress } = useCare();
+  const router = useRouter();
+  const [showModal, setShowModal] = useState(false);
+  const [activityType, setActivityType] = useState('wellness-check');
+  const [title, setTitle] = useState('');
+  const [notes, setNotes] = useState('');
+  const [saved, setSaved] = useState(false);
 
-  const handleMarkTaken = (doseId: string) => {
-    markDoseStatus(doseId, 'taken', `${user?.name || 'David Miller'} (Caregiver)`);
+  const [activities, setActivities] = useState(MOCK_CARE_ACTIVITIES);
+
+  const activityTypes = [
+    { id: 'wellness-check', label: 'Wellness check', color: '#3C6FDB' },
+    { id: 'medication', label: 'Medication', color: '#8B5CF6' },
+    { id: 'physiotherapy', label: 'Physiotherapy', color: '#16A34A' },
+    { id: 'walk', label: 'Walk / exercise', color: '#0EA5E9' },
+    { id: 'personal-care', label: 'Personal care', color: '#EA580C' },
+    { id: 'meal', label: 'Meal assistance', color: '#D97706' },
+  ];
+
+  const handleSave = () => {
+    if (!title.trim() && !notes.trim()) return;
+
+    setSaved(true);
+    const newAct = {
+      id: Date.now(),
+      caregiver: 'Sarah Mitchell',
+      type: activityType,
+      title: title.trim() || activityTypes.find((t) => t.id === activityType)?.label || 'Care Activity',
+      notes: notes.trim() || 'Completed on schedule without issues.',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      date: 'Today',
+      duration: '15 min',
+      completed: true,
+    };
+
+    setTimeout(() => {
+      setActivities([newAct, ...activities]);
+      setSaved(false);
+      setShowModal(false);
+      setTitle('');
+      setNotes('');
+    }, 800);
   };
 
-  const handleMarkMissed = (doseId: string) => {
-    markDoseStatus(doseId, 'missed', `${user?.name || 'David Miller'} (Caregiver)`);
-  };
-
-  const handleAddWater = (activityId: string) => {
-    updateActivityProgress(activityId, 0.25, `${user?.name || 'David Miller'} (Caregiver)`);
-  };
-
-  const handleAddWalk = (activityId: string) => {
-    updateActivityProgress(activityId, 5, `${user?.name || 'David Miller'} (Caregiver)`);
-  };
-
-  const takenCount = todayDoses.filter((d) => d.status === 'taken').length;
-  const adherenceRate = Math.round((takenCount / todayDoses.length) * 100);
-
-  // Group doses into dayparts
-  const morningDoses = todayDoses.filter((d) => d.scheduledTime.includes('AM'));
-  const afternoonDoses = todayDoses.filter((d) => d.scheduledTime.includes('12:') || d.scheduledTime.includes('01:') || d.scheduledTime.includes('02:'));
-  const eveningDoses = todayDoses.filter((d) => d.scheduledTime.includes('PM') && !afternoonDoses.includes(d));
-
-  const renderDoseItem = (dose: MedicationDose) => {
-    const isTaken = dose.status === 'taken';
-    const isMissed = dose.status === 'missed';
-
-    return (
-      <View key={dose.id} style={[styles.doseItemCard, isTaken && styles.doseItemTaken]}>
-        <View style={styles.doseItemHeader}>
-          <View style={[styles.doseIconBox, isTaken && { backgroundColor: Colors.safeBg }]}>
-            <Pill size={18} color={isTaken ? Colors.safe : Colors.safe} />
-          </View>
-
-          <View style={{ flex: 1 }}>
-            <Text style={styles.doseName}>{dose.medicationName}</Text>
-            <Text style={styles.doseDosage}>{dose.dosage}</Text>
-          </View>
-
-          <View style={styles.timeTag}>
-            <Clock size={11} color={Colors.textSecondary} />
-            <Text style={styles.timeTagText}>{dose.scheduledTime}</Text>
-          </View>
-        </View>
-
-        {dose.loggedBy && (
-          <Text style={styles.loggedByText}>
-            Logged by {dose.loggedBy} at {dose.loggedAt}
-          </Text>
-        )}
-
-        <View style={styles.doseActionsRow}>
-          <TouchableOpacity
-            onPress={() => handleMarkTaken(dose.id)}
-            style={[styles.doseActionBtn, isTaken && styles.doseActionTakenActive]}
-            activeOpacity={0.8}
-          >
-            <CheckCircle2 size={15} color={isTaken ? Colors.white : Colors.safe} />
-            <Text style={[styles.doseActionText, isTaken && { color: Colors.white }]}>
-              {isTaken ? 'Administered' : 'Mark Administered'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => handleMarkMissed(dose.id)}
-            style={[styles.doseActionBtn, isMissed && styles.doseActionMissedActive]}
-            activeOpacity={0.8}
-          >
-            <XCircle size={15} color={isMissed ? Colors.white : Colors.critical} />
-            <Text style={[styles.doseActionText, isMissed && { color: Colors.white }]}>
-              {isMissed ? 'Refused / Missed' : 'Mark Missed'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-    );
-  };
+  const todayActs = activities.filter((a) => a.date === 'Today');
 
   return (
     <ScreenContainer
       scrollable
       padded
-      backgroundColor="#F8FAFC"
+      backgroundColor="#F0F4FA"
       bottomBar={<BottomTabBar activeTab="care" role="caregiver" />}
     >
-      {/* ── Top Header ──────────────────────────────────────── */}
-        <View style={styles.topHeader}>
-          <View>
-            <Text style={styles.screenTitle}>Care & Medications</Text>
-            <Text style={styles.screenSub}>Administer Margaret Johnson&apos;s daily routine</Text>
-          </View>
+      <TopBar
+        title="Care Activities"
+        onBack={() => router.push('/(caregiver)')}
+        right={
+          <TouchableOpacity
+            onPress={() => setShowModal(true)}
+            style={styles.addBtn}
+            activeOpacity={0.7}
+          >
+            <Plus size={18} color="#FFFFFF" />
+          </TouchableOpacity>
+        }
+      />
+
+      {/* Summary Header */}
+      <View style={styles.headerRow}>
+        <Text style={styles.headerTitle}>TODAY&apos;S CARE PROTOCOLS</Text>
+        <View style={styles.countPill}>
+          <Text style={styles.countPillText}>{todayActs.length} logged</Text>
         </View>
+      </View>
 
-        {/* ── Adherence Score Card ────────────────────────────── */}
-        <Card elevated style={styles.adherenceCard}>
-          <View style={styles.adherenceRow}>
-            <View style={styles.adherenceIconCircle}>
-              <Pill size={22} color={Colors.safe} />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.adherenceTitle}>Adherence: {adherenceRate}%</Text>
-              <Text style={styles.adherenceSub}>
-                {takenCount} of {todayDoses.length} doses administered today
-              </Text>
-            </View>
-            <StatusBadge
-              status={adherenceRate >= 80 ? 'safe' : 'warning'}
-              label={adherenceRate >= 80 ? 'ON TRACK' : 'PENDING'}
-              size="sm"
-            />
-          </View>
+      {/* Activities Card List */}
+      <Card style={styles.cardZeroPadding}>
+        {todayActs.map((act, i) => {
+          const typeMatch = activityTypes.find((t) => t.id === act.type);
+          const color = typeMatch?.color || '#3C6FDB';
 
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${adherenceRate}%` }]} />
-          </View>
-        </Card>
+          return (
+            <View
+              key={act.id}
+              style={[
+                styles.activityItem,
+                i === todayActs.length - 1 && { borderBottomWidth: 0 },
+              ]}
+            >
+              <View style={[styles.typeIconBox, { backgroundColor: color + '15' }]}>
+                <CheckCircle size={16} color={color} />
+              </View>
 
-        <View style={{ height: Spacing.lg }} />
-
-        {/* ── Daypart 1: Morning Schedule ─────────────────────── */}
-        <View style={styles.daypartHeader}>
-          <Sunrise size={16} color="#D97706" />
-          <Text style={styles.daypartTitle}>MORNING DOSES (08:00 AM)</Text>
-        </View>
-        <View style={styles.daypartGroup}>
-          {morningDoses.map(renderDoseItem)}
-        </View>
-
-        <View style={{ height: Spacing.md }} />
-
-        {/* ── Daypart 2: Afternoon Schedule ───────────────────── */}
-        <View style={styles.daypartHeader}>
-          <Sun size={16} color="#2563EB" />
-          <Text style={styles.daypartTitle}>AFTERNOON DOSES (12:30 PM)</Text>
-        </View>
-        <View style={styles.daypartGroup}>
-          {afternoonDoses.map(renderDoseItem)}
-        </View>
-
-        <View style={{ height: Spacing.md }} />
-
-        {/* ── Daypart 3: Evening Schedule ─────────────────────── */}
-        <View style={styles.daypartHeader}>
-          <Moon size={16} color="#7C3AED" />
-          <Text style={styles.daypartTitle}>EVENING DOSES (07:00 PM)</Text>
-        </View>
-        <View style={styles.daypartGroup}>
-          {eveningDoses.map(renderDoseItem)}
-        </View>
-
-        <View style={{ height: Spacing.xl }} />
-
-        {/* ── Daily Wellness Assistance ───────────────────────── */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>DAILY ASSISTANCE ROUTINE</Text>
-        </View>
-
-        <View style={styles.activitiesList}>
-          {activities.map((act) => {
-            const isDone = act.status === 'completed';
-            const pct = Math.min(100, Math.round((act.current / act.target) * 100));
-
-            return (
-              <Card key={act.id} style={styles.actCard}>
-                <View style={styles.actRow}>
-                  <View style={[styles.actIconCircle, isDone && { backgroundColor: Colors.safeBg }]}>
-                    {act.category === 'hydration' ? (
-                      <Droplets size={18} color={isDone ? Colors.safe : Colors.primary} />
-                    ) : act.category === 'mobility' ? (
-                      <Activity size={18} color={isDone ? Colors.safe : Colors.warning} />
-                    ) : (
-                      <Heart size={18} color={Colors.critical} />
-                    )}
+              <View style={{ flex: 1 }}>
+                <View style={styles.itemTitleRow}>
+                  <Text style={styles.itemTitle}>{act.title}</Text>
+                  <View style={styles.donePill}>
+                    <Text style={styles.donePillText}>Done</Text>
                   </View>
-
-                  <View style={styles.actInfo}>
-                    <Text style={styles.actTitle}>{act.title}</Text>
-                    <Text style={styles.actProgress}>
-                      {act.current} / {act.target} {act.unit} ({pct}%)
-                    </Text>
-                  </View>
-
-                  {act.category === 'hydration' && !isDone && (
-                    <TouchableOpacity
-                      onPress={() => handleAddWater(act.id)}
-                      style={styles.quickIncrementBtn}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.quickIncrementText}>+250ml</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {act.category === 'mobility' && !isDone && (
-                    <TouchableOpacity
-                      onPress={() => handleAddWalk(act.id)}
-                      style={styles.quickIncrementBtn}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.quickIncrementText}>+5 min</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {isDone && <CheckCircle2 size={22} color={Colors.safe} />}
                 </View>
 
-                {/* Progress bar */}
-                <View style={styles.actProgressTrack}>
-                  <View
+                <Text style={styles.itemTime}>
+                  {act.time} · {act.duration} · By {act.caregiver}
+                </Text>
+
+                <Text style={styles.itemNotes}>{act.notes}</Text>
+              </View>
+            </View>
+          );
+        })}
+      </Card>
+
+      <View style={{ height: Spacing.xl }} />
+
+      {/* Log Activity Modal Sheet */}
+      <Modal
+        visible={showModal}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setShowModal(false)}
+      >
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalSheet}>
+            <View style={styles.sheetHandle} />
+
+            <View style={styles.sheetHeader}>
+              <Text style={styles.sheetTitle}>Log Care Activity</Text>
+              <TouchableOpacity
+                onPress={() => setShowModal(false)}
+                style={styles.closeBtn}
+              >
+                <X size={18} color="#64748B" />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.fieldLabel}>ACTIVITY TYPE</Text>
+            <View style={styles.typesWrap}>
+              {activityTypes.map((t) => (
+                <TouchableOpacity
+                  key={t.id}
+                  onPress={() => setActivityType(t.id)}
+                  style={[
+                    styles.typeChip,
+                    activityType === t.id && {
+                      backgroundColor: t.color,
+                      borderColor: t.color,
+                    },
+                  ]}
+                  activeOpacity={0.7}
+                >
+                  <Text
                     style={[
-                      styles.actProgressFill,
-                      {
-                        width: `${pct}%`,
-                        backgroundColor: Colors.safe,
-                      },
+                      styles.typeChipText,
+                      activityType === t.id && { color: '#FFFFFF' },
                     ]}
-                  />
-                </View>
-              </Card>
-            );
-          })}
-        </View>
+                  >
+                    {t.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
 
-        <View style={{ height: Spacing['2xl'] }} />
+            <Text style={styles.fieldLabel}>CLINICAL OBSERVATIONS & NOTES</Text>
+            <TextInput
+              style={styles.textArea}
+              multiline
+              numberOfLines={4}
+              placeholder="Describe tasks completed, Margaret's response, vitals or any observations..."
+              placeholderTextColor="#94A3B8"
+              value={notes}
+              onChangeText={setNotes}
+            />
+
+            <View style={styles.modalButtonsRow}>
+              <Button
+                variant="ghost"
+                onClick={() => setShowModal(false)}
+                className="flex-1"
+              >
+                Cancel
+              </Button>
+              <Button
+                variant="primary"
+                disabled={saved}
+                onClick={handleSave}
+                className="flex-1"
+              >
+                {saved ? 'Saved ✓' : 'Save Protocol'}
+              </Button>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  topHeader: {
-    marginBottom: Spacing.base,
-  },
-  screenTitle: {
-    ...Typography.h2,
-    fontSize: 22,
-    color: Colors.textPrimary,
-  },
-  screenSub: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  adherenceCard: {
-    backgroundColor: Colors.white,
-  },
-  adherenceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  adherenceIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.safeBg,
+  addBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: Colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  adherenceTitle: {
-    ...Typography.bodySemiBold,
-    fontSize: 15,
-    color: Colors.textPrimary,
-  },
-  adherenceSub: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surfaceSecondary,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.safe,
-    borderRadius: BorderRadius.full,
-  },
-  daypartHeader: {
+  headerRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    marginBottom: Spacing.xs,
+    justifyContent: 'space-between',
+    marginVertical: 12,
   },
-  daypartTitle: {
-    ...Typography.overline,
-    color: Colors.textSecondary,
+  headerTitle: {
     fontSize: 11,
+    fontWeight: '800',
+    color: '#94A3B8',
     letterSpacing: 0.8,
   },
-  daypartGroup: {
-    gap: Spacing.sm,
-  },
-  doseItemCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.base,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  doseItemTaken: {
-    borderColor: 'rgba(34, 197, 94, 0.3)',
-    backgroundColor: '#F0FDF4',
-  },
-  doseItemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  doseIconBox: {
-    width: 38,
-    height: 38,
-    borderRadius: BorderRadius.sm,
+  countPill: {
     backgroundColor: Colors.safeBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  doseName: {
-    ...Typography.bodySemiBold,
-    fontSize: 15,
-    color: Colors.textPrimary,
-  },
-  doseDosage: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  timeTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.surfaceSecondary,
     paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.full,
+    paddingVertical: 3,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
   },
-  timeTagText: {
-    ...Typography.captionMedium,
+  countPillText: {
     fontSize: 11,
-    color: Colors.textSecondary,
-  },
-  loggedByText: {
-    ...Typography.caption,
-    color: Colors.safe,
-    marginTop: 6,
-    fontSize: 11,
-    fontWeight: '500',
-  },
-  doseActionsRow: {
-    flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
-  },
-  doseActionBtn: {
-    flex: 1,
-    height: 38,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surfaceSecondary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-  },
-  doseActionTakenActive: {
-    backgroundColor: Colors.safe,
-  },
-  doseActionMissedActive: {
-    backgroundColor: Colors.critical,
-  },
-  doseActionText: {
-    ...Typography.captionMedium,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-  },
-  sectionHeader: {
-    marginBottom: Spacing.xs,
-  },
-  sectionTitle: {
-    ...Typography.overline,
-    color: Colors.textTertiary,
-    letterSpacing: 0.8,
-    fontSize: 11,
-  },
-  activitiesList: {
-    gap: Spacing.sm,
-  },
-  actCard: {
-    backgroundColor: Colors.white,
-  },
-  actRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  actIconCircle: {
-    width: 38,
-    height: 38,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.safeBg,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  actInfo: {
-    flex: 1,
-  },
-  actTitle: {
-    ...Typography.bodySemiBold,
-    fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  actProgress: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  quickIncrementBtn: {
-    backgroundColor: Colors.safeBg,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.full,
-  },
-  quickIncrementText: {
-    ...Typography.captionMedium,
-    color: Colors.safe,
     fontWeight: '700',
+    color: Colors.safe,
   },
-  actProgressTrack: {
-    height: 6,
-    backgroundColor: Colors.surfaceSecondary,
-    borderRadius: BorderRadius.full,
+  cardZeroPadding: {
+    padding: 0,
     overflow: 'hidden',
   },
-  actProgressFill: {
-    height: '100%',
-    borderRadius: BorderRadius.full,
+  activityItem: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    gap: 12,
+  },
+  typeIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 2,
+  },
+  itemTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  itemTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  donePill: {
+    backgroundColor: Colors.safeBg,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  donePillText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: Colors.safe,
+  },
+  itemTime: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  itemNotes: {
+    fontSize: 12,
+    color: '#475569',
+    marginTop: 6,
+    lineHeight: 17,
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(15, 23, 42, 0.55)',
+    justifyContent: 'flex-end',
+  },
+  modalSheet: {
+    backgroundColor: '#FFFFFF',
+    borderTopLeftRadius: 28,
+    borderTopRightRadius: 28,
+    padding: 20,
+    paddingBottom: 36,
+  },
+  sheetHandle: {
+    width: 40,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: '#CBD5E1',
+    alignSelf: 'center',
+    marginBottom: 16,
+  },
+  sheetHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 16,
+  },
+  sheetTitle: {
+    fontSize: 17,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  closeBtn: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  fieldLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.8,
+    marginBottom: 8,
+  },
+  typesWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  typeChip: {
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  typeChipText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  textArea: {
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    padding: 12,
+    fontSize: 13,
+    color: '#0F172A',
+    height: 100,
+    textAlignVertical: 'top',
+    marginBottom: 18,
+  },
+  modalButtonsRow: {
+    flexDirection: 'row',
+    gap: 12,
   },
 });

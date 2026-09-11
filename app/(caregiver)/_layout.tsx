@@ -12,6 +12,8 @@ export default function CaregiverLayout() {
       <Stack.Screen name="alerts/index" />
       <Stack.Screen name="alerts/[id]" />
       <Stack.Screen name="care/index" />
+      <Stack.Screen name="history" />
+      <Stack.Screen name="location" />
       <Stack.Screen name="settings" />
     </Stack>
   );

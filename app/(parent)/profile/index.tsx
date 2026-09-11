@@ -1,617 +1,533 @@
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Linking, Platform } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Linking,
+  Image,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  ArrowLeft,
-  Edit3,
   Phone,
-  Heart,
-  ShieldCheck,
-  Battery,
-  Wifi,
+  Pencil,
   MapPin,
+  Shield,
+  Activity,
+  User,
+  Heart,
   Calendar,
   AlertTriangle,
-  UserCheck,
-  Stethoscope,
+  ChevronRight,
+  Battery,
+  Wifi,
+  CheckCircle,
 } from 'lucide-react-native';
-import { ScreenContainer, Button, Card, StatusBadge, Avatar, Divider, BottomTabBar } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import {
+  ScreenContainer,
+  Card,
+  TopBar,
+  StatusBadge,
+  SectionHeader,
+  Button,
+} from '@/components/ui';
+import { Colors, Spacing } from '@/constants/theme';
 import { useElderly } from '@/context/ElderlyContext';
+import {
+  MOCK_ELDERLY_PERSON,
+  MOCK_CAREGIVER,
+  MOCK_DOCTOR,
+  MOCK_USERS,
+} from '@/services/mockData';
 
 export default function ParentElderlyProfileScreen() {
   const router = useRouter();
   const { activeProfile } = useElderly();
 
-  const primaryContact = activeProfile.emergencyContacts.find((c) => c.isPrimary) || activeProfile.emergencyContacts[0];
-  const secondaryContact = activeProfile.emergencyContacts.find((c) => !c.isPrimary);
-
-  const handleCall = (phone: string) => {
-    const cleanPhone = phone.replace(/[^0-9+]/g, '');
-    const url = Platform.OS === 'ios' ? `telprompt:${cleanPhone}` : `tel:${cleanPhone}`;
-    Linking.openURL(url).catch(() => {});
+  const handleCall = (phone?: string) => {
+    if (!phone) return;
+    Linking.openURL(`tel:${phone.replace(/[^0-9+]/g, '')}`).catch(() => {});
   };
 
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(parent)' as any);
-    }
-  };
+  const name = activeProfile?.fullName || MOCK_ELDERLY_PERSON.fullName;
+  const age = activeProfile?.age || MOCK_ELDERLY_PERSON.age;
+  const dob = MOCK_ELDERLY_PERSON.dateOfBirth;
+  const photo = activeProfile?.imageUrl || MOCK_ELDERLY_PERSON.photo;
 
   return (
     <ScreenContainer
       scrollable
       padded
-      backgroundColor="#F8FAFC"
-      bottomBar={<BottomTabBar activeTab="profile" role="parent" />}
+      backgroundColor="#F0F4FA"
     >
-      {/* ── 1. Top Navigation Bar ────────────────────────────── */}
-      <View style={styles.topNav}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <ArrowLeft size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
+      <TopBar
+        title="Elderly Profile"
+        onBack={() => (router.canGoBack() ? router.back() : router.replace('/(parent)' as any))}
+        right={
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/profile/edit' as any)}
+            style={styles.editBtn}
+            activeOpacity={0.7}
+          >
+            <Pencil size={17} color="#475569" />
+          </TouchableOpacity>
+        }
+      />
 
-        <Text style={styles.navTitle}>Elderly Profile</Text>
+      {/* Main Profile Card with Gradient Header Banner */}
+      <Card style={styles.profileCard}>
+        <View style={styles.gradientHeader} />
 
-        <TouchableOpacity
-          onPress={() => router.push('/(parent)/profile/edit')}
-          style={styles.editHeaderButton}
-          activeOpacity={0.7}
-        >
-          <Edit3 size={18} color={Colors.primary} />
-          <Text style={styles.editHeaderText}>Edit</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* ── 2. Hero Profile Card ─────────────────────────────── */}
-      <Card elevated style={styles.heroCard}>
-        <View style={styles.heroRow}>
-          <Avatar
-            name={activeProfile.fullName}
-            imageUrl={activeProfile.imageUrl}
-            size={80}
-            statusIndicator="safe"
-          />
-          <View style={styles.heroMeta}>
-            <Text style={styles.heroName}>{activeProfile.fullName}</Text>
-            <Text style={styles.heroSub}>
-              {activeProfile.age} yrs · {activeProfile.gender} · &quot;{activeProfile.preferredName}&quot;
-            </Text>
-            <View style={styles.statusWrap}>
-              <StatusBadge status="safe" label="Device Online · Normal" size="sm" />
+        <View style={styles.profileBody}>
+          <View style={styles.avatarRow}>
+            <Image source={{ uri: photo }} style={styles.avatarImage} />
+            <View style={styles.statusBadgeWrap}>
+              <StatusBadge status="safe" size="md" />
             </View>
           </View>
-        </View>
 
-        {/* Live Device Quick Strip */}
-        <View style={styles.deviceStrip}>
-          <View style={styles.deviceMetric}>
-            <Battery size={16} color={Colors.safe} />
-            <Text style={styles.deviceMetricText}>{activeProfile.deviceStatus.batteryLevel}% Battery</Text>
-          </View>
-          <View style={styles.deviceDivider} />
-          <View style={styles.deviceMetric}>
-            <Wifi size={16} color={Colors.primary} />
-            <Text style={styles.deviceMetricText}>Synced {activeProfile.deviceStatus.lastSync}</Text>
+          <Text style={styles.profileName}>{name}</Text>
+          <Text style={styles.profileSub}>Born {dob} · {age} years old</Text>
+
+          {/* 3-Col Clinical Specs */}
+          <View style={styles.clinicalGrid}>
+            <View style={styles.clinicalCell}>
+              <Text style={styles.clinicalLabel}>BLOOD TYPE</Text>
+              <Text style={styles.clinicalVal}>{MOCK_ELDERLY_PERSON.bloodType}</Text>
+            </View>
+            <View style={styles.clinicalDivider} />
+            <View style={styles.clinicalCell}>
+              <Text style={styles.clinicalLabel}>HEIGHT</Text>
+              <Text style={styles.clinicalVal}>{MOCK_ELDERLY_PERSON.height}</Text>
+            </View>
+            <View style={styles.clinicalDivider} />
+            <View style={styles.clinicalCell}>
+              <Text style={styles.clinicalLabel}>WEIGHT</Text>
+              <Text style={styles.clinicalVal}>{MOCK_ELDERLY_PERSON.weight}</Text>
+            </View>
           </View>
         </View>
       </Card>
 
-      <View style={{ height: Spacing.md }} />
-
-      {/* ── 3. Primary Emergency Contacts Card ───────────────── */}
-      <Card style={styles.sectionCard}>
-        <View style={styles.cardHeader}>
-          <Phone size={18} color={Colors.critical} />
-          <Text style={styles.cardTitle}>EMERGENCY CONTACTS</Text>
+      {/* Home Address Card */}
+      <Card style={styles.addressCard}>
+        <View style={styles.addressIconWrap}>
+          <MapPin size={18} color={Colors.primary} />
         </View>
+        <View style={{ flex: 1 }}>
+          <Text style={styles.addressHeading}>Home Address</Text>
+          <Text style={styles.addressText}>{MOCK_ELDERLY_PERSON.address}</Text>
+          <Text style={styles.roomText}>{MOCK_ELDERLY_PERSON.room}</Text>
+        </View>
+      </Card>
 
-        {/* Primary Contact */}
-        {primaryContact && (
-          <View style={styles.contactItem}>
-            <View style={styles.contactInfo}>
-              <View style={styles.primaryBadgeRow}>
-                <Text style={styles.contactName}>{primaryContact.name}</Text>
-                <View style={styles.primaryPill}>
-                  <Text style={styles.primaryPillText}>PRIMARY</Text>
-                </View>
-              </View>
-              <Text style={styles.contactRelation}>{primaryContact.relationship}</Text>
-              <Text style={styles.contactPhone}>{primaryContact.phone}</Text>
+      {/* Medical Conditions */}
+      <Card style={styles.conditionsCard}>
+        <Text style={styles.cardHeading}>Medical Conditions</Text>
+        <View style={styles.conditionsList}>
+          {MOCK_ELDERLY_PERSON.conditions.map((cond, i) => (
+            <View key={i} style={styles.conditionRow}>
+              <View style={styles.conditionRedDot} />
+              <Text style={styles.conditionText}>{cond}</Text>
             </View>
-            <TouchableOpacity
-              onPress={() => handleCall(primaryContact.phone)}
-              style={styles.callActionButton}
-              activeOpacity={0.8}
-            >
-              <Phone size={16} color={Colors.white} />
-              <Text style={styles.callActionText}>Call</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+          ))}
+        </View>
+      </Card>
 
-        {secondaryContact && (
-          <>
-            <Divider spacing={Spacing.sm} />
-            <View style={styles.contactItem}>
-              <View style={styles.contactInfo}>
-                <Text style={styles.contactName}>{secondaryContact.name}</Text>
-                <Text style={styles.contactRelation}>{secondaryContact.relationship}</Text>
-                <Text style={styles.contactPhone}>{secondaryContact.phone}</Text>
+      {/* Known Allergies */}
+      <Card style={styles.allergiesCard}>
+        <Text style={styles.cardHeading}>Known Allergies</Text>
+        <View style={styles.allergiesWrap}>
+          {MOCK_ELDERLY_PERSON.allergies.map((all, i) => (
+            <View key={i} style={styles.allergyPill}>
+              <AlertTriangle size={12} color="#DC2626" />
+              <Text style={styles.allergyText}>{all}</Text>
+            </View>
+          ))}
+        </View>
+      </Card>
+
+      {/* Emergency Contacts with One-Tap Dialers */}
+      <View style={styles.sectionWrap}>
+        <SectionHeader title="Emergency Contacts" />
+        <Card style={styles.cardZeroPadding}>
+          {[
+            {
+              name: MOCK_USERS.parent.name,
+              role: 'Son · Primary Parent',
+              phone: MOCK_USERS.parent.phone,
+              initials: 'RT',
+              color: '#3C6FDB',
+            },
+            {
+              name: MOCK_CAREGIVER.name,
+              role: 'Assigned Caregiver · RN',
+              phone: MOCK_CAREGIVER.phone,
+              initials: 'SM',
+              color: '#16A34A',
+            },
+            {
+              name: MOCK_DOCTOR.name,
+              role: 'Attending Physician · GP',
+              phone: MOCK_DOCTOR.phone,
+              initials: 'JH',
+              color: '#8B5CF6',
+            },
+          ].map((c, i) => (
+            <View
+              key={c.name}
+              style={[
+                styles.contactRow,
+                i === 2 && { borderBottomWidth: 0 },
+              ]}
+            >
+              <View style={[styles.contactInitials, { backgroundColor: c.color + '18' }]}>
+                <Text style={[styles.contactInitialsText, { color: c.color }]}>
+                  {c.initials}
+                </Text>
               </View>
+
+              <View style={{ flex: 1 }}>
+                <Text style={styles.contactName}>{c.name}</Text>
+                <Text style={styles.contactRole}>{c.role}</Text>
+                <Text style={styles.contactPhone}>{c.phone}</Text>
+              </View>
+
               <TouchableOpacity
-                onPress={() => handleCall(secondaryContact.phone)}
-                style={[styles.callActionButton, styles.callSecondaryButton]}
-                activeOpacity={0.8}
+                onPress={() => handleCall(c.phone)}
+                style={styles.callCircleBtn}
+                activeOpacity={0.7}
               >
                 <Phone size={16} color={Colors.primary} />
-                <Text style={[styles.callActionText, { color: Colors.primary }]}>Call</Text>
               </TouchableOpacity>
             </View>
-          </>
-        )}
-      </Card>
-
-      <View style={{ height: Spacing.md }} />
-
-      {/* ── 4. Medical & Health Information ──────────────────── */}
-      <Card style={styles.sectionCard}>
-        <View style={styles.cardHeader}>
-          <Heart size={18} color={Colors.critical} />
-          <Text style={styles.cardTitle}>HEALTH & MEDICAL PROFILE</Text>
-        </View>
-
-        {/* Blood Type & Allergies */}
-        <View style={styles.medicalRow}>
-          <View style={styles.bloodTypeBox}>
-            <Text style={styles.bloodTypeLabel}>BLOOD TYPE</Text>
-            <Text style={styles.bloodTypeValue}>{activeProfile.medicalInfo.bloodType}</Text>
-          </View>
-
-          <View style={styles.allergiesBox}>
-            <View style={styles.alertHeader}>
-              <AlertTriangle size={14} color={Colors.warning} />
-              <Text style={styles.allergiesLabel}>ALLERGIES</Text>
-            </View>
-            <View style={styles.chipsWrap}>
-              {activeProfile.medicalInfo.allergies.map((allergy, i) => (
-                <View key={i} style={styles.allergyChip}>
-                  <Text style={styles.allergyText}>{allergy}</Text>
-                </View>
-              ))}
-            </View>
-          </View>
-        </View>
-
-        {/* Chronic Conditions */}
-        <View style={styles.conditionSection}>
-          <Text style={styles.metaSubhead}>CHRONIC CONDITIONS</Text>
-          <View style={styles.chipsWrap}>
-            {activeProfile.medicalInfo.chronicConditions.map((condition, i) => (
-              <View key={i} style={styles.conditionChip}>
-                <Text style={styles.conditionText}>{condition}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Medication Schedule Note */}
-        {activeProfile.medicalInfo.medicationNotes && (
-          <View style={styles.medNoteBox}>
-            <Text style={styles.medNoteLabel}>DAILY MEDICATION NOTES</Text>
-            <Text style={styles.medNoteText}>{activeProfile.medicalInfo.medicationNotes}</Text>
-          </View>
-        )}
-
-        {/* Physician / Hospital */}
-        <View style={styles.physicianBox}>
-          <Stethoscope size={16} color={Colors.textSecondary} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.physicianName}>{activeProfile.medicalInfo.physicianName}</Text>
-            <Text style={styles.hospitalName}>{activeProfile.medicalInfo.hospitalPreference}</Text>
-          </View>
-        </View>
-      </Card>
-
-      <View style={{ height: Spacing.md }} />
-
-      {/* ── 5. Personal Details & Residence ──────────────────── */}
-      <Card style={styles.sectionCard}>
-        <View style={styles.cardHeader}>
-          <MapPin size={18} color={Colors.primary} />
-          <Text style={styles.cardTitle}>RESIDENTIAL & CONTACT</Text>
-        </View>
-
-        <View style={styles.detailRow}>
-          <MapPin size={16} color={Colors.textTertiary} />
-          <View style={styles.detailMeta}>
-            <Text style={styles.detailLabel}>Home Address</Text>
-            <Text style={styles.detailValue}>{activeProfile.address}</Text>
-          </View>
-        </View>
-
-        <View style={styles.detailRow}>
-          <Calendar size={16} color={Colors.textTertiary} />
-          <View style={styles.detailMeta}>
-            <Text style={styles.detailLabel}>Date of Birth</Text>
-            <Text style={styles.detailValue}>{activeProfile.dateOfBirth} ({activeProfile.age} years old)</Text>
-          </View>
-        </View>
-
-        {activeProfile.phone && (
-          <View style={styles.detailRow}>
-            <Phone size={16} color={Colors.textTertiary} />
-            <View style={styles.detailMeta}>
-              <Text style={styles.detailLabel}>Personal Phone</Text>
-              <Text style={styles.detailValue}>{activeProfile.phone}</Text>
-            </View>
-          </View>
-        )}
-      </Card>
-
-      <View style={{ height: Spacing.md }} />
-
-      {/* ── 6. Care Team & Device Information ────────────────── */}
-      <Card style={styles.sectionCard}>
-        <View style={styles.cardHeader}>
-          <ShieldCheck size={18} color={Colors.safe} />
-          <Text style={styles.cardTitle}>CARE MANAGEMENT & IOT DEVICE</Text>
-        </View>
-
-        <View style={styles.teamRow}>
-          <UserCheck size={16} color={Colors.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.teamRole}>Assigned Caregiver</Text>
-            <Text style={styles.teamMember}>{activeProfile.primaryCaregiverName || 'David Miller'}</Text>
-          </View>
-        </View>
-
-        <View style={styles.teamRow}>
-          <Wifi size={16} color={Colors.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.teamRole}>IoT Wearable Hardware</Text>
-            <Text style={styles.teamMember}>
-              {activeProfile.deviceStatus.deviceName} ({activeProfile.deviceStatus.deviceId})
-            </Text>
-          </View>
-        </View>
-      </Card>
-
-      {/* ── 7. Bottom Actions ────────────────────────────────── */}
-      <View style={styles.bottomActions}>
-        <Button
-          title="Edit Profile Information"
-          onPress={() => router.push('/(parent)/profile/edit')}
-          variant="primary"
-          size="lg"
-          fullWidth
-          leftIcon={<Edit3 size={18} color={Colors.white} />}
-        />
-
-        <View style={{ height: Spacing.sm }} />
-
-        <Button
-          title="Return to Dashboard"
-          onPress={handleBack}
-          variant="secondary"
-          size="lg"
-          fullWidth
-        />
+          ))}
+        </Card>
       </View>
-        <View style={{ height: Spacing['2xl'] }} />
+
+      {/* Active Medications matching design */}
+      <View style={styles.sectionWrap}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionOverline}>ACTIVE MEDICATIONS</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/care' as any)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sectionActionText}>Full list →</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Card style={styles.cardZeroPadding}>
+          {[
+            { name: 'Aspirin 100mg', time: 'Morning · 08:00', color: '#3C6FDB' },
+            { name: 'Lisinopril 10mg', time: 'Morning · 08:00', color: '#16A34A' },
+            { name: 'Metformin 500mg', time: 'After Lunch · 13:00', color: '#EA580C' },
+          ].map((med, i) => (
+            <View
+              key={med.name}
+              style={[
+                styles.medicationRow,
+                i === 2 && { borderBottomWidth: 0 },
+              ]}
+            >
+              <View style={[styles.medDot, { backgroundColor: med.color }]} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.medNameText}>{med.name}</Text>
+                <Text style={styles.medTimeText}>{med.time}</Text>
+              </View>
+              <CheckCircle size={17} color="#16A34A" />
+            </View>
+          ))}
+        </Card>
+      </View>
+
+      <View style={{ height: Spacing.xl }} />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  topNav: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingVertical: Spacing.xs,
-    marginBottom: Spacing.md,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
+  editBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceSecondary,
   },
-  navTitle: {
-    ...Typography.bodySemiBold,
-    fontSize: 17,
-    color: Colors.textPrimary,
+  profileCard: {
+    padding: 0,
+    overflow: 'hidden',
+    marginBottom: 14,
   },
-  editHeaderButton: {
+  gradientHeader: {
+    height: 70,
+    backgroundColor: '#3C6FDB',
+  },
+  profileBody: {
+    paddingHorizontal: 16,
+    paddingBottom: 16,
+    marginTop: -32,
+  },
+  avatarRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.primaryFaded,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.full,
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    marginBottom: 10,
   },
-  editHeaderText: {
-    ...Typography.captionMedium,
-    color: Colors.primary,
-    fontWeight: '600',
+  avatarImage: {
+    width: 68,
+    height: 68,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: '#FFFFFF',
   },
-  heroCard: {
-    backgroundColor: Colors.white,
+  statusBadgeWrap: {
+    marginBottom: 4,
   },
-  heroRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.base,
+  profileName: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
   },
-  heroMeta: {
-    flex: 1,
-  },
-  heroName: {
-    ...Typography.h2,
-    color: Colors.textPrimary,
-  },
-  heroSub: {
-    ...Typography.bodySmall,
-    color: Colors.textSecondary,
+  profileSub: {
+    fontSize: 12,
+    color: '#64748B',
     marginTop: 2,
   },
-  statusWrap: {
-    marginTop: Spacing.xs,
-    alignSelf: 'flex-start',
-  },
-  deviceStrip: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: Colors.surfaceSecondary,
-    borderRadius: BorderRadius.sm,
-    paddingVertical: Spacing.sm,
-    paddingHorizontal: Spacing.md,
-    marginTop: Spacing.base,
-  },
-  deviceMetric: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    justifyContent: 'center',
-  },
-  deviceMetricText: {
-    ...Typography.captionMedium,
-    color: Colors.textSecondary,
-  },
-  deviceDivider: {
-    width: 1,
-    height: 18,
-    backgroundColor: Colors.border,
-  },
-  sectionCard: {
-    backgroundColor: Colors.white,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.xs,
-    marginBottom: Spacing.base,
-  },
-  cardTitle: {
-    ...Typography.overline,
-    color: Colors.textTertiary,
-    letterSpacing: 1,
-  },
-  contactItem: {
+  clinicalGrid: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    marginTop: 14,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
   },
-  contactInfo: {
+  clinicalCell: {
     flex: 1,
-  },
-  primaryBadgeRow: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.xs,
   },
-  contactName: {
-    ...Typography.bodySemiBold,
-    color: Colors.textPrimary,
+  clinicalDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: '#E2E8F0',
   },
-  primaryPill: {
-    backgroundColor: 'rgba(239, 68, 68, 0.12)',
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xs,
-  },
-  primaryPillText: {
-    ...Typography.overline,
+  clinicalLabel: {
     fontSize: 9,
-    color: Colors.critical,
+    fontWeight: '700',
+    color: '#94A3B8',
     letterSpacing: 0.5,
   },
-  contactRelation: {
-    ...Typography.bodySmall,
-    color: Colors.textSecondary,
+  clinicalVal: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginTop: 2,
+  },
+  addressCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    marginBottom: 14,
+  },
+  addressIconWrap: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryFaded,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  addressHeading: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  addressText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 2,
+  },
+  roomText: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  conditionsCard: {
+    padding: 16,
+    marginBottom: 14,
+  },
+  cardHeading: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 10,
+  },
+  conditionsList: {
+    gap: 8,
+  },
+  conditionRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  conditionRedDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#EF4444',
+  },
+  conditionText: {
+    fontSize: 13,
+    color: '#334155',
+    fontWeight: '500',
+  },
+  allergiesCard: {
+    padding: 16,
+    marginBottom: 14,
+  },
+  allergiesWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+  },
+  allergyPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    backgroundColor: '#FEF2F2',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 10,
+  },
+  allergyText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#DC2626',
+  },
+  sectionWrap: {
+    marginBottom: 14,
+  },
+  cardZeroPadding: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  contactRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    gap: 12,
+  },
+  contactInitials: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contactInitialsText: {
+    fontSize: 14,
+    fontWeight: '800',
+  },
+  contactName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  contactRole: {
+    fontSize: 11,
+    color: '#64748B',
     marginTop: 1,
   },
   contactPhone: {
-    ...Typography.captionMedium,
-    color: Colors.primary,
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94A3B8',
     marginTop: 2,
   },
-  callActionButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: Colors.safe,
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.xs + 2,
-    borderRadius: BorderRadius.full,
-  },
-  callSecondaryButton: {
+  callCircleBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: Colors.primaryFaded,
-  },
-  callActionText: {
-    ...Typography.captionMedium,
-    color: Colors.white,
-    fontWeight: '600',
-  },
-  medicalRow: {
-    flexDirection: 'row',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  bloodTypeBox: {
-    backgroundColor: Colors.surfaceSecondary,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    minWidth: 90,
   },
-  bloodTypeLabel: {
-    ...Typography.overline,
-    fontSize: 9,
-    color: Colors.textTertiary,
+  deviceCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    gap: 12,
   },
-  bloodTypeValue: {
-    ...Typography.metricSmall,
-    color: Colors.critical,
+  deviceIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: Colors.primaryFaded,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  deviceName: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  deviceSub: {
+    fontSize: 11,
+    color: '#64748B',
     marginTop: 2,
   },
-  allergiesBox: {
-    flex: 1,
-    backgroundColor: Colors.surfaceSecondary,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
-  },
-  alertHeader: {
+  sectionHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    marginBottom: 6,
+    justifyContent: 'space-between',
+    marginBottom: 8,
   },
-  allergiesLabel: {
-    ...Typography.overline,
-    fontSize: 9,
-    color: Colors.warning,
+  sectionOverline: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
   },
-  chipsWrap: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 6,
+  sectionActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#3C6FDB',
   },
-  allergyChip: {
-    backgroundColor: Colors.warningLight,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.xs,
-  },
-  allergyText: {
-    ...Typography.caption,
-    fontSize: 11,
-    color: '#B45309',
-    fontWeight: '600',
-  },
-  conditionSection: {
-    marginBottom: Spacing.md,
-  },
-  metaSubhead: {
-    ...Typography.overline,
-    fontSize: 10,
-    color: Colors.textTertiary,
-    marginBottom: 6,
-  },
-  conditionChip: {
-    backgroundColor: Colors.primaryFaded,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.xs,
-  },
-  conditionText: {
-    ...Typography.caption,
-    fontSize: 11,
-    color: Colors.primaryDark,
-    fontWeight: '500',
-  },
-  medNoteBox: {
-    backgroundColor: '#FEF9C3',
-    borderColor: '#FDE047',
-    borderWidth: 1,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
-    marginBottom: Spacing.md,
-  },
-  medNoteLabel: {
-    ...Typography.overline,
-    fontSize: 9,
-    color: '#854D0E',
-    marginBottom: 2,
-  },
-  medNoteText: {
-    ...Typography.bodySmall,
-    color: '#713F12',
-    lineHeight: 18,
-  },
-  physicianBox: {
+  medicationRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: Colors.surfaceSecondary,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+    gap: 12,
   },
-  physicianName: {
-    ...Typography.bodySmallSemiBold,
-    color: Colors.textPrimary,
+  medDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
   },
-  hospitalName: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 1,
+  medNameText: {
+    fontSize: 13.5,
+    fontWeight: '700',
+    color: '#1E293B',
   },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  detailMeta: {
-    flex: 1,
-  },
-  detailLabel: {
-    ...Typography.caption,
-    color: Colors.textTertiary,
-  },
-  detailValue: {
-    ...Typography.bodySmall,
-    color: Colors.textPrimary,
-    marginTop: 1,
-  },
-  teamRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingVertical: Spacing.xs,
-  },
-  teamRole: {
-    ...Typography.caption,
-    color: Colors.textTertiary,
-  },
-  teamMember: {
-    ...Typography.bodySmallSemiBold,
-    color: Colors.textPrimary,
-    marginTop: 1,
-  },
-  bottomActions: {
-    paddingVertical: Spacing.xl,
-    paddingBottom: Spacing['3xl'],
+  medTimeText: {
+    fontSize: 11.5,
+    color: '#64748B',
+    marginTop: 2,
   },
 });

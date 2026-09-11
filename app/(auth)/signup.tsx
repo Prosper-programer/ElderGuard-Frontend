@@ -1,41 +1,56 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  TextInput,
+  SafeAreaView,
+  StatusBar,
+  ActivityIndicator,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  ArrowLeft,
-  User as UserIcon,
-  Mail,
-  Lock,
-  Shield,
-  HeartHandshake,
+  ChevronLeft,
+  ArrowRight,
   Check,
+  Eye,
+  EyeOff,
   AlertCircle,
-  Sparkles,
 } from 'lucide-react-native';
-import { ScreenContainer, Button, TextInput } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 
-export default function SignUpScreen() {
+export default function SignupScreen() {
   const router = useRouter();
   const { signup } = useAuth();
 
-  const [selectedRole, setSelectedRole] = useState<'parent' | 'caregiver'>('parent');
-  const [name, setName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [agreed, setAgreed] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleSignUp = async () => {
+  const handleCreateAccount = async () => {
     setError(null);
-    if (!name.trim()) {
-      setError('Please enter your full name.');
+
+    if (!firstName.trim() || !lastName.trim()) {
+      setError('Please enter your first and last name.');
       return;
     }
     if (!email.trim() || !email.includes('@')) {
       setError('Please enter a valid email address.');
+      return;
+    }
+    if (!phone.trim()) {
+      setError('Please enter your phone number.');
       return;
     }
     if (password.length < 6) {
@@ -46,13 +61,18 @@ export default function SignUpScreen() {
       setError('Passwords do not match.');
       return;
     }
+    if (!agreed) {
+      setError('Please agree to the Terms of Service and Privacy Policy.');
+      return;
+    }
 
     setLoading(true);
-    const result = await signup(name, email, password, selectedRole);
+    const fullName = `${firstName.trim()} ${lastName.trim()}`;
+    const result = await signup(fullName, email.trim(), password, 'parent');
     setLoading(false);
 
     if (!result.success) {
-      setError(result.error || 'Registration failed. Please try again.');
+      setError(result.error || 'Failed to create account. Please try again.');
     } else {
       router.replace('/');
     }
@@ -67,434 +87,400 @@ export default function SignUpScreen() {
   };
 
   return (
-    <ScreenContainer scrollable keyboardAvoiding padded backgroundColor={Colors.background}>
-      {/* Navigation Bar */}
-      <View style={styles.navBar}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <ArrowLeft size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
-      </View>
-
-      {/* Screen Header */}
-      <View style={styles.header}>
-        <Text style={styles.title}>Create Account</Text>
-        <Text style={styles.subtitle}>
-          Choose your account type to get started with ElderGuard.
-        </Text>
-      </View>
-
-      {/* ── Modern 2-Box Role Selector In A Row ─────────────── */}
-      <Text style={styles.sectionLabel}>CHOOSE YOUR ROLE</Text>
-      <View style={styles.roleBoxesRow}>
-        {/* Parent Role Box */}
-        <TouchableOpacity
-          style={[
-            styles.roleBox,
-            selectedRole === 'parent' && styles.roleBoxParentActive,
-          ]}
-          onPress={() => {
-            setSelectedRole('parent');
-            if (error) setError(null);
-          }}
-          activeOpacity={0.8}
-        >
-          {selectedRole === 'parent' && (
-            <View style={[styles.checkBubble, { backgroundColor: Colors.primary }]}>
-              <Check size={10} color={Colors.white} strokeWidth={3} />
-            </View>
-          )}
-
-          <View
-            style={[
-              styles.iconCircle,
-              selectedRole === 'parent'
-                ? { backgroundColor: Colors.white }
-                : { backgroundColor: Colors.surfaceSecondary },
-            ]}
+    <SafeAreaView style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor="#1E3A8A" />
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="handled"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Header with blue gradient style */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            onPress={handleBack}
+            style={styles.backButton}
+            hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
+            activeOpacity={0.7}
           >
-            <Shield
-              size={22}
-              color={selectedRole === 'parent' ? Colors.primary : Colors.textSecondary}
-            />
-          </View>
+            <ChevronLeft size={18} color="rgba(255, 255, 255, 0.7)" />
+            <Text style={styles.backText}>Welcome</Text>
+          </TouchableOpacity>
 
-          <Text
-            style={[
-              styles.roleTitle,
-              selectedRole === 'parent' && { color: Colors.primary },
-            ]}
-          >
-            Parent
-          </Text>
-          <Text style={styles.roleSubtitle}>Family Manager</Text>
-
-          <View
-            style={[
-              styles.miniBadge,
-              selectedRole === 'parent'
-                ? { backgroundColor: Colors.primary }
-                : { backgroundColor: Colors.surfaceSecondary },
-            ]}
-          >
-            <Text
-              style={[
-                styles.miniBadgeText,
-                selectedRole === 'parent'
-                  ? { color: Colors.white }
-                  : { color: Colors.textTertiary },
-              ]}
-            >
-              Full Control
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        {/* Caregiver Role Box */}
-        <TouchableOpacity
-          style={[
-            styles.roleBox,
-            selectedRole === 'caregiver' && styles.roleBoxCaregiverActive,
-          ]}
-          onPress={() => {
-            setSelectedRole('caregiver');
-            if (error) setError(null);
-          }}
-          activeOpacity={0.8}
-        >
-          {selectedRole === 'caregiver' && (
-            <View style={[styles.checkBubble, { backgroundColor: Colors.safe }]}>
-              <Check size={10} color={Colors.white} strokeWidth={3} />
-            </View>
-          )}
-
-          <View
-            style={[
-              styles.iconCircle,
-              selectedRole === 'caregiver'
-                ? { backgroundColor: Colors.white }
-                : { backgroundColor: Colors.surfaceSecondary },
-            ]}
-          >
-            <HeartHandshake
-              size={22}
-              color={selectedRole === 'caregiver' ? Colors.safe : Colors.textSecondary}
-            />
-          </View>
-
-          <Text
-            style={[
-              styles.roleTitle,
-              selectedRole === 'caregiver' && { color: Colors.safe },
-            ]}
-          >
-            Caregiver
-          </Text>
-          <Text style={styles.roleSubtitle}>Care Assistant</Text>
-
-          <View
-            style={[
-              styles.miniBadge,
-              selectedRole === 'caregiver'
-                ? { backgroundColor: Colors.safe }
-                : { backgroundColor: Colors.surfaceSecondary },
-            ]}
-          >
-            <Text
-              style={[
-                styles.miniBadgeText,
-                selectedRole === 'caregiver'
-                  ? { color: Colors.white }
-                  : { color: Colors.textTertiary },
-              ]}
-            >
-              Assigned Care
-            </Text>
-          </View>
-        </TouchableOpacity>
-      </View>
-
-      {/* ── Dynamic Role Capability Note ────────────────────── */}
-      <View style={styles.roleDetailCard}>
-        <View style={styles.roleDetailHeader}>
-          <Sparkles
-            size={15}
-            color={selectedRole === 'parent' ? Colors.primary : Colors.safe}
-          />
-          <Text style={styles.roleDetailHeading}>
-            {selectedRole === 'parent'
-              ? 'Parent Manager Privileges'
-              : 'Caregiver Assistant Privileges'}
+          <Text style={styles.screenTitle}>Create account</Text>
+          <Text style={styles.screenSubtitle}>
+            Parent registration · Complete your details in one step
           </Text>
         </View>
-        <Text style={styles.roleDetailText}>
-          {selectedRole === 'parent'
-            ? 'You can create elderly profiles, configure geofencing boundaries, monitor live vital statistics, and generate formal health & safety reports.'
-            : 'You will access assigned elderly loved ones to log medication adherence, record daily routine completions, and view live status updates.'}
-        </Text>
-      </View>
 
-      {/* ── Form Fields ─────────────────────────────────────── */}
-      <View style={styles.form}>
-        {error && (
-          <View style={styles.errorBanner}>
-            <AlertCircle size={18} color={Colors.critical} />
-            <Text style={styles.errorBannerText}>{error}</Text>
+        {/* Body Content */}
+        <View style={styles.content}>
+          {error && (
+            <View style={styles.errorCard}>
+              <AlertCircle size={17} color="#EF4444" />
+              <Text style={styles.errorText}>{error}</Text>
+            </View>
+          )}
+
+          {/* ── Single-Step Form ────────────────────────────── */}
+          <View style={styles.formContainer}>
+            {/* First & Last Name */}
+            <View style={styles.nameRow}>
+              <View style={styles.halfInput}>
+                <Text style={styles.inputLabel}>First name</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Robert"
+                  placeholderTextColor="#94A3B8"
+                  value={firstName}
+                  onChangeText={(t) => {
+                    setFirstName(t);
+                    if (error) setError(null);
+                  }}
+                  autoCapitalize="words"
+                />
+              </View>
+
+              <View style={styles.halfInput}>
+                <Text style={styles.inputLabel}>Last name</Text>
+                <TextInput
+                  style={styles.textInput}
+                  placeholder="Thompson"
+                  placeholderTextColor="#94A3B8"
+                  value={lastName}
+                  onChangeText={(t) => {
+                    setLastName(t);
+                    if (error) setError(null);
+                  }}
+                  autoCapitalize="words"
+                />
+              </View>
+            </View>
+
+            {/* Email Address */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Email address</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="you@email.com"
+                placeholderTextColor="#94A3B8"
+                value={email}
+                onChangeText={(t) => {
+                  setEmail(t);
+                  if (error) setError(null);
+                }}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+              />
+            </View>
+
+            {/* Phone Number */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Phone number</Text>
+              <TextInput
+                style={styles.textInput}
+                placeholder="+44 7700 900000"
+                placeholderTextColor="#94A3B8"
+                value={phone}
+                onChangeText={(t) => {
+                  setPhone(t);
+                  if (error) setError(null);
+                }}
+                keyboardType="phone-pad"
+              />
+            </View>
+
+            {/* Password */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Create password</Text>
+              <View style={styles.passwordInputWrap}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Minimum 6 characters"
+                  placeholderTextColor="#94A3B8"
+                  value={password}
+                  onChangeText={(t) => {
+                    setPassword(t);
+                    if (error) setError(null);
+                  }}
+                  secureTextEntry={!showPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowPassword(!showPassword)}
+                  style={styles.eyeButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  {showPassword ? (
+                    <EyeOff size={18} color="#94A3B8" />
+                  ) : (
+                    <Eye size={18} color="#94A3B8" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Confirm Password */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.inputLabel}>Confirm password</Text>
+              <View style={styles.passwordInputWrap}>
+                <TextInput
+                  style={styles.passwordInput}
+                  placeholder="Re-enter password"
+                  placeholderTextColor="#94A3B8"
+                  value={confirmPassword}
+                  onChangeText={(t) => {
+                    setConfirmPassword(t);
+                    if (error) setError(null);
+                  }}
+                  secureTextEntry={!showConfirmPassword}
+                />
+                <TouchableOpacity
+                  onPress={() => setShowConfirmPassword(!showConfirmPassword)}
+                  style={styles.eyeButton}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                >
+                  {showConfirmPassword ? (
+                    <EyeOff size={18} color="#94A3B8" />
+                  ) : (
+                    <Eye size={18} color="#94A3B8" />
+                  )}
+                </TouchableOpacity>
+              </View>
+            </View>
+
+            {/* Terms Agreement Checkbox */}
+            <TouchableOpacity
+              style={styles.termsRow}
+              onPress={() => setAgreed(!agreed)}
+              activeOpacity={0.8}
+            >
+              <View
+                style={[
+                  styles.checkbox,
+                  agreed && styles.checkboxActive,
+                ]}
+              >
+                {agreed && <Check size={12} color="#FFFFFF" strokeWidth={3} />}
+              </View>
+              <Text style={styles.termsText}>
+                I agree to the{' '}
+                <Text style={styles.termsLink}>Terms of Service</Text> and{' '}
+                <Text style={styles.termsLink}>Privacy Policy</Text>
+              </Text>
+            </TouchableOpacity>
+
+            {/* Submit Button */}
+            <TouchableOpacity
+              style={styles.submitBtn}
+              onPress={handleCreateAccount}
+              disabled={loading}
+              activeOpacity={0.88}
+            >
+              {loading ? (
+                <ActivityIndicator color="#FFFFFF" />
+              ) : (
+                <>
+                  <Text style={styles.submitBtnText}>Create Account</Text>
+                  <ArrowRight size={18} color="#FFFFFF" />
+                </>
+              )}
+            </TouchableOpacity>
+
+            {/* Sign in link */}
+            <TouchableOpacity
+              onPress={() => router.push('/(auth)/login' as any)}
+              style={styles.signInLinkRow}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.signInLinkText}>
+                Already have an account?{' '}
+                <Text style={styles.signInLinkHighlight}>Sign in</Text>
+              </Text>
+            </TouchableOpacity>
           </View>
-        )}
+        </View>
 
-        <TextInput
-          label="Full Name"
-          placeholder="e.g. Eleanor Vance"
-          value={name}
-          onChangeText={(t) => {
-            setName(t);
-            if (error) setError(null);
-          }}
-          leftIcon={<UserIcon size={18} color={Colors.textTertiary} />}
-        />
-
-        <View style={styles.spacing} />
-
-        <TextInput
-          label="Email Address"
-          placeholder="you@example.com"
-          keyboardType="email-address"
-          autoCapitalize="none"
-          autoCorrect={false}
-          value={email}
-          onChangeText={(t) => {
-            setEmail(t);
-            if (error) setError(null);
-          }}
-          leftIcon={<Mail size={18} color={Colors.textTertiary} />}
-        />
-
-        <View style={styles.spacing} />
-
-        <TextInput
-          label="Password"
-          placeholder="At least 6 characters"
-          secureTextEntry
-          value={password}
-          onChangeText={(t) => {
-            setPassword(t);
-            if (error) setError(null);
-          }}
-          leftIcon={<Lock size={18} color={Colors.textTertiary} />}
-        />
-
-        <View style={styles.spacing} />
-
-        <TextInput
-          label="Confirm Password"
-          placeholder="Re-enter your password"
-          secureTextEntry
-          value={confirmPassword}
-          onChangeText={(t) => {
-            setConfirmPassword(t);
-            if (error) setError(null);
-          }}
-          leftIcon={<Lock size={18} color={Colors.textTertiary} />}
-        />
-
-        <Button
-          title={`Create Account as ${selectedRole === 'parent' ? 'Parent' : 'Caregiver'}`}
-          onPress={handleSignUp}
-          variant="primary"
-          size="lg"
-          fullWidth
-          loading={loading}
-          style={{
-            backgroundColor: selectedRole === 'parent' ? Colors.primary : Colors.safe,
-            marginTop: Spacing.xl,
-          }}
-        />
-      </View>
-
-      {/* Switch to Login */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>Already have an account?</Text>
-        <TouchableOpacity
-          onPress={() => router.push('/(auth)/login')}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.footerLink}>Log In</Text>
-        </TouchableOpacity>
-      </View>
-    </ScreenContainer>
+        <View style={{ height: 32 }} />
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  navBar: {
-    paddingVertical: Spacing.xs,
-    marginBottom: Spacing.sm,
+  container: {
+    flex: 1,
+    backgroundColor: '#F0F4FA',
   },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: BorderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: Colors.surfaceSecondary,
+  scrollContent: {
+    flexGrow: 1,
   },
   header: {
-    marginBottom: Spacing.lg,
+    backgroundColor: '#3C6FDB',
+    paddingHorizontal: 20,
+    paddingTop: 16,
+    paddingBottom: 28,
+    borderBottomLeftRadius: 28,
+    borderBottomRightRadius: 28,
   },
-  title: {
-    ...Typography.h1,
-    color: Colors.textPrimary,
-  },
-  subtitle: {
-    ...Typography.body,
-    color: Colors.textSecondary,
-    marginTop: 2,
-    lineHeight: 20,
-  },
-  sectionLabel: {
-    ...Typography.overline,
-    color: Colors.textTertiary,
-    marginBottom: Spacing.xs,
-    letterSpacing: 1,
-  },
-  roleBoxesRow: {
+  backButton: {
     flexDirection: 'row',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
+    alignItems: 'center',
+    gap: 4,
+    marginBottom: 16,
+    alignSelf: 'flex-start',
   },
-  roleBox: {
+  backText: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontWeight: '500',
+  },
+  screenTitle: {
+    fontSize: 26,
+    fontWeight: '800',
+    color: '#FFFFFF',
+    letterSpacing: -0.5,
+  },
+  screenSubtitle: {
+    fontSize: 13,
+    color: 'rgba(255, 255, 255, 0.75)',
+    marginTop: 4,
+    fontWeight: '500',
+  },
+  content: {
+    paddingHorizontal: 20,
+    paddingTop: 20,
+  },
+  errorCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: '#FEF2F2',
+    borderColor: '#FECACA',
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 16,
+  },
+  errorText: {
+    fontSize: 13,
+    color: '#DC2626',
     flex: 1,
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
+    fontWeight: '500',
+  },
+  formContainer: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 20,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 1,
+    gap: 16,
+  },
+  nameRow: {
+    flexDirection: 'row',
+    gap: 12,
+  },
+  halfInput: {
+    flex: 1,
+  },
+  inputGroup: {
+    gap: 6,
+  },
+  inputLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  textInput: {
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: '#0F172A',
+  },
+  passwordInputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    borderRadius: 14,
+    paddingHorizontal: 14,
+  },
+  passwordInput: {
+    flex: 1,
+    paddingVertical: 12,
+    fontSize: 14,
+    color: '#0F172A',
+  },
+  eyeButton: {
+    padding: 6,
+  },
+  termsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginTop: 4,
+  },
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 6,
     borderWidth: 1.5,
-    borderColor: Colors.border,
-    paddingVertical: Spacing.base,
-    paddingHorizontal: Spacing.sm,
-    alignItems: 'center',
-    position: 'relative',
-  },
-  roleBoxParentActive: {
-    borderColor: Colors.primary,
-    backgroundColor: Colors.primaryFaded,
-    shadowColor: Colors.primary,
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  roleBoxCaregiverActive: {
-    borderColor: Colors.safe,
-    backgroundColor: Colors.safeBg,
-    shadowColor: Colors.safe,
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 3,
-  },
-  checkBubble: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 16,
-    height: 16,
-    borderRadius: BorderRadius.full,
+    borderColor: '#CBD5E1',
     alignItems: 'center',
     justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
   },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: Spacing.xs,
+  checkboxActive: {
+    backgroundColor: '#2563EB',
+    borderColor: '#2563EB',
   },
-  roleTitle: {
-    ...Typography.bodySemiBold,
-    fontSize: 15,
-    color: Colors.textPrimary,
+  termsText: {
+    fontSize: 12,
+    color: '#64748B',
+    flex: 1,
+    lineHeight: 16,
   },
-  roleSubtitle: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 1,
-  },
-  miniBadge: {
-    marginTop: 6,
-    paddingHorizontal: 8,
-    paddingVertical: 2,
-    borderRadius: BorderRadius.xl,
-  },
-  miniBadgeText: {
-    ...Typography.caption,
-    fontSize: 10,
+  termsLink: {
+    color: '#2563EB',
     fontWeight: '600',
   },
-  roleDetailCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
-    borderWidth: 1,
-    borderColor: Colors.border,
-    padding: Spacing.md,
-    marginBottom: Spacing.xl,
-  },
-  roleDetailHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: 4,
-  },
-  roleDetailHeading: {
-    ...Typography.bodySmallSemiBold,
-    color: Colors.textPrimary,
-    fontSize: 13,
-  },
-  roleDetailText: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    lineHeight: 17,
-  },
-  form: {
-    width: '100%',
-  },
-  spacing: {
-    height: Spacing.md,
-  },
-  errorBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.sm,
-    backgroundColor: Colors.criticalBg,
-    borderColor: Colors.critical,
-    borderWidth: 1,
-    padding: Spacing.md,
-    borderRadius: BorderRadius.sm,
-    marginBottom: Spacing.base,
-  },
-  errorBannerText: {
-    ...Typography.bodySmall,
-    color: Colors.critical,
-    flex: 1,
-  },
-  submitButton: {
-    marginTop: Spacing.xl,
-  },
-  footer: {
+  submitBtn: {
+    backgroundColor: '#2563EB',
+    borderRadius: 16,
+    paddingVertical: 15,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    gap: Spacing.xs,
-    paddingVertical: Spacing.xl,
-    marginTop: 'auto',
+    gap: 8,
+    marginTop: 8,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    elevation: 3,
   },
-  footerText: {
-    ...Typography.body,
-    color: Colors.textSecondary,
+  submitBtnText: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#FFFFFF',
   },
-  footerLink: {
-    ...Typography.bodySemiBold,
-    color: Colors.primary,
+  signInLinkRow: {
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  signInLinkText: {
+    fontSize: 13,
+    color: '#64748B',
+  },
+  signInLinkHighlight: {
+    color: '#2563EB',
+    fontWeight: '700',
   },
 });

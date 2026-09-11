@@ -1,330 +1,449 @@
 import React from 'react';
-import { View, Text, StyleSheet, Image, useWindowDimensions } from 'react-native';
-import { useRouter } from 'expo-router';
 import {
-  Activity,
-  Bell,
-  HeartHandshake,
-  ArrowRight,
+  View,
+  Text,
+  StyleSheet,
+  Image,
+  ScrollView,
+  TouchableOpacity,
+  SafeAreaView,
+  StatusBar,
+  Dimensions,
+} from 'react-native';
+import { useRouter } from 'expo-router';
+import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
+import {
   Shield,
-  Sparkles,
+  Heart,
+  MapPin,
+  Bell,
+  Brain,
+  ArrowRight,
 } from 'lucide-react-native';
-import { ScreenContainer, Button, Card } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+
+const { height: WINDOW_HEIGHT, width: WINDOW_WIDTH } = Dimensions.get('window');
+const HERO_HEIGHT = Math.min(Math.max(WINDOW_HEIGHT * 0.48, 360), 440);
+
+const FEATURE_CHIPS = [
+  { icon: Heart, text: 'Health vitals', color: '#EF4444' },
+  { icon: MapPin, text: 'GPS location', color: '#3C6FDB' },
+  { icon: Bell, text: 'Instant alerts', color: '#F59E0B' },
+  { icon: Shield, text: 'Fall detection', color: '#8B5CF6' },
+  { icon: Brain, text: 'AI insights', color: '#00FBFB' },
+];
 
 export default function WelcomeScreen() {
   const router = useRouter();
-  const { height: windowHeight } = useWindowDimensions();
-
-  const isCompact = windowHeight < 750;
-  const heroHeight = Math.min(Math.max(windowHeight * 0.28, 190), 270);
 
   return (
-    <ScreenContainer scrollable padded backgroundColor={Colors.background}>
-      {/* ── 1. Hero Image with Enhanced Design ──────────────── */}
-      <View style={[styles.heroCard, { height: heroHeight }]}>
-        <Image
-          source={require('@/assets/images/auth_welcome_hero.jpg')}
-          style={styles.heroImage}
-          resizeMode="cover"
-        />
+    <SafeAreaView style={styles.safeArea}>
+      <StatusBar barStyle="light-content" backgroundColor="#060D1F" />
+      <ScrollView
+        style={styles.container}
+        contentContainerStyle={styles.scrollContent}
+        bounces={false}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Full-bleed hero banner */}
+        <View style={[styles.heroContainer, { height: HERO_HEIGHT }]}>
+          <Image
+            source={{
+              uri: 'https://images.unsplash.com/photo-1758686253861-bbfd56e5ba7a?w=800&auto=format&fit=crop',
+            }}
+            defaultSource={require('@/assets/images/auth_welcome_hero.jpg')}
+            style={styles.heroImage}
+            resizeMode="cover"
+          />
 
-        {/* Top Floating Badge */}
-        <View style={styles.topGlassBadge}>
-          <Shield size={14} color={Colors.accent} />
-          <Text style={styles.topGlassText}>ElderGuard Care Ecosystem</Text>
-        </View>
+          {/* Smooth Linear Gradient Overlay via SVG (Zero banding / degradation) */}
+          <Svg
+            style={StyleSheet.absoluteFillObject}
+            width="100%"
+            height={HERO_HEIGHT}
+          >
+            <Defs>
+              <LinearGradient id="heroGradient" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0%" stopColor="#060D1F" stopOpacity="0.45" />
+                <Stop offset="25%" stopColor="#060D1F" stopOpacity="0.1" />
+                <Stop offset="55%" stopColor="#060D1F" stopOpacity="0.5" />
+                <Stop offset="85%" stopColor="#060D1F" stopOpacity="0.92" />
+                <Stop offset="100%" stopColor="#060D1F" stopOpacity="1" />
+              </LinearGradient>
+            </Defs>
+            <Rect x="0" y="0" width="100%" height={HERO_HEIGHT} fill="url(#heroGradient)" />
+          </Svg>
 
-        {/* Bottom Floating Status Overlay */}
-        <View style={styles.bottomStatusBadge}>
-          <View style={styles.livePulseOuter}>
-            <View style={styles.livePulseInner} />
-          </View>
-          <View>
-            <Text style={styles.statusBadgeTitle}>24/7 Smart Protection</Text>
-            <Text style={styles.statusBadgeSubtitle}>IoT Wearable & Family Connected</Text>
-          </View>
-        </View>
-      </View>
-
-      {/* ── 2. Brand Heading & Concept ──────────────────────── */}
-      <View style={styles.headerSection}>
-        <Text style={styles.title}>ElderGuard</Text>
-        <Text style={styles.tagline}>
-          Intelligent Elderly Monitoring & Care Management
-        </Text>
-        <View style={styles.conceptPill}>
-          <Sparkles size={13} color={Colors.primary} />
-          <Text style={styles.conceptText}>
-            Monitor · Detect · Alert · Respond · Record
-          </Text>
-        </View>
-      </View>
-
-      {/* ── 3. What The App Does (3 Feature Cards) ─────────── */}
-      <View style={styles.featuresSection}>
-        <Text style={styles.sectionLabel}>WHAT ELDERGUARD DELIVERS</Text>
-
-        {/* Feature 1: Real-time Health Monitoring */}
-        <Card style={styles.featureCard}>
-          <View style={styles.featureRow}>
-            <View style={[styles.iconCircle, { backgroundColor: Colors.primaryFaded }]}>
-              <Activity size={22} color={Colors.primary} />
-            </View>
-            <View style={styles.featureTextContainer}>
-              <Text style={styles.featureTitle}>Real-time Health Monitoring</Text>
-              <Text style={styles.featureDescription}>
-                Continuous IoT vital tracking for heart rate, blood oxygen (SpO₂), body temperature, and physical mobility.
+          {/* Top Logo Bar */}
+          <View style={styles.topLogoBar}>
+            <View style={styles.brandRow}>
+              <View style={styles.brandIconBox}>
+                <Shield size={18} color="#FFFFFF" />
+              </View>
+              <Text style={styles.brandTitle}>
+                Elder<Text style={styles.brandAccent}>Guard</Text>
               </Text>
             </View>
+
+            <TouchableOpacity
+              style={styles.howItWorksButton}
+              onPress={() => router.push('/(auth)/about')}
+              activeOpacity={0.75}
+            >
+              <Text style={styles.howItWorksText}>How it works</Text>
+            </TouchableOpacity>
           </View>
-        </Card>
 
-        {/* Feature 2: Instant Emergency Alerts */}
-        <Card style={styles.featureCard}>
-          <View style={styles.featureRow}>
-            <View style={[styles.iconCircle, { backgroundColor: 'rgba(239, 68, 68, 0.10)' }]}>
-              <Bell size={22} color={Colors.critical} />
+          {/* Hero Copy */}
+          <View style={styles.heroCopyContainer}>
+            <View style={styles.liveIndicatorRow}>
+              <View style={styles.pulseOuter}>
+                <View style={styles.pulseInner} />
+              </View>
+              <Text style={styles.liveIndicatorText}>REAL-TIME MONITORING</Text>
             </View>
-            <View style={styles.featureTextContainer}>
-              <Text style={styles.featureTitle}>Instant Fall & Safety Alerts</Text>
-              <Text style={styles.featureDescription}>
-                Automated detection of abnormal vital thresholds, sudden falls, and optional geofence boundary exits.
-              </Text>
-            </View>
+
+            <Text style={styles.heroHeadline}>
+              Peace of mind,{'\n'}every heartbeat.
+            </Text>
+            <Text style={styles.heroSubtitle}>
+              Continuous safety monitoring for your loved ones — anytime, anywhere.
+            </Text>
           </View>
-        </Card>
-
-        {/* Feature 3: Care Coordination */}
-        <Card style={styles.featureCard}>
-          <View style={styles.featureRow}>
-            <View style={[styles.iconCircle, { backgroundColor: 'rgba(34, 197, 94, 0.10)' }]}>
-              <HeartHandshake size={22} color={Colors.safe} />
-            </View>
-            <View style={styles.featureTextContainer}>
-              <Text style={styles.featureTitle}>Care Coordination & Reminders</Text>
-              <Text style={styles.featureDescription}>
-                Medication schedules, daily routines, and shared progress records between family members and caregivers.
-              </Text>
-            </View>
-          </View>
-        </Card>
-      </View>
-
-      {/* ── 4. Primary Actions (Get Started & Go To Login) ─── */}
-      <View style={styles.actionSection}>
-        <Button
-          title="Create Account"
-          onPress={() => router.push('/(auth)/signup')}
-          variant="primary"
-          size={isCompact ? 'md' : 'lg'}
-          fullWidth
-          rightIcon={<ArrowRight size={18} color={Colors.white} />}
-        />
-
-        <Button
-          title="Sign In to Existing Account"
-          onPress={() => router.push('/(auth)/login')}
-          variant="outline"
-          size={isCompact ? 'md' : 'lg'}
-          fullWidth
-          style={[styles.signInButton, isCompact && { marginTop: Spacing.sm }]}
-        />
-
-        {/* Reassurance text */}
-        <View style={styles.footerNote}>
-          <Text style={styles.footerNoteText}>
-            Secured IoT connection · Role-based access for Parent & Caregiver
-          </Text>
         </View>
-      </View>
-    </ScreenContainer>
+
+        {/* Bottom Section */}
+        <View style={styles.bottomSection}>
+          {/* Feature Chips */}
+          <View style={styles.chipsWrap}>
+            {FEATURE_CHIPS.map((chip) => {
+              const IconComp = chip.icon;
+              return (
+                <View key={chip.text} style={styles.chip}>
+                  <IconComp size={12} color={chip.color} />
+                  <Text style={styles.chipText}>{chip.text}</Text>
+                </View>
+              );
+            })}
+          </View>
+
+          {/* Role Navigation Buttons */}
+          <View style={styles.roleButtonsContainer}>
+            {/* Parent Role Button */}
+            <TouchableOpacity
+              style={styles.parentRoleButton}
+              onPress={() =>
+                router.push({
+                  pathname: '/(auth)/login',
+                  params: { role: 'parent' },
+                } as any)
+              }
+              activeOpacity={0.88}
+            >
+              <View style={styles.roleIconBoxParent}>
+                <Heart size={20} color="#FFFFFF" />
+              </View>
+              <View style={styles.roleTextGroup}>
+                <Text style={styles.roleMainTitle}>I'm a Parent</Text>
+                <Text style={styles.roleSubTitle}>Monitor your loved one</Text>
+              </View>
+              <ArrowRight size={18} color="rgba(255, 255, 255, 0.7)" />
+            </TouchableOpacity>
+
+            {/* Caregiver Role Button */}
+            <TouchableOpacity
+              style={styles.caregiverRoleButton}
+              onPress={() =>
+                router.push({
+                  pathname: '/(auth)/login',
+                  params: { role: 'caregiver' },
+                } as any)
+              }
+              activeOpacity={0.88}
+            >
+              <View style={styles.roleIconBoxCaregiver}>
+                <Shield size={20} color="rgba(255, 255, 255, 0.8)" />
+              </View>
+              <View style={styles.roleTextGroup}>
+                <Text style={styles.roleMainTitleLight}>I'm a Caregiver</Text>
+                <Text style={styles.roleSubTitleLight}>Access assigned care</Text>
+              </View>
+              <ArrowRight size={18} color="rgba(255, 255, 255, 0.35)" />
+            </TouchableOpacity>
+          </View>
+
+          {/* Admin link */}
+          <TouchableOpacity
+            style={styles.adminAccessRow}
+            onPress={() => router.push('/(auth)/login')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.adminAccessText}>
+              Admin access · <Text style={styles.adminAccessBold}>Sign in here</Text>
+            </Text>
+          </TouchableOpacity>
+
+          {/* Create Account Banner */}
+          <TouchableOpacity
+            style={styles.createAccountCard}
+            onPress={() => router.push('/(auth)/signup')}
+            activeOpacity={0.85}
+          >
+            <Text style={styles.createAccountPrompt}>
+              New to ElderGuard?{' '}
+              <Text style={styles.createAccountLink}>Create a free account →</Text>
+            </Text>
+          </TouchableOpacity>
+        </View>
+      </ScrollView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  heroCard: {
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#060D1F',
+  },
+  container: {
+    flex: 1,
+    backgroundColor: '#060D1F',
+  },
+  scrollContent: {
+    flexGrow: 1,
+    paddingBottom: 28,
+  },
+  heroContainer: {
     width: '100%',
-    maxWidth: 560,
-    alignSelf: 'center',
-    borderRadius: BorderRadius.xl,
-    overflow: 'hidden',
-    backgroundColor: Colors.surfaceSecondary,
     position: 'relative',
-    borderWidth: 1.5,
-    borderColor: Colors.border,
-    marginBottom: Spacing.lg,
-    shadowColor: Colors.textPrimary,
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.12,
-    shadowRadius: 14,
-    elevation: 4,
+    backgroundColor: '#060D1F',
+    overflow: 'hidden',
   },
   heroImage: {
-    width: '100%',
-    height: '100%',
+    ...StyleSheet.absoluteFillObject,
+    opacity: 0.55,
   },
-  topGlassBadge: {
+  topLogoBar: {
     position: 'absolute',
-    top: Spacing.md,
-    left: Spacing.md,
+    top: 16,
+    left: 18,
+    right: 18,
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 6,
-    backgroundColor: 'rgba(15, 23, 42, 0.75)',
+    justifyContent: 'space-between',
+    zIndex: 10,
+  },
+  brandRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 9,
+  },
+  brandIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 11,
+    backgroundColor: '#3C6FDB',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#3C6FDB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 4,
+  },
+  brandTitle: {
+    color: '#FFFFFF',
+    fontSize: 20,
+    fontWeight: '700',
+    letterSpacing: -0.4,
+  },
+  brandAccent: {
+    color: '#00FBFB',
+  },
+  howItWorksButton: {
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.25)',
-    paddingHorizontal: Spacing.md,
+    paddingHorizontal: 13,
     paddingVertical: 6,
-    borderRadius: BorderRadius.full,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
   },
-  topGlassText: {
-    ...Typography.captionMedium,
-    color: Colors.white,
-    fontSize: 11,
-    letterSpacing: 0.3,
+  howItWorksText: {
+    color: 'rgba(255, 255, 255, 0.85)',
+    fontSize: 11.5,
+    fontWeight: '600',
   },
-  bottomStatusBadge: {
+  heroCopyContainer: {
     position: 'absolute',
-    bottom: Spacing.md,
-    left: Spacing.md,
-    right: Spacing.md,
+    bottom: 14,
+    left: 18,
+    right: 18,
+    zIndex: 5,
+  },
+  liveIndicatorRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
-    backgroundColor: 'rgba(15, 23, 42, 0.85)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
-    paddingHorizontal: Spacing.base,
-    paddingVertical: Spacing.md,
-    borderRadius: BorderRadius.lg,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.25,
-    shadowRadius: 8,
-    elevation: 5,
+    gap: 7,
+    marginBottom: 8,
   },
-  livePulseOuter: {
-    width: 24,
-    height: 24,
-    borderRadius: BorderRadius.full,
-    backgroundColor: 'rgba(34, 197, 94, 0.25)',
+  pulseOuter: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#00FBFB',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  livePulseInner: {
-    width: 12,
-    height: 12,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.safe,
+  pulseInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00FBFB',
   },
-  statusBadgeTitle: {
-    ...Typography.bodySemiBold,
-    color: Colors.white,
-    fontSize: 14,
-  },
-  statusBadgeSubtitle: {
-    ...Typography.caption,
-    color: 'rgba(241, 245, 249, 0.8)',
+  liveIndicatorText: {
+    color: '#00FBFB',
     fontSize: 11,
-    marginTop: 1,
+    fontWeight: '800',
+    letterSpacing: 1.2,
   },
-  headerSection: {
-    alignItems: 'center',
-    marginBottom: Spacing.xl,
-  },
-  title: {
-    ...Typography.h1,
-    fontSize: 30,
-    lineHeight: 36,
-    color: Colors.textPrimary,
+  heroHeadline: {
+    color: '#FFFFFF',
+    fontSize: 29,
+    fontWeight: '800',
+    lineHeight: 35,
     letterSpacing: -0.6,
+    marginBottom: 8,
   },
-  tagline: {
-    ...Typography.body,
-    color: Colors.textSecondary,
-    marginTop: Spacing.xs,
-    textAlign: 'center',
-    lineHeight: 22,
+  heroSubtitle: {
+    color: 'rgba(255, 255, 255, 0.68)',
+    fontSize: 13.5,
+    lineHeight: 19,
   },
-  conceptPill: {
+  bottomSection: {
+    backgroundColor: '#060D1F',
+    paddingHorizontal: 18,
+    paddingTop: 10,
+    gap: 16,
+  },
+  chipsWrap: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 4,
+  },
+  chip: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    backgroundColor: Colors.primaryFaded,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 999,
     borderWidth: 1,
-    borderColor: 'rgba(60, 111, 219, 0.2)',
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 5,
-    borderRadius: BorderRadius.full,
-    marginTop: Spacing.md,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
+    backgroundColor: 'rgba(255, 255, 255, 0.06)',
   },
-  conceptText: {
-    ...Typography.overline,
-    color: Colors.primary,
-    fontSize: 10,
-    letterSpacing: 1,
+  chipText: {
+    color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 11.5,
+    fontWeight: '500',
   },
-  featuresSection: {
-    gap: Spacing.md,
-    marginBottom: Spacing.xl,
-    width: '100%',
-    maxWidth: 560,
-    alignSelf: 'center',
+  roleButtonsContainer: {
+    gap: 11,
   },
-  sectionLabel: {
-    ...Typography.overline,
-    color: Colors.textTertiary,
-    marginBottom: Spacing.xs,
-    letterSpacing: 1.2,
-  },
-  featureCard: {
-    backgroundColor: Colors.white,
-  },
-  featureRow: {
+  parentRoleButton: {
+    backgroundColor: '#3C6FDB',
+    height: 58,
+    borderRadius: 18,
     flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: Spacing.base,
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    gap: 14,
+    shadowColor: '#3C6FDB',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.45,
+    shadowRadius: 16,
+    elevation: 4,
   },
-  iconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
+  caregiverRoleButton: {
+    backgroundColor: 'rgba(255, 255, 255, 0.07)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+    height: 58,
+    borderRadius: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    gap: 14,
+  },
+  roleIconBoxParent: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  featureTextContainer: {
+  roleIconBoxCaregiver: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  roleTextGroup: {
     flex: 1,
   },
-  featureTitle: {
-    ...Typography.bodySemiBold,
-    color: Colors.textPrimary,
-    marginBottom: 3,
+  roleMainTitle: {
+    color: '#FFFFFF',
+    fontSize: 15.5,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
-  featureDescription: {
-    ...Typography.bodySmall,
-    color: Colors.textSecondary,
-    lineHeight: 19,
+  roleSubTitle: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 11.5,
+    marginTop: 1,
   },
-  actionSection: {
-    marginTop: 'auto',
-    paddingBottom: Spacing.lg,
-    width: '100%',
-    maxWidth: 480,
-    alignSelf: 'center',
+  roleMainTitleLight: {
+    color: 'rgba(255, 255, 255, 0.92)',
+    fontSize: 15.5,
+    fontWeight: '700',
+    letterSpacing: -0.3,
   },
-  signInButton: {
-    marginTop: Spacing.md,
+  roleSubTitleLight: {
+    color: 'rgba(255, 255, 255, 0.45)',
+    fontSize: 11.5,
+    marginTop: 1,
   },
-  footerNote: {
-    marginTop: Spacing.lg,
+  adminAccessRow: {
     alignItems: 'center',
+    paddingVertical: 4,
   },
-  footerNoteText: {
-    ...Typography.caption,
-    color: Colors.textTertiary,
-    textAlign: 'center',
-    fontSize: 11,
-    lineHeight: 16,
+  adminAccessText: {
+    color: 'rgba(255, 255, 255, 0.35)',
+    fontSize: 12,
+  },
+  adminAccessBold: {
+    color: 'rgba(255, 255, 255, 0.68)',
+    fontWeight: '600',
+  },
+  createAccountCard: {
+    backgroundColor: 'rgba(60, 111, 219, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    borderRadius: 18,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  createAccountPrompt: {
+    color: 'rgba(255, 255, 255, 0.65)',
+    fontSize: 13,
+  },
+  createAccountLink: {
+    color: '#3C6FDB',
+    fontWeight: '700',
   },
 });

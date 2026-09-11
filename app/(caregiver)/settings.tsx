@@ -1,28 +1,52 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Switch,
+  ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Alert,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  ArrowLeft,
-  HeartHandshake,
-  LogOut,
-  Sparkles,
+  ChevronLeft,
+  Pencil,
+  User,
+  Shield,
+  FileText,
   ChevronRight,
+  LogOut,
+  HeartHandshake,
+  CheckCircle,
 } from 'lucide-react-native';
-import { ScreenContainer, Card, Button } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { BottomTabBar } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
+import { MOCK_CAREGIVER, MOCK_ELDERLY_PERSON } from '@/services/mockData';
 
 export default function CaregiverSettingsScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
+  const { logout } = useAuth();
 
   const [onDuty, setOnDuty] = useState(true);
-  const [pushAlerts, setPushAlerts] = useState(true);
-  const [taskReminders, setTaskReminders] = useState(true);
+  const [fallAlerts, setFallAlerts] = useState(true);
+  const [medicationReminders, setMedicationReminders] = useState(true);
+  const [shiftHandovers, setShiftHandovers] = useState(true);
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/(auth)/welcome');
+  const handleSignOut = () => {
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign out',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          router.replace('/(auth)/welcome' as any);
+        },
+      },
+    ]);
   };
 
   const handleBack = () => {
@@ -34,217 +58,351 @@ export default function CaregiverSettingsScreen() {
   };
 
   return (
-    <ScreenContainer scrollable padded backgroundColor={Colors.background}>
-      {/* ── Top Navigation Bar ──────────────────────────────── */}
-      <View style={styles.topNav}>
+    <SafeAreaView style={styles.screen}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F0F4FA" />
+
+      {/* Top Header */}
+      <View style={styles.topHeader}>
         <TouchableOpacity
           onPress={handleBack}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          style={styles.backBtn}
+          activeOpacity={0.7}
         >
-          <ArrowLeft size={22} color={Colors.textPrimary} />
+          <ChevronLeft size={22} color="#0F172A" />
         </TouchableOpacity>
-
-        <Text style={styles.navTitle}>Caregiver Settings</Text>
+        <Text style={styles.headerTitle}>Caregiver Profile & Settings</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      {/* ── 1. Duty Status ──────────────────────────────────── */}
-      <Text style={styles.sectionLabel}>ACTIVE DUTY STATUS</Text>
-      <Card style={styles.card}>
-        <View style={styles.switchRow}>
-          <View style={styles.switchInfo}>
-            <Text style={styles.switchTitle}>{onDuty ? 'On Active Duty' : 'Off Duty'}</Text>
-            <Text style={styles.switchSub}>
-              {onDuty
-                ? 'Receiving real-time sensor alerts for Margaret Johnson'
-                : 'Alerts temporarily forwarded to secondary family contacts'}
-            </Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Caregiver Profile Banner (Emerald) */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatarBox}>
+            <Text style={styles.avatarText}>SM</Text>
           </View>
-          <Switch
-            value={onDuty}
-            onValueChange={setOnDuty}
-            trackColor={{ false: Colors.border, true: Colors.safe }}
-          />
-        </View>
-      </Card>
-
-      <View style={{ height: Spacing.lg }} />
-
-      {/* ── 2. Notification Preferences ─────────────────────── */}
-      <Text style={styles.sectionLabel}>CARE NOTIFICATIONS</Text>
-      <Card style={styles.card}>
-        <View style={styles.switchRow}>
-          <View style={styles.switchInfo}>
-            <Text style={styles.switchTitle}>Critical Emergency Fall Alerts</Text>
-            <Text style={styles.switchSub}>High-priority notifications with sound override</Text>
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>{MOCK_CAREGIVER.name}</Text>
+            <Text style={styles.profileRole}>Certified Nursing Assistant · St. Jude</Text>
+            <Text style={styles.profileEmail}>sarah.mitchell@care.org</Text>
           </View>
-          <Switch
-            value={pushAlerts}
-            onValueChange={setPushAlerts}
-            trackColor={{ false: Colors.border, true: Colors.safe }}
-          />
+          <TouchableOpacity
+            style={styles.editBtn}
+            activeOpacity={0.8}
+            onPress={() => Alert.alert('Caregiver Profile', 'Profile editor for Sarah Mitchell.')}
+          >
+            <Pencil size={18} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.switchRow}>
-          <View style={styles.switchInfo}>
-            <Text style={styles.switchTitle}>Scheduled Medication Reminders</Text>
-            <Text style={styles.switchSub}>15 minutes before dose time (08:00 AM, 12:30 PM, 07:00 PM)</Text>
+        {/* Active Duty Status Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardHeading}>Duty Status</Text>
+          <View style={styles.switchRow}>
+            <View style={{ flex: 1, paddingRight: 8 }}>
+              <Text style={styles.switchLabel}>
+                {onDuty ? 'On Active Duty' : 'Off Duty'}
+              </Text>
+              <Text style={styles.switchSub}>
+                {onDuty
+                  ? `Active shift · ${MOCK_CAREGIVER.shiftStart}–${MOCK_CAREGIVER.shiftEnd}. Receiving live sensor telemetry.`
+                  : 'Alerts forwarded to primary family contact.'}
+              </Text>
+            </View>
+            <Switch
+              value={onDuty}
+              onValueChange={setOnDuty}
+              trackColor={{ false: '#E2E8F0', true: '#16A34A' }}
+              thumbColor="#FFFFFF"
+            />
           </View>
-          <Switch
-            value={taskReminders}
-            onValueChange={setTaskReminders}
-            trackColor={{ false: Colors.border, true: Colors.safe }}
-          />
-        </View>
-      </Card>
-
-      <View style={{ height: Spacing.lg }} />
-
-      {/* ── 3. Account Details ──────────────────────────────── */}
-      <Text style={styles.sectionLabel}>CAREGIVER ACCOUNT</Text>
-      <Card style={styles.card}>
-        <View style={styles.accRow}>
-          <HeartHandshake size={20} color={Colors.safe} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.accName}>{user?.name || 'David Miller'}</Text>
-            <Text style={styles.accEmail}>{user?.email || 'caregiver@elderguard.com'}</Text>
-          </View>
-          <Text style={styles.roleTag}>CAREGIVER</Text>
         </View>
 
-        <View style={styles.divider} />
+        {/* Notifications Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardHeading}>Care Notifications</Text>
 
+          {/* Critical Emergency & Fall Alerts */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Emergency & fall notifications</Text>
+            <Switch
+              value={fallAlerts}
+              onValueChange={setFallAlerts}
+              trackColor={{ false: '#E2E8F0', true: '#16A34A' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          {/* Medication reminders */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Scheduled medication reminders</Text>
+            <Switch
+              value={medicationReminders}
+              onValueChange={setMedicationReminders}
+              trackColor={{ false: '#E2E8F0', true: '#16A34A' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          {/* Shift Handover updates */}
+          <View style={[styles.switchRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+            <Text style={styles.switchLabel}>Shift handover updates</Text>
+            <Switch
+              value={shiftHandovers}
+              onValueChange={setShiftHandovers}
+              trackColor={{ false: '#E2E8F0', true: '#16A34A' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+        </View>
+
+        {/* Care Coordination List */}
+        <View style={[styles.card, styles.cardMenu]}>
+          {/* Assigned Senior */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(caregiver)/profile' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconWrap, { backgroundColor: '#F0FDF4' }]}>
+              <User size={18} color="#16A34A" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.menuLabel}>Assigned Senior</Text>
+              <Text style={styles.menuSub}>{MOCK_ELDERLY_PERSON.fullName} · {MOCK_ELDERLY_PERSON.room}</Text>
+            </View>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Shift Handover Notes */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => Alert.alert('Shift Handover', 'Shift notes submitted for next on-duty nurse.')}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconWrap, { backgroundColor: '#F0FDF4' }]}>
+              <FileText size={18} color="#16A34A" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.menuLabel}>Shift Handover Notes</Text>
+              <Text style={styles.menuSub}>Morning and afternoon routine logged</Text>
+            </View>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Emergency First Aid Protocols */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/first-aid' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconWrap, { backgroundColor: '#F0FDF4' }]}>
+              <Shield size={18} color="#16A34A" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.menuLabel}>Emergency First Aid Guide</Text>
+              <Text style={styles.menuSub}>Standard fall recovery protocols</Text>
+            </View>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Sign Out Button */}
         <TouchableOpacity
-          onPress={() => router.push('/design-system')}
-          style={styles.dsRow}
-          activeOpacity={0.7}
+          style={styles.signOutBtn}
+          onPress={handleSignOut}
+          activeOpacity={0.8}
         >
-          <Sparkles size={18} color={Colors.safe} />
-          <Text style={styles.dsText}>Inspect Design System Tokens</Text>
-          <ChevronRight size={18} color={Colors.textTertiary} />
+          <LogOut size={18} color="#EF4444" />
+          <Text style={styles.signOutText}>Sign out of Caregiver Portal</Text>
         </TouchableOpacity>
-      </Card>
 
-      <View style={{ height: Spacing.xl }} />
+        <View style={{ height: 20 }} />
+      </ScrollView>
 
-      {/* ── Logout Button ───────────────────────────────────── */}
-      <Button
-        title="Sign Out of ElderGuard"
-        onPress={handleLogout}
-        variant="outline"
-        size="lg"
-        fullWidth
-        leftIcon={<LogOut size={18} color={Colors.critical} />}
-      />
-
-      <View style={styles.footerNote}>
-        <Text style={styles.footerText}>ElderGuard Mobile Application · v1.0.0 (Expo SDK 54)</Text>
-      </View>
-
-      <View style={{ height: Spacing['3xl'] }} />
-    </ScreenContainer>
+      {/* Bottom Tab Bar with More active */}
+      <BottomTabBar activeTab="more" role="caregiver" />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  topNav: {
+  screen: {
+    flex: 1,
+    backgroundColor: '#F0F4FA',
+  },
+  topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.xs,
-    marginBottom: Spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  backButton: {
+  backBtn: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.full,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceSecondary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  navTitle: {
-    ...Typography.bodySemiBold,
+  headerTitle: {
     fontSize: 17,
-    color: Colors.textPrimary,
+    fontWeight: '700',
+    color: '#0F172A',
   },
-  sectionLabel: {
-    ...Typography.overline,
-    color: Colors.textTertiary,
-    letterSpacing: 1,
-    marginBottom: Spacing.xs,
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 24,
+  },
+  profileCard: {
+    backgroundColor: '#059669',
+    borderRadius: 20,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#059669',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 3,
+    gap: 14,
+  },
+  avatarBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  profileRole: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.9)',
+    marginTop: 2,
+    fontWeight: '600',
+  },
+  profileEmail: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.8)',
+    marginTop: 2,
+  },
+  editBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  cardHeading: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 14,
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.md,
-    paddingVertical: Spacing.xs,
+    paddingVertical: 10,
   },
-  switchInfo: {
-    flex: 1,
-  },
-  switchTitle: {
-    ...Typography.bodySemiBold,
+  switchLabel: {
     fontSize: 14,
-    color: Colors.textPrimary,
+    fontWeight: '600',
+    color: '#0F172A',
   },
   switchSub: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 3,
+    lineHeight: 16,
+  },
+  cardMenu: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  menuIconWrap: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuLabel: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#0F172A',
+  },
+  menuSub: {
+    fontSize: 12,
+    color: '#64748B',
     marginTop: 2,
   },
-  divider: {
+  menuDivider: {
     height: 1,
-    backgroundColor: Colors.borderLight,
-    marginVertical: Spacing.sm,
+    backgroundColor: '#F1F5F9',
+    marginLeft: 66,
   },
-  accRow: {
+  signOutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FFF5F5',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 24,
+    paddingVertical: 14,
+    marginTop: 4,
   },
-  accName: {
-    ...Typography.bodySemiBold,
+  signOutText: {
     fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  accEmail: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-  },
-  roleTag: {
-    ...Typography.caption,
     fontWeight: '700',
-    color: Colors.safe,
-    backgroundColor: Colors.safeBg,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.xs,
-  },
-  dsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingVertical: 4,
-  },
-  dsText: {
-    ...Typography.bodySmallSemiBold,
-    color: Colors.safe,
-    flex: 1,
-  },
-  footerNote: {
-    alignItems: 'center',
-    marginTop: Spacing.lg,
-  },
-  footerText: {
-    ...Typography.caption,
-    color: Colors.textTertiary,
-    fontSize: 11,
+    color: '#EF4444',
   },
 });

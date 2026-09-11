@@ -9,23 +9,35 @@ import {
   ChevronRight,
   CheckCircle2,
   Sparkles,
+  Zap,
 } from 'lucide-react-native';
-import { ScreenContainer, Card, StatusBadge, BottomTabBar } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import {
+  ScreenContainer,
+  Card,
+  StatusBadge,
+  BottomTabBar,
+  TopBar,
+  AlertItem,
+} from '@/components/ui';
+import { Colors, Typography, Spacing } from '@/constants/theme';
 import { useAlerts } from '@/context/AlertContext';
 import { useVitals } from '@/context/VitalsContext';
-import { AlertIncident } from '@/types/alerts';
+import { MOCK_ALERTS_LIST } from '@/services/mockData';
 
 export default function AlertsListScreen() {
   const router = useRouter();
-  const { alerts, triggerAlert } = useAlerts();
+  const { alerts, triggerAlert, acknowledgeAlert, resolveAlert } = useAlerts();
   const { simulateAnomaly, resetToNormal } = useVitals();
 
-  const [activeTab, setActiveTab] = useState<'all' | 'active' | 'resolved'>('all');
+  const [activeTab, setActiveTab] = useState<'all' | 'critical' | 'warning' | 'info'>('all');
 
-  const filteredAlerts = alerts.filter((a) => {
-    if (activeTab === 'active') return a.status === 'active' || a.status === 'acknowledged';
-    if (activeTab === 'resolved') return a.status === 'resolved';
+  const combinedAlerts = alerts.length > 0 ? alerts : MOCK_ALERTS_LIST;
+
+  const filteredAlerts = combinedAlerts.filter((a: any) => {
+    const sev = (a.severity || a.type || 'info').toLowerCase();
+    if (activeTab === 'critical') return sev === 'critical';
+    if (activeTab === 'warning') return sev === 'warning';
+    if (activeTab === 'info') return sev === 'info';
     return true;
   });
 
@@ -34,14 +46,14 @@ export default function AlertsListScreen() {
     triggerAlert({
       type: 'fall',
       severity: 'critical',
-      title: 'Sudden Fall Detected',
-      description: 'Accelerometer detected sudden 3.4G downward impact in Kitchen.',
+      title: 'Fall Detected',
+      description: 'Wearable sensor detected a sudden 3.4g impact in Kitchen.',
       elderlyId: 'eld-01',
-      elderlyName: 'Margaret Johnson',
-      location: 'Kitchen Area — 142 Elm Street',
+      elderlyName: 'Margaret Thompson',
+      location: 'Ground Floor, Kitchen',
       vitalReadings: {
         heartRate: 119,
-        spo2: 96,
+        spo2: 94,
         impactGForce: 3.4,
       },
     });
@@ -51,332 +63,205 @@ export default function AlertsListScreen() {
     simulateAnomaly('tachycardia');
     triggerAlert({
       type: 'heart_rate',
-      severity: 'critical',
-      title: 'High Heart Rate Spiked (>135 bpm)',
-      description: 'Resting pulse reached 138 bpm while elderly person is stationary.',
+      severity: 'warning',
+      title: 'Elevated Heart Rate',
+      description: 'Heart rate reached 91 bpm during morning activity.',
       elderlyId: 'eld-01',
-      elderlyName: 'Margaret Johnson',
-      location: 'Bedroom Residence',
+      elderlyName: 'Margaret Thompson',
+      location: 'Living Room',
       vitalReadings: {
-        heartRate: 138,
+        heartRate: 91,
         spo2: 97,
       },
     });
-  };
-
-  const getAlertIcon = (type: AlertIncident['type'], severity: AlertIncident['severity']) => {
-    const color =
-      severity === 'critical'
-        ? Colors.critical
-        : severity === 'warning'
-        ? Colors.warning
-        : Colors.primary;
-
-    switch (type) {
-      case 'fall':
-        return <ShieldAlert size={20} color={color} />;
-      case 'heart_rate':
-        return <Heart size={20} color={color} />;
-      case 'battery':
-        return <Battery size={20} color={color} />;
-      default:
-        return <AlertTriangle size={20} color={color} />;
-    }
   };
 
   return (
     <ScreenContainer
       scrollable
       padded
-      backgroundColor="#F8FAFC"
+      backgroundColor="#F0F4FA"
       bottomBar={<BottomTabBar activeTab="alerts" role="parent" />}
     >
-      {/* ── Top Header ──────────────────────────────────────── */}
-      <View style={styles.topHeader}>
-          <Text style={styles.screenTitle}>Incident & Alert Center</Text>
-          <Text style={styles.screenSub}>Continuous 24/7 safety monitoring</Text>
+      <TopBar
+        title="Alerts & Incidents"
+        onBack={() => (router.canGoBack() ? router.back() : router.replace('/(parent)' as any))}
+      />
+
+      {/* Filter Tabs matching Figma */}
+      <View style={styles.tabContainer}>
+        {(['all', 'critical', 'warning', 'info'] as const).map((tab) => (
+          <TouchableOpacity
+            key={tab}
+            onPress={() => setActiveTab(tab)}
+            style={[styles.tabBtn, activeTab === tab && styles.tabBtnActive]}
+            activeOpacity={0.7}
+          >
+            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+              {tab.charAt(0).toUpperCase() + tab.slice(1)}
+            </Text>
+          </TouchableOpacity>
+        ))}
+      </View>
+
+      {/* Live Simulation Testing Bar */}
+      <Card style={styles.simCard}>
+        <View style={styles.simHeader}>
+          <Sparkles size={14} color={Colors.primary} />
+          <Text style={styles.simTitle}>SIMULATE TELEMETRY ALERTS</Text>
         </View>
+        <View style={styles.simRow}>
+          <TouchableOpacity
+            onPress={handleSimulateFall}
+            style={[styles.simBtn, { backgroundColor: '#FEF2F2', borderColor: '#FECACA' }]}
+            activeOpacity={0.8}
+          >
+            <ShieldAlert size={13} color="#DC2626" />
+            <Text style={[styles.simBtnText, { color: '#DC2626' }]}>Trigger Fall</Text>
+          </TouchableOpacity>
 
-        {/* ── Simulation / Testing Strip ───────────────────────── */}
-        <Card style={styles.simulateCard}>
-          <View style={styles.simHeader}>
-            <Sparkles size={14} color={Colors.primary} />
-            <Text style={styles.simTitle}>SIMULATE INCIDENTS FOR TESTING</Text>
-          </View>
-          <View style={styles.simButtonsRow}>
-            <TouchableOpacity
-              onPress={handleSimulateFall}
-              style={[styles.simBtn, { backgroundColor: 'rgba(239, 68, 68, 0.12)' }]}
-            >
-              <Text style={[styles.simBtnText, { color: Colors.critical }]}>+ Trigger Fall</Text>
-            </TouchableOpacity>
+          <TouchableOpacity
+            onPress={handleSimulateTachycardia}
+            style={[styles.simBtn, { backgroundColor: '#FFF7ED', borderColor: '#FED7AA' }]}
+            activeOpacity={0.8}
+          >
+            <Heart size={13} color="#EA580C" />
+            <Text style={[styles.simBtnText, { color: '#EA580C' }]}>Spike Pulse</Text>
+          </TouchableOpacity>
 
-            <TouchableOpacity
-              onPress={handleSimulateTachycardia}
-              style={[styles.simBtn, { backgroundColor: 'rgba(245, 158, 11, 0.12)' }]}
-            >
-              <Text style={[styles.simBtnText, { color: Colors.warning }]}>+ High Pulse</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              onPress={resetToNormal}
-              style={[styles.simBtn, { backgroundColor: Colors.surfaceSecondary }]}
-            >
-              <Text style={[styles.simBtnText, { color: Colors.textSecondary }]}>Reset Vitals</Text>
-            </TouchableOpacity>
-          </View>
-        </Card>
-
-        <View style={{ height: Spacing.md }} />
-
-        {/* ── Filter Tabs ─────────────────────────────────────── */}
-        <View style={styles.tabsRow}>
-          {(['all', 'active', 'resolved'] as const).map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              onPress={() => setActiveTab(tab)}
-              style={[styles.tab, activeTab === tab && styles.tabActive]}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab === 'all'
-                  ? `All (${alerts.length})`
-                  : tab === 'active'
-                  ? `Active (${alerts.filter((a) => a.status !== 'resolved').length})`
-                  : `Resolved (${alerts.filter((a) => a.status === 'resolved').length})`}
-              </Text>
-            </TouchableOpacity>
-          ))}
+          <TouchableOpacity
+            onPress={() => resetToNormal()}
+            style={[styles.simBtn, { backgroundColor: '#F0FDF4', borderColor: '#BBF7D0' }]}
+            activeOpacity={0.8}
+          >
+            <Zap size={13} color="#16A34A" />
+            <Text style={[styles.simBtnText, { color: '#16A34A' }]}>Normalize</Text>
+          </TouchableOpacity>
         </View>
+      </Card>
 
-        <View style={{ height: Spacing.base }} />
-
-        {/* ── Alerts List ─────────────────────────────────────── */}
+      {/* Alert Feed */}
+      <View style={{ marginTop: 8 }}>
         {filteredAlerts.length === 0 ? (
           <Card style={styles.emptyCard}>
-            <CheckCircle2 size={40} color={Colors.safe} />
-            <Text style={styles.emptyTitle}>No Alerts in this Category</Text>
-            <Text style={styles.emptySubtitle}>All sensors and vital signs are currently normal.</Text>
+            <CheckCircle2 size={36} color={Colors.safe} />
+            <Text style={styles.emptyTitle}>No Incidents Found</Text>
+            <Text style={styles.emptySub}>All health systems and telemetry are normal.</Text>
           </Card>
         ) : (
-          <View style={styles.alertsList}>
-            {filteredAlerts.map((alert) => (
-              <TouchableOpacity
-                key={alert.id}
-                onPress={() => router.push(`/(parent)/alerts/${alert.id}` as any)}
-                activeOpacity={0.8}
-              >
-                <Card
-                  elevated={alert.status === 'active'}
-                  style={[
-                    styles.alertCard,
-                    alert.severity === 'critical' && alert.status !== 'resolved' && styles.alertCardCritical,
-                  ]}
-                >
-                  <View style={styles.alertRow}>
-                    <View
-                      style={[
-                        styles.alertIconCircle,
-                        alert.severity === 'critical'
-                          ? { backgroundColor: 'rgba(239, 68, 68, 0.12)' }
-                          : alert.severity === 'warning'
-                          ? { backgroundColor: 'rgba(245, 158, 11, 0.12)' }
-                          : { backgroundColor: Colors.primaryFaded },
-                      ]}
-                    >
-                      {getAlertIcon(alert.type, alert.severity)}
-                    </View>
+          filteredAlerts.map((a: any) => {
+            const type = (a.severity || a.type || 'info') as 'critical' | 'warning' | 'info';
+            const isResolved = a.status === 'resolved' || a.resolved === true;
 
-                    <View style={styles.alertMeta}>
-                      <View style={styles.alertHeaderRow}>
-                        <Text style={styles.alertTitle} numberOfLines={1}>
-                          {alert.title}
-                        </Text>
-                        <StatusBadge
-                          status={
-                            alert.status === 'resolved'
-                              ? 'safe'
-                              : alert.severity === 'critical'
-                              ? 'critical'
-                              : 'warning'
-                          }
-                          label={alert.status.toUpperCase()}
-                          size="sm"
-                        />
-                      </View>
-
-                      <Text style={styles.alertDesc} numberOfLines={2}>
-                        {alert.description}
-                      </Text>
-
-                      <View style={styles.alertFooterRow}>
-                        <Text style={styles.alertTime}>{alert.timestamp}</Text>
-                        <Text style={styles.alertLoc}>· {alert.location}</Text>
-                      </View>
-                    </View>
-
-                    <ChevronRight size={18} color={Colors.textTertiary} />
-                  </View>
-                </Card>
-              </TouchableOpacity>
-            ))}
-          </View>
+            return (
+              <AlertItem
+                key={a.id}
+                type={type === 'critical' ? 'critical' : type === 'warning' ? 'warning' : 'info'}
+                title={a.title}
+                description={a.description}
+                time={a.time || (a.createdAt ? new Date(a.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : 'Just now')}
+                date={a.date || 'Today'}
+                resolved={isResolved}
+                onPress={() => {
+                  if (type === 'critical' || a.type === 'fall' || a.title?.toLowerCase().includes('fall')) {
+                    router.push('/(parent)/emergency' as any);
+                  } else {
+                    router.push(`/(parent)/alerts/${a.id}` as any);
+                  }
+                }}
+              />
+            );
+          })
         )}
+      </View>
 
-        <View style={{ height: Spacing['2xl'] }} />
+      <View style={{ height: Spacing.xl }} />
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  topHeader: {
-    marginBottom: Spacing.base,
+  tabContainer: {
+    flexDirection: 'row',
+    backgroundColor: '#E2E8F0',
+    borderRadius: 14,
+    padding: 4,
+    marginVertical: 12,
   },
-  screenTitle: {
-    ...Typography.h2,
-    fontSize: 22,
-    color: Colors.textPrimary,
+  tabBtn: {
+    flex: 1,
+    paddingVertical: 7,
+    alignItems: 'center',
+    borderRadius: 10,
   },
-  screenSub: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
+  tabBtnActive: {
+    backgroundColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.08,
+    shadowRadius: 2,
+    elevation: 2,
   },
-  simulateCard: {
-    backgroundColor: Colors.white,
-    borderColor: 'rgba(60, 111, 219, 0.25)',
-    borderWidth: 1,
+  tabText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  tabTextActive: {
+    color: '#0F172A',
+    fontWeight: '700',
+  },
+  simCard: {
+    padding: 12,
+    marginBottom: 12,
+    backgroundColor: '#FFFFFF',
   },
   simHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    marginBottom: Spacing.sm,
+    marginBottom: 8,
   },
   simTitle: {
-    ...Typography.overline,
     fontSize: 10,
-    color: Colors.primary,
-    letterSpacing: 1,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.8,
   },
-  simButtonsRow: {
+  simRow: {
     flexDirection: 'row',
-    gap: Spacing.xs,
+    gap: 8,
   },
   simBtn: {
     flex: 1,
-    paddingVertical: 7,
-    borderRadius: BorderRadius.xs,
+    flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 5,
+    paddingVertical: 8,
+    borderRadius: 10,
+    borderWidth: 1,
   },
   simBtnText: {
-    ...Typography.captionMedium,
-    fontSize: 11,
-    fontWeight: '600',
-  },
-  tabsRow: {
-    flexDirection: 'row',
-    backgroundColor: Colors.surfaceSecondary,
-    padding: 3,
-    borderRadius: BorderRadius.full,
-  },
-  tab: {
-    flex: 1,
-    paddingVertical: 8,
-    alignItems: 'center',
-    borderRadius: BorderRadius.full,
-  },
-  tabActive: {
-    backgroundColor: Colors.white,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.08,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  tabText: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-  },
-  tabTextActive: {
-    color: Colors.textPrimary,
+    fontSize: 10,
     fontWeight: '700',
   },
-  alertsList: {
-    gap: Spacing.md,
-  },
-  alertCard: {
-    backgroundColor: Colors.white,
-  },
-  alertCardCritical: {
-    borderColor: Colors.critical,
-    borderWidth: 1.5,
-  },
-  alertRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  alertIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.md,
+  emptyCard: {
+    padding: 32,
     alignItems: 'center',
     justifyContent: 'center',
-  },
-  alertMeta: {
-    flex: 1,
-  },
-  alertHeaderRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: 6,
-    marginBottom: 3,
-  },
-  alertTitle: {
-    ...Typography.bodySemiBold,
-    fontSize: 15,
-    color: Colors.textPrimary,
-    flex: 1,
-  },
-  alertDesc: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    lineHeight: 16,
-  },
-  alertFooterRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginTop: 6,
-  },
-  alertTime: {
-    ...Typography.caption,
-    fontSize: 11,
-    color: Colors.textTertiary,
-  },
-  alertLoc: {
-    ...Typography.caption,
-    fontSize: 11,
-    color: Colors.textSecondary,
-    fontWeight: '500',
-  },
-  emptyCard: {
-    backgroundColor: Colors.white,
-    alignItems: 'center',
-    paddingVertical: Spacing['2xl'],
+    marginVertical: 16,
   },
   emptyTitle: {
-    ...Typography.bodySemiBold,
-    color: Colors.textPrimary,
-    marginTop: Spacing.md,
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginTop: 10,
   },
-  emptySubtitle: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
+  emptySub: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 4,
     textAlign: 'center',
   },
 });

@@ -1,292 +1,382 @@
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Switch } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  Switch,
+  ScrollView,
+  SafeAreaView,
+  StatusBar,
+  Alert,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  ArrowLeft,
-  Cpu,
+  ChevronLeft,
+  Pencil,
+  User,
   Shield,
-  LogOut,
+  Bluetooth,
+  FileText,
   ChevronRight,
-  Sparkles,
+  LogOut,
 } from 'lucide-react-native';
-import { ScreenContainer, Card, Button } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
+import { BottomTabBar } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
-import { useElderly } from '@/context/ElderlyContext';
 
 export default function ParentSettingsScreen() {
   const router = useRouter();
-  const { user, logout } = useAuth();
-  const { activeProfile } = useElderly();
+  const { logout } = useAuth();
 
-  const [pushAlerts, setPushAlerts] = useState(true);
-  const [smsAlerts, setSmsAlerts] = useState(true);
-  const [vitalsAlerts, setVitalsAlerts] = useState(true);
-  const [dailyDigest, setDailyDigest] = useState(false);
+  const [emergencyAlerts, setEmergencyAlerts] = useState(true);
+  const [healthThresholds, setHealthThresholds] = useState(true);
+  const [medicationReminders, setMedicationReminders] = useState(true);
+  const [caregiverUpdates, setCaregiverUpdates] = useState(false);
 
-  const handleLogout = async () => {
-    await logout();
-    router.replace('/(auth)/welcome');
-  };
-
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(parent)' as any);
-    }
+  const handleSignOut = () => {
+    Alert.alert('Sign out', 'Are you sure you want to sign out?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Sign out',
+        style: 'destructive',
+        onPress: async () => {
+          await logout();
+          router.replace('/(auth)/welcome' as any);
+        },
+      },
+    ]);
   };
 
   return (
-    <ScreenContainer scrollable padded backgroundColor={Colors.background}>
-      {/* ── Top Navigation Bar ──────────────────────────────── */}
-      <View style={styles.topNav}>
-        <TouchableOpacity
-          onPress={handleBack}
-          style={styles.backButton}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
-        >
-          <ArrowLeft size={22} color={Colors.textPrimary} />
-        </TouchableOpacity>
+    <SafeAreaView style={styles.screen}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F0F4FA" />
 
-        <Text style={styles.navTitle}>Settings & Preferences</Text>
+      {/* Top Header */}
+      <View style={styles.topHeader}>
+        <TouchableOpacity
+          onPress={() => router.back()}
+          style={styles.backBtn}
+          activeOpacity={0.7}
+        >
+          <ChevronLeft size={22} color="#0F172A" />
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Profile & Settings</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      {/* ── 1. Alert Notifications ──────────────────────────── */}
-      <Text style={styles.sectionLabel}>EMERGENCY ALERT NOTIFICATIONS</Text>
-      <Card style={styles.card}>
-        <View style={styles.switchRow}>
-          <View style={styles.switchInfo}>
-            <Text style={styles.switchTitle}>Emergency Fall Push Alerts</Text>
-            <Text style={styles.switchSub}>Instant high-priority alerts with alarm tone</Text>
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        {/* Profile Card (Blue banner) */}
+        <View style={styles.profileCard}>
+          <View style={styles.avatarBox}>
+            <Text style={styles.avatarText}>RT</Text>
           </View>
-          <Switch
-            value={pushAlerts}
-            onValueChange={setPushAlerts}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-          />
+          <View style={styles.profileInfo}>
+            <Text style={styles.profileName}>Robert Thompson</Text>
+            <Text style={styles.profileEmail}>robert.thompson@email.com</Text>
+            <Text style={styles.profilePhone}>+44 7700 900123</Text>
+          </View>
+          <TouchableOpacity
+            style={styles.editBtn}
+            activeOpacity={0.8}
+            onPress={() => Alert.alert('Edit Profile', 'Profile editor for Robert Thompson.')}
+          >
+            <Pencil size={18} color="#FFFFFF" />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.divider} />
+        {/* Notifications Card */}
+        <View style={styles.card}>
+          <Text style={styles.cardHeading}>Notifications</Text>
 
-        <View style={styles.switchRow}>
-          <View style={styles.switchInfo}>
-            <Text style={styles.switchTitle}>Emergency SMS Fall Dispatch</Text>
-            <Text style={styles.switchSub}>Send automated SMS to emergency contacts</Text>
+          {/* Emergency & fall alerts */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Emergency & fall alerts</Text>
+            <Switch
+              value={emergencyAlerts}
+              onValueChange={setEmergencyAlerts}
+              trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+              thumbColor="#FFFFFF"
+            />
           </View>
-          <Switch
-            value={smsAlerts}
-            onValueChange={setSmsAlerts}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-          />
+
+          {/* Health threshold alerts */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Health threshold alerts</Text>
+            <Switch
+              value={healthThresholds}
+              onValueChange={setHealthThresholds}
+              trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          {/* Medication reminders */}
+          <View style={styles.switchRow}>
+            <Text style={styles.switchLabel}>Medication reminders</Text>
+            <Switch
+              value={medicationReminders}
+              onValueChange={setMedicationReminders}
+              trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
+
+          {/* Caregiver check-in updates */}
+          <View style={[styles.switchRow, { borderBottomWidth: 0, paddingBottom: 0 }]}>
+            <Text style={styles.switchLabel}>Caregiver check-in updates</Text>
+            <Switch
+              value={caregiverUpdates}
+              onValueChange={setCaregiverUpdates}
+              trackColor={{ false: '#E2E8F0', true: '#2563EB' }}
+              thumbColor="#FFFFFF"
+            />
+          </View>
         </View>
 
-        <View style={styles.divider} />
+        {/* Navigation Options List */}
+        <View style={[styles.card, styles.cardMenu]}>
+          {/* Elderly person profile */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/profile' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuIconWrap}>
+              <User size={18} color="#2563EB" />
+            </View>
+            <Text style={styles.menuLabel}>Elderly person profile</Text>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
 
-        <View style={styles.switchRow}>
-          <View style={styles.switchInfo}>
-            <Text style={styles.switchTitle}>Abnormal Vital Threshold Alerts</Text>
-            <Text style={styles.switchSub}>Alert when Heart Rate &gt;120 or SpO₂ &lt;92%</Text>
-          </View>
-          <Switch
-            value={vitalsAlerts}
-            onValueChange={setVitalsAlerts}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-          />
+          <View style={styles.menuDivider} />
+
+          {/* Emergency contacts */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/emergency' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuIconWrap}>
+              <Shield size={18} color="#2563EB" />
+            </View>
+            <Text style={styles.menuLabel}>Emergency contacts</Text>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Device settings */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/device' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuIconWrap}>
+              <Bluetooth size={18} color="#2563EB" />
+            </View>
+            <Text style={styles.menuLabel}>Device settings</Text>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Reports & exports */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/reports' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={styles.menuIconWrap}>
+              <FileText size={18} color="#2563EB" />
+            </View>
+            <Text style={styles.menuLabel}>Reports & exports</Text>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
         </View>
 
-        <View style={styles.divider} />
-
-        <View style={styles.switchRow}>
-          <View style={styles.switchInfo}>
-            <Text style={styles.switchTitle}>Daily Evening Care Digest</Text>
-            <Text style={styles.switchSub}>Daily summary of medications and vitals</Text>
-          </View>
-          <Switch
-            value={dailyDigest}
-            onValueChange={setDailyDigest}
-            trackColor={{ false: Colors.border, true: Colors.primary }}
-          />
-        </View>
-      </Card>
-
-      <View style={{ height: Spacing.lg }} />
-
-      {/* ── 2. Paired IoT Hardware ──────────────────────────── */}
-      <Text style={styles.sectionLabel}>PAIRED IOT HARDWARE</Text>
-      <Card style={styles.card}>
-        <View style={styles.hwRow}>
-          <Cpu size={22} color={Colors.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.hwName}>{activeProfile.deviceStatus.deviceName}</Text>
-            <Text style={styles.hwMeta}>
-              ID: {activeProfile.deviceStatus.deviceId} · FW: {activeProfile.deviceStatus.firmwareVersion}
-            </Text>
-          </View>
-          <ChevronRight size={18} color={Colors.textTertiary} />
-        </View>
-      </Card>
-
-      <View style={{ height: Spacing.lg }} />
-
-      {/* ── 3. Account & System Info ────────────────────────── */}
-      <Text style={styles.sectionLabel}>ACCOUNT DETAILS</Text>
-      <Card style={styles.card}>
-        <View style={styles.accRow}>
-          <Shield size={18} color={Colors.primary} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.accName}>{user?.name || 'Eleanor Vance'}</Text>
-            <Text style={styles.accEmail}>{user?.email || 'parent@elderguard.com'}</Text>
-          </View>
-          <Text style={styles.roleTag}>PARENT</Text>
-        </View>
-
-        <View style={styles.divider} />
-
+        {/* Sign Out Button */}
         <TouchableOpacity
-          onPress={() => router.push('/design-system')}
-          style={styles.dsRow}
-          activeOpacity={0.7}
+          style={styles.signOutBtn}
+          onPress={handleSignOut}
+          activeOpacity={0.8}
         >
-          <Sparkles size={18} color={Colors.primary} />
-          <Text style={styles.dsText}>Inspect Design System Tokens</Text>
-          <ChevronRight size={18} color={Colors.textTertiary} />
+          <LogOut size={18} color="#EF4444" />
+          <Text style={styles.signOutText}>Sign out</Text>
         </TouchableOpacity>
-      </Card>
 
-      <View style={{ height: Spacing.xl }} />
+        <View style={{ height: 20 }} />
+      </ScrollView>
 
-      {/* ── Logout Button ───────────────────────────────────── */}
-      <Button
-        title="Sign Out of ElderGuard"
-        onPress={handleLogout}
-        variant="outline"
-        size="lg"
-        fullWidth
-        leftIcon={<LogOut size={18} color={Colors.critical} />}
-      />
-
-      <View style={styles.footerNote}>
-        <Text style={styles.footerText}>ElderGuard Mobile Application · v1.0.0 (Expo SDK 54)</Text>
-      </View>
-
-      <View style={{ height: Spacing['3xl'] }} />
-    </ScreenContainer>
+      {/* Bottom Tab Bar */}
+      <BottomTabBar activeTab="more" role="parent" />
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  topNav: {
+  screen: {
+    flex: 1,
+    backgroundColor: '#F0F4FA',
+  },
+  topHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingVertical: Spacing.xs,
-    marginBottom: Spacing.md,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
   },
-  backButton: {
+  backBtn: {
     width: 40,
     height: 40,
-    borderRadius: BorderRadius.full,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.surfaceSecondary,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 3,
+    elevation: 1,
   },
-  navTitle: {
-    ...Typography.bodySemiBold,
+  headerTitle: {
     fontSize: 17,
-    color: Colors.textPrimary,
+    fontWeight: '700',
+    color: '#0F172A',
   },
-  sectionLabel: {
-    ...Typography.overline,
-    color: Colors.textTertiary,
-    letterSpacing: 1,
-    marginBottom: Spacing.xs,
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 8,
+    paddingBottom: 24,
+  },
+  profileCard: {
+    backgroundColor: '#2563EB',
+    borderRadius: 20,
+    padding: 18,
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.25,
+    shadowRadius: 10,
+    elevation: 3,
+    gap: 14,
+  },
+  avatarBox: {
+    width: 52,
+    height: 52,
+    borderRadius: 14,
+    backgroundColor: 'rgba(255, 255, 255, 0.22)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarText: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  profileInfo: {
+    flex: 1,
+  },
+  profileName: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  profileEmail: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.85)',
+    marginTop: 2,
+  },
+  profilePhone: {
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.85)',
+    marginTop: 2,
+  },
+  editBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   card: {
-    backgroundColor: Colors.white,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    padding: 18,
+    marginBottom: 16,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 1,
+  },
+  cardHeading: {
+    fontSize: 15,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginBottom: 14,
   },
   switchRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    gap: Spacing.md,
-    paddingVertical: Spacing.xs,
+    paddingVertical: 10,
   },
-  switchInfo: {
+  switchLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#0F172A',
+  },
+  cardMenu: {
+    padding: 0,
+    overflow: 'hidden',
+  },
+  menuRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    gap: 12,
+  },
+  menuIconWrap: {
+    width: 36,
+    height: 36,
+    borderRadius: 10,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  menuLabel: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: '#0F172A',
     flex: 1,
   },
-  switchTitle: {
-    ...Typography.bodySemiBold,
-    fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  switchSub: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  divider: {
+  menuDivider: {
     height: 1,
-    backgroundColor: Colors.borderLight,
-    marginVertical: Spacing.sm,
+    backgroundColor: '#F1F5F9',
+    marginLeft: 64,
   },
-  hwRow: {
+  signOutBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Spacing.md,
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#FFF5F5',
+    borderWidth: 1,
+    borderColor: '#FECACA',
+    borderRadius: 24,
+    paddingVertical: 14,
+    marginTop: 4,
   },
-  hwName: {
-    ...Typography.bodySemiBold,
+  signOutText: {
     fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  hwMeta: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  accRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  accName: {
-    ...Typography.bodySemiBold,
-    fontSize: 14,
-    color: Colors.textPrimary,
-  },
-  accEmail: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-  },
-  roleTag: {
-    ...Typography.caption,
     fontWeight: '700',
-    color: Colors.primary,
-    backgroundColor: Colors.primaryFaded,
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: BorderRadius.xs,
-  },
-  dsRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    paddingVertical: 4,
-  },
-  dsText: {
-    ...Typography.bodySmallSemiBold,
-    color: Colors.primary,
-    flex: 1,
-  },
-  footerNote: {
-    alignItems: 'center',
-    marginTop: Spacing.lg,
-  },
-  footerText: {
-    ...Typography.caption,
-    color: Colors.textTertiary,
-    fontSize: 11,
+    color: '#EF4444',
   },
 });

@@ -1,106 +1,140 @@
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+} from 'react-native';
 import { useRouter } from 'expo-router';
 import {
-  Pill,
+  ChevronLeft,
   Plus,
-  CheckCircle2,
-  XCircle,
-  Clock,
-  Droplets,
-  Activity,
-  Heart,
-  Sun,
-  Sunrise,
-  Moon,
+  CheckCircle,
+  Pill,
+  AlertTriangle,
+  Check,
 } from 'lucide-react-native';
-import { ScreenContainer, Card, StatusBadge, Button, BottomTabBar } from '@/components/ui';
-import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
-import { useCare } from '@/context/CareContext';
-import { useAuth } from '@/context/AuthContext';
-import { MedicationDose } from '@/types/care';
+import {
+  ScreenContainer,
+  BottomTabBar,
+  Card,
+} from '@/components/ui';
+
+interface ScheduleItem {
+  id: number;
+  time: string;
+  title: string;
+  isMed?: boolean;
+  done: boolean;
+  current?: boolean;
+}
+
+const SCHEDULE_ITEMS: ScheduleItem[] = [
+  { id: 1, time: '07:00', title: 'Wake up', done: true },
+  { id: 2, time: '07:30', title: 'Breakfast', done: true },
+  { id: 3, time: '08:00', title: 'Morning medication', isMed: true, done: true },
+  { id: 4, time: '09:00', title: 'Physical therapy exercises', done: true },
+  { id: 5, time: '10:30', title: 'Light walk — garden', done: true },
+  { id: 6, time: '12:30', title: 'Lunch', done: false, current: true },
+  { id: 7, time: '13:00', title: 'Midday medication', isMed: true, done: false },
+  { id: 8, time: '14:00', title: 'Rest / Afternoon nap', done: false },
+  { id: 9, time: '16:00', title: 'Afternoon tea', done: false },
+  { id: 10, time: '17:30', title: 'Family video call', done: false },
+  { id: 11, time: '19:00', title: 'Dinner', done: false },
+  { id: 12, time: '19:30', title: 'Evening medication', isMed: true, done: false },
+];
+
+interface MedItem {
+  id: number;
+  name: string;
+  dosage: string;
+  timing: string;
+  instruction: string;
+  color: string;
+  iconBg: string;
+  statusBadge: string;
+  statusTime?: string;
+  stock: number;
+  isTaken?: boolean;
+  isWeekly?: boolean;
+}
+
+const MEDICATIONS_LIST: MedItem[] = [
+  {
+    id: 1,
+    name: 'Aspirin',
+    dosage: '100mg',
+    timing: 'Morning',
+    instruction: 'Take with food',
+    color: '#3C6FDB',
+    iconBg: '#EEF5FF',
+    statusBadge: 'Taken',
+    statusTime: '08:07 AM',
+    stock: 22,
+    isTaken: true,
+  },
+  {
+    id: 2,
+    name: 'Lisinopril',
+    dosage: '10mg',
+    timing: 'Morning',
+    instruction: 'Take with water',
+    color: '#16A34A',
+    iconBg: '#F0FDF4',
+    statusBadge: 'Taken',
+    statusTime: '08:07 AM',
+    stock: 14,
+    isTaken: true,
+  },
+  {
+    id: 3,
+    name: 'Metformin',
+    dosage: '500mg',
+    timing: 'After Lunch',
+    instruction: 'Take after meals',
+    color: '#EA580C',
+    iconBg: '#FFF7ED',
+    statusBadge: 'Taken',
+    statusTime: '13:12 PM',
+    stock: 30,
+    isTaken: true,
+  },
+  {
+    id: 4,
+    name: 'Alendronic Acid',
+    dosage: '70mg',
+    timing: 'Morning (empty stomach)',
+    instruction: '30 min before eating, stand upright for 30 min',
+    color: '#9333EA',
+    iconBg: '#FAF5FF',
+    statusBadge: 'Weekly – Friday',
+    stock: 8,
+    isWeekly: true,
+  },
+  {
+    id: 5,
+    name: 'Metformin',
+    dosage: '500mg',
+    timing: 'After Dinner',
+    instruction: 'Take after meals',
+    color: '#EA580C',
+    iconBg: '#FFF7ED',
+    statusBadge: '19:00',
+    stock: 30,
+  },
+];
 
 export default function ParentCareScreen() {
   const router = useRouter();
-  const { user } = useAuth();
-  const { todayDoses, activities, markDoseStatus, updateActivityProgress } = useCare();
+  const [activeTab, setActiveTab] = useState<'schedule' | 'medications'>('schedule');
+  const [items, setItems] = useState<ScheduleItem[]>(SCHEDULE_ITEMS);
 
-  const handleMarkTaken = (doseId: string) => {
-    markDoseStatus(doseId, 'taken', `${user?.name || 'Eleanor Vance'} (Parent)`);
-  };
+  const doneCount = items.filter((i) => i.done).length;
 
-  const handleMarkMissed = (doseId: string) => {
-    markDoseStatus(doseId, 'missed', `${user?.name || 'Eleanor Vance'} (Parent)`);
-  };
-
-  const handleAddWater = (activityId: string) => {
-    updateActivityProgress(activityId, 0.25, `${user?.name || 'Eleanor Vance'} (Parent)`);
-  };
-
-  const handleAddWalk = (activityId: string) => {
-    updateActivityProgress(activityId, 5, `${user?.name || 'Eleanor Vance'} (Parent)`);
-  };
-
-  const takenCount = todayDoses.filter((d) => d.status === 'taken').length;
-  const adherenceRate = Math.round((takenCount / todayDoses.length) * 100);
-
-  // Group doses into dayparts
-  const morningDoses = todayDoses.filter((d) => d.scheduledTime.includes('AM'));
-  const afternoonDoses = todayDoses.filter((d) => d.scheduledTime.includes('12:') || d.scheduledTime.includes('01:') || d.scheduledTime.includes('02:'));
-  const eveningDoses = todayDoses.filter((d) => d.scheduledTime.includes('PM') && !afternoonDoses.includes(d));
-
-  const renderDoseItem = (dose: MedicationDose) => {
-    const isTaken = dose.status === 'taken';
-    const isMissed = dose.status === 'missed';
-
-    return (
-      <View key={dose.id} style={[styles.doseItemCard, isTaken && styles.doseItemTaken]}>
-        <View style={styles.doseItemHeader}>
-          <View style={[styles.doseIconBox, isTaken && { backgroundColor: Colors.safeBg }]}>
-            <Pill size={18} color={isTaken ? Colors.safe : Colors.primary} />
-          </View>
-
-          <View style={{ flex: 1 }}>
-            <Text style={styles.doseName}>{dose.medicationName}</Text>
-            <Text style={styles.doseDosage}>{dose.dosage}</Text>
-          </View>
-
-          <View style={styles.timeTag}>
-            <Clock size={11} color={Colors.textSecondary} />
-            <Text style={styles.timeTagText}>{dose.scheduledTime}</Text>
-          </View>
-        </View>
-
-        {dose.loggedBy && (
-          <Text style={styles.loggedByText}>
-            Logged by {dose.loggedBy} at {dose.loggedAt}
-          </Text>
-        )}
-
-        <View style={styles.doseActionsRow}>
-          <TouchableOpacity
-            onPress={() => handleMarkTaken(dose.id)}
-            style={[styles.doseActionBtn, isTaken && styles.doseActionTakenActive]}
-            activeOpacity={0.8}
-          >
-            <CheckCircle2 size={15} color={isTaken ? Colors.white : Colors.safe} />
-            <Text style={[styles.doseActionText, isTaken && { color: Colors.white }]}>
-              {isTaken ? 'Taken' : 'Mark Taken'}
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={() => handleMarkMissed(dose.id)}
-            style={[styles.doseActionBtn, isMissed && styles.doseActionMissedActive]}
-            activeOpacity={0.8}
-          >
-            <XCircle size={15} color={isMissed ? Colors.white : Colors.critical} />
-            <Text style={[styles.doseActionText, isMissed && { color: Colors.white }]}>
-              {isMissed ? 'Missed' : 'Mark Missed'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      </View>
+  const toggleItem = (id: number) => {
+    setItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, done: !it.done } : it))
     );
   };
 
@@ -108,403 +142,503 @@ export default function ParentCareScreen() {
     <ScreenContainer
       scrollable
       padded
-      backgroundColor="#F8FAFC"
+      backgroundColor="#F0F4FA"
       bottomBar={<BottomTabBar activeTab="care" role="parent" />}
     >
-      {/* ── Top Header ──────────────────────────────────────── */}
-        <View style={styles.topHeader}>
-          <View>
-            <Text style={styles.screenTitle}>Medications & Care</Text>
-            <Text style={styles.screenSub}>Margaret Johnson&apos;s daily routine</Text>
-          </View>
+      {/* ── 1. Top Bar ──────────────────────────────────────── */}
+      <View style={styles.topBarRow}>
+        <TouchableOpacity
+          onPress={() => (router.canGoBack() ? router.back() : router.replace('/(parent)' as any))}
+          style={styles.backBtn}
+          activeOpacity={0.7}
+        >
+          <ChevronLeft size={20} color="#334155" />
+        </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => router.push('/(parent)/care/new-medication' as any)}
-            style={styles.addNavBtn}
-            activeOpacity={0.8}
-          >
-            <Plus size={16} color={Colors.white} />
-            <Text style={styles.addNavBtnText}>Add Rx</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={styles.screenTitle}>Daily Programme</Text>
 
-        {/* ── Adherence Score Card ────────────────────────────── */}
-        <Card elevated style={styles.adherenceCard}>
-          <View style={styles.adherenceRow}>
-            <View style={styles.adherenceIconCircle}>
-              <Pill size={22} color={Colors.primary} />
+        <TouchableOpacity
+          onPress={() => router.push('/(parent)/care/new-medication' as any)}
+          style={styles.addBtn}
+          activeOpacity={0.7}
+        >
+          <Plus size={20} color="#475569" />
+        </TouchableOpacity>
+      </View>
+
+      {/* ── 2. Tabs Switcher ────────────────────────────────── */}
+      <View style={styles.tabsContainer}>
+        <TouchableOpacity
+          onPress={() => setActiveTab('schedule')}
+          style={[styles.tabButton, activeTab === 'schedule' && styles.tabButtonActive]}
+          activeOpacity={0.75}
+        >
+          <Text style={[styles.tabText, activeTab === 'schedule' && styles.tabTextActive]}>
+            Schedule
+          </Text>
+          {activeTab === 'schedule' && <View style={styles.tabUnderline} />}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          onPress={() => setActiveTab('medications')}
+          style={[styles.tabButton, activeTab === 'medications' && styles.tabButtonActive]}
+          activeOpacity={0.75}
+        >
+          <Text style={[styles.tabText, activeTab === 'medications' && styles.tabTextActive]}>
+            Medications
+          </Text>
+          {activeTab === 'medications' && <View style={styles.tabUnderline} />}
+        </TouchableOpacity>
+      </View>
+
+      {/* ── 3. SCHEDULE TAB CONTENT ─────────────────────────── */}
+      {activeTab === 'schedule' && (
+        <View style={styles.tabContentContainer}>
+          {/* Date & Progress Summary */}
+          <View style={styles.scheduleHeaderRow}>
+            <Text style={styles.dateHeading}>Thursday 10 September</Text>
+            <View style={styles.doneBadge}>
+              <Text style={styles.doneBadgeText}>{doneCount}/13 done</Text>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.adherenceTitle}>Today&apos;s Adherence: {adherenceRate}%</Text>
-              <Text style={styles.adherenceSub}>
-                {takenCount} of {todayDoses.length} doses logged on schedule
-              </Text>
-            </View>
-            <StatusBadge
-              status={adherenceRate >= 80 ? 'safe' : adherenceRate >= 50 ? 'warning' : 'critical'}
-              label={adherenceRate >= 80 ? 'EXCELLENT' : 'PENDING'}
-              size="sm"
-            />
           </View>
 
-          {/* Progress bar */}
-          <View style={styles.progressTrack}>
-            <View style={[styles.progressFill, { width: `${adherenceRate}%` }]} />
-          </View>
-        </Card>
+          {/* Schedule Timeline List Card */}
+          <Card style={styles.scheduleCard}>
+            {items.map((item, idx) => {
+              const isLast = idx === items.length - 1;
 
-        <View style={{ height: Spacing.lg }} />
-
-        {/* ── Daypart 1: Morning Schedule ─────────────────────── */}
-        <View style={styles.daypartHeader}>
-          <Sunrise size={16} color="#D97706" />
-          <Text style={styles.daypartTitle}>MORNING ROUTINE (08:00 AM)</Text>
-        </View>
-        <View style={styles.daypartGroup}>
-          {morningDoses.map(renderDoseItem)}
-        </View>
-
-        <View style={{ height: Spacing.md }} />
-
-        {/* ── Daypart 2: Afternoon Schedule ───────────────────── */}
-        <View style={styles.daypartHeader}>
-          <Sun size={16} color="#2563EB" />
-          <Text style={styles.daypartTitle}>AFTERNOON ROUTINE (12:30 PM)</Text>
-        </View>
-        <View style={styles.daypartGroup}>
-          {afternoonDoses.map(renderDoseItem)}
-        </View>
-
-        <View style={{ height: Spacing.md }} />
-
-        {/* ── Daypart 3: Evening Schedule ─────────────────────── */}
-        <View style={styles.daypartHeader}>
-          <Moon size={16} color="#7C3AED" />
-          <Text style={styles.daypartTitle}>EVENING ROUTINE (07:00 PM)</Text>
-        </View>
-        <View style={styles.daypartGroup}>
-          {eveningDoses.map(renderDoseItem)}
-        </View>
-
-        <View style={{ height: Spacing.xl }} />
-
-        {/* ── Daily Wellness Tasks ────────────────────────────── */}
-        <View style={styles.sectionHeader}>
-          <Text style={styles.sectionTitle}>DAILY WELLNESS & HYDRATION</Text>
-        </View>
-
-        <View style={styles.activitiesList}>
-          {activities.map((act) => {
-            const isDone = act.status === 'completed';
-            const pct = Math.min(100, Math.round((act.current / act.target) * 100));
-
-            return (
-              <Card key={act.id} style={styles.actCard}>
-                <View style={styles.actRow}>
-                  <View style={[styles.actIconCircle, isDone && { backgroundColor: Colors.safeBg }]}>
-                    {act.category === 'hydration' ? (
-                      <Droplets size={18} color={isDone ? Colors.safe : Colors.primary} />
-                    ) : act.category === 'mobility' ? (
-                      <Activity size={18} color={isDone ? Colors.safe : Colors.warning} />
-                    ) : (
-                      <Heart size={18} color={Colors.critical} />
-                    )}
+              if (item.current) {
+                return (
+                  <View key={item.id} style={styles.currentItemBox}>
+                    <View style={styles.currentRadioOuter}>
+                      <View style={styles.currentRadioInner} />
+                    </View>
+                    <View style={styles.itemMainTextCol}>
+                      <Text style={styles.currentTitle}>{item.title}</Text>
+                      <Text style={styles.nowTag}>Now</Text>
+                    </View>
+                    <Text style={styles.currentTimeText}>{item.time}</Text>
                   </View>
+                );
+              }
 
-                  <View style={styles.actInfo}>
-                    <Text style={styles.actTitle}>{act.title}</Text>
-                    <Text style={styles.actProgress}>
-                      {act.current} / {act.target} {act.unit} ({pct}%)
+              return (
+                <TouchableOpacity
+                  key={item.id}
+                  style={[styles.scheduleRow, !isLast && styles.scheduleRowDivider]}
+                  onPress={() => toggleItem(item.id)}
+                  activeOpacity={0.7}
+                >
+                  {/* Left Indicator */}
+                  {item.done ? (
+                    <View style={styles.checkWrap}>
+                      <CheckCircle size={18} color="#22C55E" />
+                    </View>
+                  ) : (
+                    <View style={styles.pendingCircleOuter}>
+                      <View style={styles.pendingCircleInner} />
+                    </View>
+                  )}
+
+                  {/* Title & optional med pill */}
+                  <View style={styles.itemMainTextCol}>
+                    <Text
+                      style={[
+                        styles.itemTitle,
+                        item.done && styles.itemTitleDone,
+                      ]}
+                    >
+                      {item.title}
                     </Text>
                   </View>
 
-                  {act.category === 'hydration' && !isDone && (
-                    <TouchableOpacity
-                      onPress={() => handleAddWater(act.id)}
-                      style={styles.quickIncrementBtn}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.quickIncrementText}>+250ml</Text>
-                    </TouchableOpacity>
+                  {/* Optional Pill Icon */}
+                  {item.isMed && (
+                    <Pill size={14} color="#C084FC" style={styles.rowMedIcon} />
                   )}
 
-                  {act.category === 'mobility' && !isDone && (
-                    <TouchableOpacity
-                      onPress={() => handleAddWalk(act.id)}
-                      style={styles.quickIncrementBtn}
-                      activeOpacity={0.8}
-                    >
-                      <Text style={styles.quickIncrementText}>+5 min</Text>
-                    </TouchableOpacity>
-                  )}
-
-                  {isDone && <CheckCircle2 size={22} color={Colors.safe} />}
-                </View>
-
-                {/* Progress bar */}
-                <View style={styles.actProgressTrack}>
-                  <View
+                  {/* Time */}
+                  <Text
                     style={[
-                      styles.actProgressFill,
-                      {
-                        width: `${pct}%`,
-                        backgroundColor: isDone ? Colors.safe : Colors.primary,
-                      },
+                      styles.itemTime,
+                      item.done && styles.itemTimeDone,
                     ]}
-                  />
-                </View>
-              </Card>
-            );
-          })}
+                  >
+                    {item.time}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </Card>
         </View>
+      )}
 
-        <View style={{ height: Spacing.xl }} />
+      {/* ── 4. MEDICATIONS TAB CONTENT ──────────────────────── */}
+      {activeTab === 'medications' && (
+        <View style={styles.tabContentContainer}>
+          {/* Low Stock Warning Banner */}
+          <View style={styles.lowStockBanner}>
+            <AlertTriangle size={18} color="#EA580C" />
+            <View style={styles.lowStockTextCol}>
+              <Text style={styles.lowStockTitle}>
+                Low stock — Alendronic Acid
+              </Text>
+              <Text style={styles.lowStockSubtitle}>
+                8 tablets remaining. Please reorder.
+              </Text>
+            </View>
+          </View>
 
-        <Button
-          title="Add New Prescribed Medication"
-          onPress={() => router.push('/(parent)/care/new-medication' as any)}
-          variant="primary"
-          size="lg"
-          fullWidth
-          leftIcon={<Plus size={18} color={Colors.white} />}
-        />
+          {/* Medication Cards List */}
+          <Card style={styles.medCard}>
+            {MEDICATIONS_LIST.map((med, idx) => {
+              const isLast = idx === MEDICATIONS_LIST.length - 1;
 
-        <View style={{ height: Spacing['2xl'] }} />
+              return (
+                <View
+                  key={med.id}
+                  style={[styles.medRow, !isLast && styles.medRowDivider]}
+                >
+                  {/* Left Icon */}
+                  <View style={[styles.medIconBox, { backgroundColor: med.iconBg }]}>
+                    <Pill size={17} color={med.color} />
+                  </View>
+
+                  {/* Med Name & Instructions */}
+                  <View style={styles.medDetailsCol}>
+                    <Text style={styles.medNameText}>
+                      {med.name} {med.dosage}
+                    </Text>
+                    <Text style={styles.medTimingText}>{med.timing}</Text>
+                    <Text style={styles.medInstructionText}>
+                      {med.instruction}
+                    </Text>
+                  </View>
+
+                  {/* Right Status Badge & Stock */}
+                  <View style={styles.medRightCol}>
+                    {med.isTaken ? (
+                      <View style={styles.takenBadgeRow}>
+                        <Check size={11} color="#16A34A" strokeWidth={3} />
+                        <Text style={styles.takenBadgeText}>Taken</Text>
+                      </View>
+                    ) : med.isWeekly ? (
+                      <Text style={styles.weeklyBadgeText}>{med.statusBadge}</Text>
+                    ) : (
+                      <Text style={styles.pendingTimeBadgeText}>{med.statusBadge}</Text>
+                    )}
+
+                    {med.statusTime && (
+                      <Text style={styles.medTimeSubText}>{med.statusTime}</Text>
+                    )}
+
+                    <Text style={styles.medStockText}>Stock: {med.stock}</Text>
+                  </View>
+                </View>
+              );
+            })}
+          </Card>
+        </View>
+      )}
     </ScreenContainer>
   );
 }
 
 const styles = StyleSheet.create({
-  topHeader: {
+  topBarRow: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: Spacing.base,
+    paddingVertical: 12,
+    marginBottom: 8,
+  },
+  backBtn: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   screenTitle: {
-    ...Typography.h2,
-    fontSize: 22,
-    color: Colors.textPrimary,
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.3,
   },
-  screenSub: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  addNavBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.primary,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 8,
-    borderRadius: BorderRadius.full,
-  },
-  addNavBtnText: {
-    ...Typography.captionMedium,
-    color: Colors.white,
-    fontWeight: '700',
-  },
-  adherenceCard: {
-    backgroundColor: Colors.white,
-  },
-  adherenceRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.md,
-  },
-  adherenceIconCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primaryFaded,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  adherenceTitle: {
-    ...Typography.bodySemiBold,
-    fontSize: 15,
-    color: Colors.textPrimary,
-  },
-  adherenceSub: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 2,
-  },
-  progressTrack: {
-    height: 8,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surfaceSecondary,
-    overflow: 'hidden',
-  },
-  progressFill: {
-    height: '100%',
-    backgroundColor: Colors.primary,
-    borderRadius: BorderRadius.full,
-  },
-  daypartHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    marginBottom: Spacing.xs,
-  },
-  daypartTitle: {
-    ...Typography.overline,
-    color: Colors.textSecondary,
-    fontSize: 11,
-    letterSpacing: 0.8,
-  },
-  daypartGroup: {
-    gap: Spacing.sm,
-  },
-  doseItemCard: {
-    backgroundColor: Colors.white,
-    borderRadius: BorderRadius.md,
-    padding: Spacing.base,
-    borderWidth: 1,
-    borderColor: 'rgba(0,0,0,0.05)',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.03,
-    shadowRadius: 3,
-    elevation: 1,
-  },
-  doseItemTaken: {
-    borderColor: 'rgba(34, 197, 94, 0.3)',
-    backgroundColor: '#F0FDF4',
-  },
-  doseItemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-  },
-  doseIconBox: {
+  addBtn: {
     width: 38,
     height: 38,
-    borderRadius: BorderRadius.sm,
-    backgroundColor: Colors.primaryFaded,
+    borderRadius: 12,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  doseName: {
-    ...Typography.bodySemiBold,
-    fontSize: 15,
-    color: Colors.textPrimary,
+  tabsContainer: {
+    flexDirection: 'row',
+    borderBottomWidth: 1,
+    borderBottomColor: '#E2E8F0',
+    marginBottom: 16,
   },
-  doseDosage: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
-    marginTop: 1,
+  tabButton: {
+    flex: 1,
+    paddingVertical: 12,
+    alignItems: 'center',
+    position: 'relative',
   },
-  timeTag: {
+  tabButtonActive: {},
+  tabText: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: '#64748B',
+  },
+  tabTextActive: {
+    color: '#3C6FDB',
+  },
+  tabUnderline: {
+    position: 'absolute',
+    bottom: -1,
+    left: 12,
+    right: 12,
+    height: 2.5,
+    backgroundColor: '#3C6FDB',
+    borderRadius: 1.5,
+  },
+  tabContentContainer: {
+    gap: 14,
+  },
+  scheduleHeaderRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: Colors.surfaceSecondary,
-    paddingHorizontal: 8,
-    paddingVertical: 4,
-    borderRadius: BorderRadius.full,
+    justifyContent: 'space-between',
+    paddingHorizontal: 2,
   },
-  timeTagText: {
-    ...Typography.captionMedium,
-    fontSize: 11,
-    color: Colors.textSecondary,
+  dateHeading: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#64748B',
   },
-  loggedByText: {
-    ...Typography.caption,
-    color: Colors.safe,
-    marginTop: 6,
+  doneBadge: {
+    backgroundColor: '#DCFCE7',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 999,
+    paddingHorizontal: 10,
+    paddingVertical: 3,
+  },
+  doneBadgeText: {
+    color: '#16A34A',
+    fontSize: 11.5,
+    fontWeight: '800',
+  },
+  scheduleCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+  },
+  scheduleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 11,
+    gap: 12,
+  },
+  scheduleRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F8FAFC',
+  },
+  checkWrap: {
+    width: 22,
+    alignItems: 'center',
+  },
+  pendingCircleOuter: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 2,
+  },
+  pendingCircleInner: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#CBD5E1',
+  },
+  itemMainTextCol: {
+    flex: 1,
+  },
+  itemTitle: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: '#334155',
+  },
+  itemTitleDone: {
+    textDecorationLine: 'line-through',
+    color: '#94A3B8',
+  },
+  rowMedIcon: {
+    marginRight: 6,
+  },
+  itemTime: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  itemTimeDone: {
+    color: '#94A3B8',
+  },
+  currentItemBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#EFF6FF',
+    borderRadius: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginVertical: 4,
+    gap: 12,
+  },
+  currentRadioOuter: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#3C6FDB',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  currentRadioInner: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#3C6FDB',
+  },
+  currentTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#1D4ED8',
+  },
+  nowTag: {
     fontSize: 11,
+    fontWeight: '700',
+    color: '#3C6FDB',
+    marginTop: 1,
+  },
+  currentTimeText: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#1D4ED8',
+  },
+  lowStockBanner: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+    backgroundColor: '#FFF7ED',
+    borderWidth: 1,
+    borderColor: '#FED7AA',
+    borderRadius: 18,
+    padding: 14,
+  },
+  lowStockTextCol: {
+    flex: 1,
+  },
+  lowStockTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#C2410C',
+    marginBottom: 2,
+  },
+  lowStockSubtitle: {
+    fontSize: 11.5,
+    color: '#EA580C',
     fontWeight: '500',
   },
-  doseActionsRow: {
+  medCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 14,
+  },
+  medRow: {
     flexDirection: 'row',
-    gap: Spacing.sm,
-    marginTop: Spacing.md,
+    alignItems: 'flex-start',
+    paddingVertical: 12,
+    gap: 12,
   },
-  doseActionBtn: {
-    flex: 1,
-    height: 38,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.surfaceSecondary,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
+  medRowDivider: {
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
   },
-  doseActionTakenActive: {
-    backgroundColor: Colors.safe,
-  },
-  doseActionMissedActive: {
-    backgroundColor: Colors.critical,
-  },
-  doseActionText: {
-    ...Typography.captionMedium,
-    color: Colors.textPrimary,
-    fontWeight: '600',
-  },
-  sectionHeader: {
-    marginBottom: Spacing.xs,
-  },
-  sectionTitle: {
-    ...Typography.overline,
-    color: Colors.textTertiary,
-    letterSpacing: 0.8,
-    fontSize: 11,
-  },
-  activitiesList: {
-    gap: Spacing.sm,
-  },
-  actCard: {
-    backgroundColor: Colors.white,
-  },
-  actRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.md,
-    marginBottom: Spacing.sm,
-  },
-  actIconCircle: {
+  medIconBox: {
     width: 38,
     height: 38,
-    borderRadius: BorderRadius.full,
-    backgroundColor: Colors.primaryFaded,
+    borderRadius: 12,
     alignItems: 'center',
     justifyContent: 'center',
+    marginTop: 2,
   },
-  actInfo: {
+  medDetailsCol: {
     flex: 1,
   },
-  actTitle: {
-    ...Typography.bodySemiBold,
+  medNameText: {
     fontSize: 14,
-    color: Colors.textPrimary,
+    fontWeight: '800',
+    color: '#1E293B',
+    marginBottom: 2,
   },
-  actProgress: {
-    ...Typography.caption,
-    color: Colors.textSecondary,
+  medTimingText: {
+    fontSize: 12,
+    color: '#64748B',
+    fontWeight: '500',
+    marginBottom: 2,
+  },
+  medInstructionText: {
+    fontSize: 11,
+    color: '#94A3B8',
+    lineHeight: 15,
+  },
+  medRightCol: {
+    alignItems: 'flex-end',
+    minWidth: 80,
+  },
+  takenBadgeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+  },
+  takenBadgeText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#16A34A',
+  },
+  weeklyBadgeText: {
+    fontSize: 10.5,
+    fontWeight: '800',
+    color: '#7C3AED',
+  },
+  pendingTimeBadgeText: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#475569',
+  },
+  medTimeSubText: {
+    fontSize: 10.5,
+    color: '#94A3B8',
+    fontWeight: '500',
     marginTop: 1,
   },
-  quickIncrementBtn: {
-    backgroundColor: Colors.primaryFaded,
-    paddingHorizontal: Spacing.md,
-    paddingVertical: 6,
-    borderRadius: BorderRadius.full,
-  },
-  quickIncrementText: {
-    ...Typography.captionMedium,
-    color: Colors.primary,
-    fontWeight: '700',
-  },
-  actProgressTrack: {
-    height: 6,
-    backgroundColor: Colors.surfaceSecondary,
-    borderRadius: BorderRadius.full,
-    overflow: 'hidden',
-  },
-  actProgressFill: {
-    height: '100%',
-    borderRadius: BorderRadius.full,
+  medStockText: {
+    fontSize: 10,
+    color: '#94A3B8',
+    fontWeight: '500',
+    marginTop: 3,
   },
 });

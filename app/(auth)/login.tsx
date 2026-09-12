@@ -100,7 +100,14 @@ export default function LoginScreen() {
     if (!result.success) {
       setError(result.error || 'Failed to sign in. Please check your credentials.');
     } else {
-      router.replace('/');
+      const activeRole = result.user?.role || selectedRole;
+      if (activeRole === 'parent') {
+        router.replace('/(parent)');
+      } else if (activeRole === 'caregiver') {
+        router.replace('/(caregiver)');
+      } else {
+        router.replace('/');
+      }
     }
   };
 

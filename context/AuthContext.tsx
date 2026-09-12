@@ -21,6 +21,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { User, UserRole, AuthContextValue } from '@/types/auth';
 import { MOCK_USERS } from '@/services/mockData';
+import { apiLogin, apiSignup, apiLogout } from '@/services/authService';
 
 // React Context for authentication session state
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
@@ -42,78 +43,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   /**
-   * Logs in a user using email and password.
-   * Matches pre-seeded demo accounts (parent, caregiver) or generates a flexible demo user.
+   * Logs in a user using email and password via the Express + MySQL backend.
    */
   const login = async (
     email: string,
     password: string
   ): Promise<{ success: boolean; error?: string }> => {
-    await new Promise((resolve) => setTimeout(resolve, 600)); // Simulates network roundtrip
+    setIsLoading(true);
 
-    const normalizedEmail = email.trim().toLowerCase();
+    // Call real Node.js + Express backend API
+    const result = await apiLogin(email, password);
 
-    // Check pre-configured mock accounts
-    if (normalizedEmail === 'parent@elderguard.com') {
-      setUser(MOCK_USERS.parent);
-      return { success: true };
-    }
-    if (normalizedEmail === 'caregiver@elderguard.com') {
-      setUser(MOCK_USERS.caregiver);
+    if (result.success && result.user) {
+      setUser(result.user);
+      setIsLoading(false);
       return { success: true };
     }
 
-    // Flexible fallback: if valid email format and password >= 6 chars, assign Parent role
-    if (normalizedEmail.includes('@') && password.length >= 6) {
-      const newUser: User = {
-        id: `usr-${Date.now()}`,
-        name: email.split('@')[0].replace(/[._]/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        email: normalizedEmail,
-        role: 'parent',
-        createdAt: new Date().toISOString(),
-      };
-      setUser(newUser);
-      return { success: true };
-    }
-
+    setIsLoading(false);
     return {
       success: false,
-      error: 'Invalid credentials. Password must be at least 6 characters.',
+      error: result.error || 'Invalid credentials.',
     };
   };
 
   /**
-   * Registers a new user account with role assignment.
+   * Registers a new user account with role assignment on the Express + MySQL backend.
    */
   const signup = async (
     name: string,
     email: string,
     password: string,
-    role: 'parent' | 'caregiver'
+    role: 'parent' | 'caregiver',
+    phone?: string
   ): Promise<{ success: boolean; error?: string }> => {
-    await new Promise((resolve) => setTimeout(resolve, 600));
+    setIsLoading(true);
 
-    if (!name.trim()) {
-      return { success: false, error: 'Full name is required.' };
-    }
-    if (!email.trim() || !email.includes('@')) {
-      return { success: false, error: 'Valid email address is required.' };
-    }
-    if (password.length < 6) {
-      return { success: false, error: 'Password must be at least 6 characters.' };
+    // Call real Node.js + Express backend API
+    const result = await apiSignup(name, email, password, role, phone);
+
+    if (result.success && result.user) {
+      setUser(result.user);
+      setIsLoading(false);
+      return { success: true };
     }
 
-    const newUser: User = {
-      id: `usr-${Date.now()}`,
-      name: name.trim(),
-      email: email.trim().toLowerCase(),
-      role,
-      assignedElderlyCount: 0,
-      createdAt: new Date().toISOString(),
+    setIsLoading(false);
+    return {
+      success: false,
+      error: result.error || 'Failed to register.',
     };
-
-    setUser(newUser);
-    return { success: true };
   };
 
   /**
@@ -127,11 +106,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   /**
-   * Clears active session and signs out the user.
+   * Clears active session and signs out the user on the backend.
    */
   const logout = async (): Promise<void> => {
     setIsLoading(true);
-    await new Promise((resolve) => setTimeout(resolve, 200));
+    await apiLogout();
     setUser(null);
     setIsLoading(false);
   };

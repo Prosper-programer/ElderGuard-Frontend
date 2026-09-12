@@ -10,7 +10,7 @@ import {
   StatusBar,
   ActivityIndicator,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useRouter, useLocalSearchParams } from 'expo-router';
 import {
   ChevronLeft,
   ArrowRight,
@@ -18,12 +18,17 @@ import {
   Eye,
   EyeOff,
   AlertCircle,
+  Shield,
 } from 'lucide-react-native';
 import { useAuth } from '@/context/AuthContext';
+import { UserRole } from '@/types/auth';
 
 export default function SignupScreen() {
   const router = useRouter();
+  const params = useLocalSearchParams<{ role?: string }>();
   const { signup } = useAuth();
+
+  const selectedRole: UserRole = 'parent';
 
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
@@ -68,7 +73,7 @@ export default function SignupScreen() {
 
     setLoading(true);
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
-    const result = await signup(fullName, email.trim(), password, 'parent');
+    const result = await signup(fullName, email.trim(), password, 'parent', phone.trim());
     setLoading(false);
 
     if (!result.success) {
@@ -106,14 +111,31 @@ export default function SignupScreen() {
             <Text style={styles.backText}>Welcome</Text>
           </TouchableOpacity>
 
-          <Text style={styles.screenTitle}>Create account</Text>
+          <Text style={styles.screenTitle}>Create parent account</Text>
           <Text style={styles.screenSubtitle}>
-            Parent registration · Complete your details in one step
+            Family Manager · Monitor your loved one and manage care
           </Text>
         </View>
 
         {/* Body Content */}
         <View style={styles.content}>
+          {/* Caregiver informational notice */}
+          <TouchableOpacity
+            style={styles.caregiverBanner}
+            onPress={() => router.push({ pathname: '/(auth)/login', params: { role: 'caregiver' } } as any)}
+            activeOpacity={0.8}
+          >
+            <View style={styles.caregiverBannerIconWrap}>
+              <Shield size={16} color="#16A34A" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.caregiverBannerTitle}>Are you a Caregiver?</Text>
+              <Text style={styles.caregiverBannerSub}>
+                Caregivers don&apos;t register here. Your account is created by the family manager. <Text style={styles.caregiverBannerLink}>Sign In →</Text>
+              </Text>
+            </View>
+          </TouchableOpacity>
+
           {error && (
             <View style={styles.errorCard}>
               <AlertCircle size={17} color="#EF4444" />
@@ -482,5 +504,39 @@ const styles = StyleSheet.create({
   signInLinkHighlight: {
     color: '#2563EB',
     fontWeight: '700',
+  },
+  caregiverBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    backgroundColor: '#F0FDF4',
+    borderWidth: 1,
+    borderColor: '#BBF7D0',
+    borderRadius: 14,
+    padding: 12,
+    marginBottom: 16,
+  },
+  caregiverBannerIconWrap: {
+    width: 32,
+    height: 32,
+    borderRadius: 8,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  caregiverBannerTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#166534',
+  },
+  caregiverBannerSub: {
+    fontSize: 11,
+    color: '#15803D',
+    marginTop: 1,
+    lineHeight: 15,
+  },
+  caregiverBannerLink: {
+    fontWeight: '700',
+    textDecorationLine: 'underline',
   },
 });

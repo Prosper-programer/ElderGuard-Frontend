@@ -27,7 +27,8 @@ export interface AuthContextValue extends AuthState {
     name: string,
     email: string,
     password: string,
-    role: 'parent' | 'caregiver'
+    role: 'parent' | 'caregiver',
+    phone?: string
   ) => Promise<{ success: boolean; error?: string }>;
   quickLogin: (role: UserRole) => Promise<void>;
   logout: () => Promise<void>;

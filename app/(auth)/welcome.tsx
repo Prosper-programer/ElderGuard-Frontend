@@ -189,8 +189,8 @@ export default function WelcomeScreen() {
             activeOpacity={0.85}
           >
             <Text style={styles.createAccountPrompt}>
-              New to ElderGuard?{' '}
-              <Text style={styles.createAccountLink}>Create a free account →</Text>
+              New family manager?{' '}
+              <Text style={styles.createAccountLink}>Register parent account →</Text>
             </Text>
           </TouchableOpacity>
         </View>

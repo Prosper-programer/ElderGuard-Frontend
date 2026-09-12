@@ -313,7 +313,9 @@ export default function CaregiverHomeScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.activityTitle}>{act.title}</Text>
-                <Text style={styles.activityNotes} numberOfLines={1}>{act.notes}</Text>
+                <Text style={styles.activityNotes} numberOfLines={1}>
+                  {act.duration ? `Completed in ${act.duration}` : act.notes}
+                </Text>
               </View>
               <Text style={styles.activityTime}>{act.time}</Text>
             </View>

@@ -224,16 +224,24 @@ export default function LoginScreen() {
         </View>
       </View>
 
-      {/* Switch to Sign Up */}
-      <View style={styles.footer}>
-        <Text style={styles.footerText}>{"Don't have an account?"}</Text>
-        <TouchableOpacity
-          onPress={() => router.push('/(auth)/signup')}
-          activeOpacity={0.7}
-        >
-          <Text style={styles.footerLink}>Sign Up</Text>
-        </TouchableOpacity>
-      </View>
+      {/* Switch to Sign Up (Only for Parents) */}
+      {selectedRole === 'caregiver' ? (
+        <View style={styles.caregiverNotice}>
+          <Text style={styles.caregiverNoticeText}>
+            Caregiver accounts are created by the senior&apos;s family manager. Contact the parent if you need login credentials.
+          </Text>
+        </View>
+      ) : (
+        <View style={styles.footer}>
+          <Text style={styles.footerText}>{"Don't have an account?"}</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(auth)/signup')}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.footerLink}>Sign Up</Text>
+          </TouchableOpacity>
+        </View>
+      )}
     </ScreenContainer>
   );
 }
@@ -385,5 +393,17 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: '#2563EB',
     fontWeight: '700',
+  },
+  caregiverNotice: {
+    marginTop: 24,
+    marginBottom: 20,
+    paddingHorizontal: 20,
+    alignItems: 'center',
+  },
+  caregiverNoticeText: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 18,
   },
 });

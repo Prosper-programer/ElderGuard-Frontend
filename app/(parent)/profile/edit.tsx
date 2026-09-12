@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useRouter } from 'expo-router';
 import { ArrowLeft, Check, Save } from 'lucide-react-native';
-import { ScreenContainer, Button, TextInput, Card } from '@/components/ui';
+import { ScreenContainer, Button, TextInput, Card, TopBar } from '@/components/ui';
 import { Colors, Typography, Spacing, BorderRadius } from '@/constants/theme';
 import { useElderly } from '@/context/ElderlyContext';
 
@@ -11,8 +11,8 @@ export default function EditElderlyProfileScreen() {
   const { activeProfile, updateProfile } = useElderly();
 
   const primaryContact =
-    activeProfile.emergencyContacts.find((c) => c.isPrimary) ||
-    activeProfile.emergencyContacts[0] || {
+    activeProfile?.emergencyContacts.find((c) => c.isPrimary) ||
+    activeProfile?.emergencyContacts[0] || {
       id: 'ec-1',
       name: '',
       relationship: '',
@@ -20,22 +20,22 @@ export default function EditElderlyProfileScreen() {
       isPrimary: true,
     };
 
-  const [fullName, setFullName] = useState(activeProfile.fullName);
-  const [preferredName, setPreferredName] = useState(activeProfile.preferredName);
-  const [age, setAge] = useState(activeProfile.age.toString());
-  const [address, setAddress] = useState(activeProfile.address);
-  const [phone, setPhone] = useState(activeProfile.phone || '');
+  const [fullName, setFullName] = useState(activeProfile?.fullName || '');
+  const [preferredName, setPreferredName] = useState(activeProfile?.preferredName || '');
+  const [age, setAge] = useState(activeProfile?.age ? activeProfile.age.toString() : '');
+  const [address, setAddress] = useState(activeProfile?.address || '');
+  const [phone, setPhone] = useState(activeProfile?.phone || '');
 
-  const [bloodType, setBloodType] = useState(activeProfile.medicalInfo.bloodType);
-  const [allergies, setAllergies] = useState(activeProfile.medicalInfo.allergies.join(', '));
+  const [bloodType, setBloodType] = useState(activeProfile?.medicalInfo?.bloodType || 'O+');
+  const [allergies, setAllergies] = useState(activeProfile?.medicalInfo?.allergies?.join(', ') || '');
   const [chronicConditions, setChronicConditions] = useState(
-    activeProfile.medicalInfo.chronicConditions.join(', ')
+    activeProfile?.medicalInfo?.chronicConditions?.join(', ') || ''
   );
   const [medicationNotes, setMedicationNotes] = useState(
-    activeProfile.medicalInfo.medicationNotes || ''
+    activeProfile?.medicalInfo?.medicationNotes || ''
   );
   const [physicianName, setPhysicianName] = useState(
-    activeProfile.medicalInfo.physicianName || ''
+    activeProfile?.medicalInfo?.physicianName || ''
   );
 
   const [emergencyName, setEmergencyName] = useState(primaryContact.name);
@@ -43,9 +43,17 @@ export default function EditElderlyProfileScreen() {
   const [emergencyPhone, setEmergencyPhone] = useState(primaryContact.phone);
 
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [savedSuccess, setSavedSuccess] = useState(false);
 
   const handleSave = () => {
+    if (!activeProfile) return;
+    setError(null);
+    if (!fullName.trim()) {
+      setError('Full name is required.');
+      return;
+    }
+
     setLoading(true);
 
     const updatedAllergies = allergies
@@ -89,9 +97,8 @@ export default function EditElderlyProfileScreen() {
 
     setLoading(false);
     setSavedSuccess(true);
-
     setTimeout(() => {
-      handleBack();
+      router.replace('/(parent)/profile' as any);
     }, 400);
   };
 
@@ -102,6 +109,25 @@ export default function EditElderlyProfileScreen() {
       router.replace('/(parent)/profile' as any);
     }
   };
+
+  if (!activeProfile) {
+    return (
+      <ScreenContainer padded backgroundColor="#F0F4FA">
+        <TopBar title="Edit Profile" onBack={handleBack} />
+        <Card style={{ padding: 24, alignItems: 'center', marginTop: 24 }}>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: '#0F172A' }}>No Profile Found</Text>
+          <Text style={{ fontSize: 13, color: '#64748B', marginTop: 4, textAlign: 'center' }}>
+            Please add an elderly profile first before editing.
+          </Text>
+          <Button
+            title="Create Senior Profile"
+            onPress={() => router.replace('/(parent)/profile/create' as any)}
+            style={{ marginTop: 16 }}
+          />
+        </Card>
+      </ScreenContainer>
+    );
+  }
 
   return (
     <ScreenContainer scrollable keyboardAvoiding padded backgroundColor={Colors.background}>

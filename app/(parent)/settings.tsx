@@ -26,7 +26,7 @@ import { useAuth } from '@/context/AuthContext';
 
 export default function ParentSettingsScreen() {
   const router = useRouter();
-  const { logout } = useAuth();
+  const { user, logout } = useAuth();
 
   const [emergencyAlerts, setEmergencyAlerts] = useState(true);
   const [healthThresholds, setHealthThresholds] = useState(true);
@@ -71,17 +71,24 @@ export default function ParentSettingsScreen() {
         {/* Profile Card (Blue banner) */}
         <View style={styles.profileCard}>
           <View style={styles.avatarBox}>
-            <Text style={styles.avatarText}>RT</Text>
+            <Text style={styles.avatarText}>
+              {(user?.name || 'Robert Thompson')
+                .split(' ')
+                .map((n: string) => n[0])
+                .join('')
+                .slice(0, 2)
+                .toUpperCase()}
+            </Text>
           </View>
           <View style={styles.profileInfo}>
-            <Text style={styles.profileName}>Robert Thompson</Text>
-            <Text style={styles.profileEmail}>robert.thompson@email.com</Text>
-            <Text style={styles.profilePhone}>+44 7700 900123</Text>
+            <Text style={styles.profileName}>{user?.name || 'Robert Thompson'}</Text>
+            <Text style={styles.profileEmail}>{user?.email || 'robert.thompson@email.com'}</Text>
+            <Text style={styles.profilePhone}>{user?.phone || '+44 7700 900123'}</Text>
           </View>
           <TouchableOpacity
             style={styles.editBtn}
             activeOpacity={0.8}
-            onPress={() => Alert.alert('Edit Profile', 'Profile editor for Robert Thompson.')}
+            onPress={() => Alert.alert('Edit Profile', `Profile editor for ${user?.name || 'Parent'}.`)}
           >
             <Pencil size={18} color="#FFFFFF" />
           </TouchableOpacity>
@@ -147,7 +154,37 @@ export default function ParentSettingsScreen() {
             <View style={styles.menuIconWrap}>
               <User size={18} color="#2563EB" />
             </View>
-            <Text style={styles.menuLabel}>Elderly person profile</Text>
+            <Text style={styles.menuLabel}>Elderly Person Profile</Text>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Add / Create Elderly Person */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/profile/create' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconWrap, { backgroundColor: '#EFF6FF' }]}>
+              <User size={18} color="#3C6FDB" />
+            </View>
+            <Text style={styles.menuLabel}>+ Add Elderly Loved One</Text>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Caregiver Provisioning */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/caregivers/create' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconWrap, { backgroundColor: '#F0FDF4' }]}>
+              <Shield size={18} color="#16A34A" />
+            </View>
+            <Text style={styles.menuLabel}>+ Add / Provision Caregiver</Text>
             <ChevronRight size={18} color="#CBD5E1" />
           </TouchableOpacity>
 
@@ -162,7 +199,7 @@ export default function ParentSettingsScreen() {
             <View style={styles.menuIconWrap}>
               <Shield size={18} color="#2563EB" />
             </View>
-            <Text style={styles.menuLabel}>Emergency contacts</Text>
+            <Text style={styles.menuLabel}>Emergency Contacts</Text>
             <ChevronRight size={18} color="#CBD5E1" />
           </TouchableOpacity>
 
@@ -177,7 +214,7 @@ export default function ParentSettingsScreen() {
             <View style={styles.menuIconWrap}>
               <Bluetooth size={18} color="#2563EB" />
             </View>
-            <Text style={styles.menuLabel}>Device settings</Text>
+            <Text style={styles.menuLabel}>Device Settings</Text>
             <ChevronRight size={18} color="#CBD5E1" />
           </TouchableOpacity>
 
@@ -192,7 +229,7 @@ export default function ParentSettingsScreen() {
             <View style={styles.menuIconWrap}>
               <FileText size={18} color="#2563EB" />
             </View>
-            <Text style={styles.menuLabel}>Reports & exports</Text>
+            <Text style={styles.menuLabel}>Reports & Exports</Text>
             <ChevronRight size={18} color="#CBD5E1" />
           </TouchableOpacity>
         </View>

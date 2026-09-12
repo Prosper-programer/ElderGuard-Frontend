@@ -20,6 +20,32 @@ export default function CaregiverElderlyProfileScreen() {
   const router = useRouter();
   const { activeProfile } = useElderly();
 
+  const handleBack = () => {
+    if (router.canGoBack()) {
+      router.back();
+    } else {
+      router.replace('/(caregiver)' as any);
+    }
+  };
+
+  if (!activeProfile) {
+    return (
+      <ScreenContainer
+        scrollable
+        padded
+        backgroundColor="#F8FAFC"
+        bottomBar={<BottomTabBar activeTab="profile" role="caregiver" />}
+      >
+        <Card style={{ padding: 28, alignItems: 'center', marginTop: 40 }}>
+          <Text style={{ fontSize: 16, fontWeight: '700', color: '#0F172A' }}>No Senior Assigned</Text>
+          <Text style={{ fontSize: 13, color: '#64748B', marginTop: 6, textAlign: 'center' }}>
+            You do not currently have an assigned senior. Once the family manager links your account, their care profile will appear here.
+          </Text>
+        </Card>
+      </ScreenContainer>
+    );
+  }
+
   const primaryContact =
     activeProfile.emergencyContacts.find((c) => c.isPrimary) ||
     activeProfile.emergencyContacts[0];
@@ -28,14 +54,6 @@ export default function CaregiverElderlyProfileScreen() {
     const cleanPhone = phone.replace(/[^0-9+]/g, '');
     const url = Platform.OS === 'ios' ? `telprompt:${cleanPhone}` : `tel:${cleanPhone}`;
     Linking.openURL(url).catch(() => {});
-  };
-
-  const handleBack = () => {
-    if (router.canGoBack()) {
-      router.back();
-    } else {
-      router.replace('/(caregiver)' as any);
-    }
   };
 
   return (

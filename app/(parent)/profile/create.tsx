@@ -34,7 +34,7 @@ export default function CreateElderlyProfileScreen() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleCreate = () => {
+  const handleCreate = async () => {
     setError(null);
     if (!fullName.trim()) {
       setError('Please enter the full legal name.');
@@ -65,7 +65,7 @@ export default function CreateElderlyProfileScreen() {
       .map((s) => s.trim())
       .filter(Boolean);
 
-    createProfile({
+    const created = await createProfile({
       fullName: fullName.trim(),
       preferredName: preferredName.trim() || fullName.split(' ')[0],
       age: parseInt(age, 10),
@@ -74,8 +74,6 @@ export default function CreateElderlyProfileScreen() {
       address: address.trim(),
       phone: phone.trim(),
       parentManagerId: user?.id || 'usr-parent-01',
-      primaryCaregiverId: 'usr-caregiver-01',
-      primaryCaregiverName: 'David Miller',
       medicalInfo: {
         bloodType: bloodType.trim(),
         allergies: parsedAllergies,
@@ -105,7 +103,11 @@ export default function CreateElderlyProfileScreen() {
     });
 
     setLoading(false);
-    router.replace('/(parent)');
+    if (created) {
+      router.replace('/(parent)');
+    } else {
+      setError('Failed to create elderly profile. Please try again.');
+    }
   };
 
   const handleBack = () => {

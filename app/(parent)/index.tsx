@@ -21,6 +21,10 @@ import {
   RefreshCw,
   Clock,
   AlertTriangle,
+  UserPlus,
+  Plus,
+  HeartHandshake,
+  ShieldAlert,
 } from 'lucide-react-native';
 import {
   ScreenContainer,
@@ -41,9 +45,17 @@ import {
 export default function ParentDashboardScreen() {
   const router = useRouter();
   const { user } = useAuth();
-  const { activeProfile } = useElderly();
+  const { activeProfile, hasSenior, hasCaregiver, assignedCaregiverName } = useElderly();
   const { vitals } = useVitals();
   const { activeAlerts } = useAlerts();
+
+  const parentFirstName = user?.name ? user.name.split(' ')[0] : 'Robert';
+  const userInitials = (user?.name || 'Robert Thompson')
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
 
   const seniorName = activeProfile?.fullName || MOCK_ELDERLY_PERSON.fullName;
   const seniorAge = activeProfile?.age || MOCK_ELDERLY_PERSON.age;
@@ -60,7 +72,7 @@ export default function ParentDashboardScreen() {
       <View style={styles.topHeader}>
         <View>
           <Text style={styles.dateLabel}>THU, 10 SEPT 2026</Text>
-          <Text style={styles.greetingTitle}>Good morning, Robert 👋</Text>
+          <Text style={styles.greetingTitle}>Good morning, {parentFirstName} 👋</Text>
         </View>
 
         <View style={styles.headerRightActions}>
@@ -76,97 +88,117 @@ export default function ParentDashboardScreen() {
           </TouchableOpacity>
 
           <TouchableOpacity
-            onPress={() => router.push('/(parent)/profile' as any)}
+            onPress={() => router.push('/(parent)/settings' as any)}
             style={styles.avatarButton}
             activeOpacity={0.8}
           >
             <View style={styles.avatarInner}>
-              <Text style={styles.avatarButtonText}>RT</Text>
+              <Text style={styles.avatarButtonText}>{userInitials}</Text>
             </View>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── 2. Margaret's Status Hero Gradient Card ─────────── */}
-      <TouchableOpacity
-        onPress={() => router.push('/(parent)/profile' as any)}
-        activeOpacity={0.92}
-        style={styles.heroCardContainer}
-      >
-        <View style={styles.heroCardGradient}>
-          {/* Subtle Ambient Radial Glow */}
-          <View style={styles.ambientGlow} />
+      {/* ── 2. Senior Status Hero / Onboarding Card ─────────── */}
+      {!hasSenior ? (
+        <Card style={styles.emptySeniorHeroCard}>
+          <View style={styles.emptySeniorIconWrap}>
+            <UserPlus size={24} color="#2563EB" />
+          </View>
+          <Text style={styles.emptySeniorTitle}>Welcome to ElderGuard!</Text>
+          <Text style={styles.emptySeniorSub}>
+            You haven&apos;t added an elderly loved one yet. Create their profile to monitor vitals, track safe zones, and connect medical sensors.
+          </Text>
+          <TouchableOpacity
+            style={styles.addSeniorHeroBtn}
+            onPress={() => router.push('/(parent)/profile/create' as any)}
+            activeOpacity={0.85}
+          >
+            <Plus size={16} color="#FFFFFF" />
+            <Text style={styles.addSeniorHeroBtnText}>Add Elderly Loved One</Text>
+          </TouchableOpacity>
+        </Card>
+      ) : (
+        <TouchableOpacity
+          onPress={() => router.push('/(parent)/profile' as any)}
+          activeOpacity={0.92}
+          style={styles.heroCardContainer}
+        >
+          <View style={styles.heroCardGradient}>
+            {/* Subtle Ambient Radial Glow */}
+            <View style={styles.ambientGlow} />
 
-          <View style={styles.heroTopRow}>
-            {/* Senior Photo with Live Green Ring */}
-            <View style={styles.avatarWrap}>
-              <View style={styles.avatarHalo} />
-              <Image source={{ uri: seniorPhoto }} style={styles.seniorAvatar} />
-              <View style={styles.safeLiveDot} />
+            <View style={styles.heroTopRow}>
+              {/* Senior Photo with Live Green Ring */}
+              <View style={styles.avatarWrap}>
+                <View style={styles.avatarHalo} />
+                <Image source={{ uri: seniorPhoto }} style={styles.seniorAvatar} />
+                <View style={styles.safeLiveDot} />
+              </View>
+
+              <View style={styles.heroMeta}>
+                <Text style={styles.seniorNameText}>{seniorName}</Text>
+                <Text style={styles.seniorSubText}>{seniorAge} years · London, SW1A</Text>
+
+                <View style={styles.heroBadgeRow}>
+                  <View style={styles.safeStatusPill}>
+                    <View style={styles.greenDot} />
+                    <Text style={styles.safeStatusText}>SAFE</Text>
+                  </View>
+
+                  <View style={styles.batteryPill}>
+                    <View style={styles.cyanDot} />
+                    <Text style={styles.batteryText}>84%</Text>
+                  </View>
+                </View>
+              </View>
+
+              <ChevronRight size={20} color="rgba(255, 255, 255, 0.5)" />
             </View>
 
-            <View style={styles.heroMeta}>
-              <Text style={styles.seniorNameText}>{seniorName}</Text>
-              <Text style={styles.seniorSubText}>{seniorAge} years · London, SW1A</Text>
+            {/* Mini Vitals 4-Col Grid */}
+            <View style={styles.miniVitalsGrid}>
+              <View style={styles.miniVitalCell}>
+                <Text style={styles.miniVitalValue}>
+                  72<Text style={styles.miniVitalUnit}>bpm</Text>
+                </Text>
+                <Text style={styles.miniVitalLabel}>HR</Text>
+              </View>
 
-              <View style={styles.heroBadgeRow}>
-                <View style={styles.safeStatusPill}>
-                  <View style={styles.greenDot} />
-                  <Text style={styles.safeStatusText}>SAFE</Text>
-                </View>
+              <View style={styles.miniVitalDivider} />
 
-                <View style={styles.batteryPill}>
-                  <View style={styles.cyanDot} />
-                  <Text style={styles.batteryText}>84%</Text>
-                </View>
+              <View style={styles.miniVitalCell}>
+                <Text style={styles.miniVitalValue}>
+                  97<Text style={styles.miniVitalUnit}>%</Text>
+                </Text>
+                <Text style={styles.miniVitalLabel}>SpO₂</Text>
+              </View>
+
+              <View style={styles.miniVitalDivider} />
+
+              <View style={styles.miniVitalCell}>
+                <Text style={styles.miniVitalValue}>
+                  36.8<Text style={styles.miniVitalUnit}>°C</Text>
+                </Text>
+                <Text style={styles.miniVitalLabel}>Temp</Text>
+              </View>
+
+              <View style={styles.miniVitalDivider} />
+
+              <View style={styles.miniVitalCell}>
+                <Text style={styles.miniVitalValue}>1.2k</Text>
+                <Text style={styles.miniVitalLabel}>Steps</Text>
               </View>
             </View>
 
-            <ChevronRight size={20} color="rgba(255, 255, 255, 0.5)" />
-          </View>
-
-          {/* Mini Vitals 4-Col Grid */}
-          <View style={styles.miniVitalsGrid}>
-            <View style={styles.miniVitalCell}>
-              <Text style={styles.miniVitalValue}>
-                72<Text style={styles.miniVitalUnit}>bpm</Text>
-              </Text>
-              <Text style={styles.miniVitalLabel}>HR</Text>
-            </View>
-
-            <View style={styles.miniVitalDivider} />
-
-            <View style={styles.miniVitalCell}>
-              <Text style={styles.miniVitalValue}>
-                97<Text style={styles.miniVitalUnit}>%</Text>
-              </Text>
-              <Text style={styles.miniVitalLabel}>SpO₂</Text>
-            </View>
-
-            <View style={styles.miniVitalDivider} />
-
-            <View style={styles.miniVitalCell}>
-              <Text style={styles.miniVitalValue}>
-                36.8<Text style={styles.miniVitalUnit}>°C</Text>
-              </Text>
-              <Text style={styles.miniVitalLabel}>Temp</Text>
-            </View>
-
-            <View style={styles.miniVitalDivider} />
-
-            <View style={styles.miniVitalCell}>
-              <Text style={styles.miniVitalValue}>1.2k</Text>
-              <Text style={styles.miniVitalLabel}>Steps</Text>
+            {/* Sync Timestamp Footer */}
+            <View style={styles.heroFooterRow}>
+              <RefreshCw size={11} color="rgba(255, 255, 255, 0.65)" />
+              <Text style={styles.heroFooterText}>Live - Updated 2 min ago</Text>
             </View>
           </View>
-
-          {/* Sync Timestamp Footer */}
-          <View style={styles.heroFooterRow}>
-            <RefreshCw size={11} color="rgba(255, 255, 255, 0.65)" />
-            <Text style={styles.heroFooterText}>Live - Updated 2 min ago</Text>
-          </View>
-        </View>
-      </TouchableOpacity>
+        </TouchableOpacity>
+      )}
 
       {/* ── 3. Quick Actions 4-Button Row ───────────────────── */}
       <View style={styles.sectionWrap}>
@@ -217,6 +249,57 @@ export default function ParentDashboardScreen() {
         </View>
       </View>
 
+      {/* ── 3.5. Assigned Caregiver Section ─────────────────── */}
+      <View style={styles.sectionWrap}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionOverline}>ASSIGNED CAREGIVER</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(parent)/caregivers/create' as any)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sectionActionText}>+ Provision caregiver →</Text>
+          </TouchableOpacity>
+        </View>
+
+        {hasCaregiver ? (
+          <Card style={styles.caregiverActiveCard}>
+            <View style={styles.caregiverIconBox}>
+              <HeartHandshake size={20} color="#16A34A" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.caregiverActiveName}>
+                {assignedCaregiverName || 'Sarah Mitchell'}
+              </Text>
+              <Text style={styles.caregiverActiveSub}>Active Shift · 08:00–20:00 · On Duty</Text>
+            </View>
+            <View style={styles.caregiverStatusPill}>
+              <View style={styles.greenDot} />
+              <Text style={styles.caregiverStatusText}>ON DUTY</Text>
+            </View>
+          </Card>
+        ) : (
+          <Card style={styles.noCaregiverCard}>
+            <View style={styles.noCaregiverIconBox}>
+              <ShieldAlert size={20} color="#D97706" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.noCaregiverTitle}>No Caregiver Assigned Yet</Text>
+              <Text style={styles.noCaregiverSub}>
+                Caregivers cannot sign up on their own. Provision their login credentials so they can sign in and record care activities.
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.addCaregiverBtn}
+              onPress={() => router.push('/(parent)/caregivers/create' as any)}
+              activeOpacity={0.85}
+            >
+              <Plus size={14} color="#FFFFFF" />
+              <Text style={styles.addCaregiverBtnText}>Add</Text>
+            </TouchableOpacity>
+          </Card>
+        )}
+      </View>
+
       {/* ── 4. Live Vitals Grid ─────────────────────────────── */}
       <View style={styles.sectionWrap}>
         <View style={styles.sectionHeaderRow}>
@@ -229,7 +312,16 @@ export default function ParentDashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        <View style={styles.vitals2ColGrid}>
+        {!hasSenior ? (
+          <Card style={styles.emptyVitalsNoticeCard}>
+            <Activity size={24} color="#94A3B8" />
+            <Text style={styles.emptyVitalsNoticeTitle}>Vitals Telemetry Pending Setup</Text>
+            <Text style={styles.emptyVitalsNoticeSub}>
+              Add your elderly loved one and pair an ElderGuard Smart Wearable to receive live heart rate, SpO₂, and body temperature readings.
+            </Text>
+          </Card>
+        ) : (
+          <View style={styles.vitals2ColGrid}>
           {/* Heart Rate */}
           <Card style={styles.vitalCardItem}>
             <View style={[styles.vitalAccentBar, { backgroundColor: '#10B981' }]} />
@@ -321,6 +413,7 @@ export default function ParentDashboardScreen() {
             </View>
           </Card>
         </View>
+        )}
       </View>
 
       {/* ── 5. Today's Programme Preview ────────────────────── */}
@@ -335,72 +428,82 @@ export default function ParentDashboardScreen() {
           </TouchableOpacity>
         </View>
 
-        <Card style={styles.programmeCard}>
-          {[
-            { id: 1, title: 'Light walk — garden', time: '10:30', done: true },
-            { id: 2, title: 'Lunch', time: '12:30', done: false, current: true },
-            { id: 3, title: 'Midday medication', time: '13:00', done: false, isMed: true },
-            { id: 4, title: 'Rest / Afternoon nap', time: '14:00', done: false },
-          ].map((item, i) => (
-            <View
-              key={item.id}
-              style={[
-                styles.programmeRow,
-                item.current && styles.programmeRowCurrent,
-                i === 3 && { borderBottomWidth: 0 },
-              ]}
-            >
+        {!hasSenior ? (
+          <Card style={styles.emptyVitalsNoticeCard}>
+            <Pill size={24} color="#94A3B8" />
+            <Text style={styles.emptyVitalsNoticeTitle}>No Programme Scheduled</Text>
+            <Text style={styles.emptyVitalsNoticeSub}>
+              Add your elderly loved one to configure medication schedules and daily activity routines.
+            </Text>
+          </Card>
+        ) : (
+          <Card style={styles.programmeCard}>
+            {[
+              { id: 1, title: 'Light walk — garden', time: '10:30', done: true },
+              { id: 2, title: 'Lunch', time: '12:30', done: false, current: true },
+              { id: 3, title: 'Midday medication', time: '13:00', done: false, isMed: true },
+              { id: 4, title: 'Rest / Afternoon nap', time: '14:00', done: false },
+            ].map((item, i) => (
               <View
+                key={item.id}
                 style={[
-                  styles.programmeDotCircle,
-                  item.done
-                    ? styles.programmeDotDone
-                    : item.current
-                    ? styles.programmeDotCurrent
-                    : styles.programmeDotPending,
+                  styles.programmeRow,
+                  item.current && styles.programmeRowCurrent,
+                  i === 3 && { borderBottomWidth: 0 },
                 ]}
               >
-                {item.done ? (
-                  <CheckCircle size={14} color="#16A34A" />
-                ) : item.current ? (
-                  <View style={styles.programmeCurrentRadio}>
-                    <View style={styles.programmeCurrentRadioInner} />
-                  </View>
-                ) : (
-                  <View style={styles.programmeDotInner} />
+                <View
+                  style={[
+                    styles.programmeDotCircle,
+                    item.done
+                      ? styles.programmeDotDone
+                      : item.current
+                      ? styles.programmeDotCurrent
+                      : styles.programmeDotPending,
+                  ]}
+                >
+                  {item.done ? (
+                    <CheckCircle size={14} color="#16A34A" />
+                  ) : item.current ? (
+                    <View style={styles.programmeCurrentRadio}>
+                      <View style={styles.programmeCurrentRadioInner} />
+                    </View>
+                  ) : (
+                    <View style={styles.programmeDotInner} />
+                  )}
+                </View>
+
+                <View style={styles.programmeTextCol}>
+                  <Text
+                    style={[
+                      styles.programmeTitle,
+                      item.done && styles.programmeTitleDone,
+                      item.current && styles.programmeTitleCurrent,
+                    ]}
+                  >
+                    {item.title}
+                  </Text>
+                </View>
+
+                {item.isMed && (
+                  <Pill size={13} color="#C084FC" style={{ marginRight: 6 }} />
                 )}
-              </View>
 
-              <View style={styles.programmeTextCol}>
-                <Text
-                  style={[
-                    styles.programmeTitle,
-                    item.done && styles.programmeTitleDone,
-                    item.current && styles.programmeTitleCurrent,
-                  ]}
-                >
-                  {item.title}
-                </Text>
+                <View style={styles.programmeTimeCol}>
+                  <Text
+                    style={[
+                      styles.programmeTimeText,
+                      item.done && styles.programmeTitleDone,
+                      item.current && styles.programmeTitleCurrent,
+                    ]}
+                  >
+                    {item.time}
+                  </Text>
+                </View>
               </View>
-
-              {item.isMed && (
-                <Pill size={13} color="#C084FC" style={{ marginRight: 6 }} />
-              )}
-
-              <View style={styles.programmeTimeCol}>
-                <Text
-                  style={[
-                    styles.programmeTimeText,
-                    item.done && styles.programmeTitleDone,
-                    item.current && styles.programmeTitleCurrent,
-                  ]}
-                >
-                  {item.time}
-                </Text>
-              </View>
-            </View>
-          ))}
-        </Card>
+            ))}
+          </Card>
+        )}
       </View>
 
       {/* ── 6. Recent Alerts Section ────────────────────────── */}
@@ -991,5 +1094,165 @@ const styles = StyleSheet.create({
     fontSize: 11,
     color: '#94A3B8',
     fontWeight: '500',
+  },
+  emptySeniorHeroCard: {
+    padding: 24,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    alignItems: 'center',
+    textAlign: 'center',
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    shadowColor: '#2563EB',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.06,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  emptySeniorIconWrap: {
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  emptySeniorTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    marginBottom: 6,
+  },
+  emptySeniorSub: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 19,
+    marginBottom: 16,
+    paddingHorizontal: 10,
+  },
+  addSeniorHeroBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: '#2563EB',
+    paddingHorizontal: 20,
+    paddingVertical: 12,
+    borderRadius: 14,
+  },
+  addSeniorHeroBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  caregiverActiveCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 16,
+    borderLeftWidth: 3,
+    borderLeftColor: '#16A34A',
+  },
+  caregiverIconBox: {
+    width: 40,
+    height: 40,
+    borderRadius: 12,
+    backgroundColor: '#DCFCE7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  caregiverActiveName: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  caregiverActiveSub: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  caregiverStatusPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#DCFCE7',
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  caregiverStatusText: {
+    fontSize: 9,
+    fontWeight: '800',
+    color: '#15803D',
+    letterSpacing: 0.5,
+  },
+  noCaregiverCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    padding: 14,
+    backgroundColor: '#FFFBEB',
+    borderColor: '#FDE68A',
+    borderWidth: 1,
+    borderRadius: 16,
+  },
+  noCaregiverIconBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: '#FEF3C7',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  noCaregiverTitle: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#92400E',
+  },
+  noCaregiverSub: {
+    fontSize: 11,
+    color: '#B45309',
+    marginTop: 2,
+    lineHeight: 15,
+  },
+  addCaregiverBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#D97706',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 10,
+  },
+  addCaregiverBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#FFFFFF',
+  },
+  emptyVitalsNoticeCard: {
+    padding: 24,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  emptyVitalsNoticeTitle: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#0F172A',
+    marginTop: 8,
+    marginBottom: 4,
+  },
+  emptyVitalsNoticeSub: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 17,
   },
 });

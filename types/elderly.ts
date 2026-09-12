@@ -51,9 +51,14 @@ export interface ElderlyProfile {
 }
 
 export interface ElderlyContextValue {
-  activeProfile: ElderlyProfile;
+  activeProfile: ElderlyProfile | null;
   profiles: ElderlyProfile[];
+  hasSenior: boolean;
+  hasCaregiver: boolean;
+  assignedCaregiverName?: string;
   updateProfile: (id: string, updates: Partial<ElderlyProfile>) => void;
-  createProfile: (data: Omit<ElderlyProfile, 'id' | 'createdAt' | 'updatedAt'>) => ElderlyProfile;
+  createProfile: (data: Omit<ElderlyProfile, 'id' | 'createdAt' | 'updatedAt'>) => Promise<ElderlyProfile | null>;
   getAssignedProfileForCaregiver: (caregiverId: string) => ElderlyProfile | undefined;
+  refreshProfiles: () => Promise<void>;
+  provisionCaregiver: (data: { fullName: string; email: string; phoneNumber: string; password?: string }) => Promise<{ success: boolean; error?: string }>;
 }

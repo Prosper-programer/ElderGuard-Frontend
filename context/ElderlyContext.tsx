@@ -4,100 +4,133 @@
  * ============================================================================
  * 
  * PURPOSE:
- * Stores and manages the senior profile (Margaret Johnson), including:
- * 1. Demographic and contact data (Name, address, phone, avatar).
- * 2. Clinical and medical history (Blood type, allergies, chronic conditions, physician).
- * 3. Emergency contacts hierarchy (Primary vs. secondary family responders).
- * 4. Paired IoT hardware telemetry status (Device ID, battery %, connection status).
- * 
- * ROLE ACCESS:
- * - Parent: Full Read/Write access (can edit contacts, medical notes, add new seniors).
- * - Caregiver: Read-Only access (displays assigned senior care instructions).
+ * Stores and manages senior profiles, including:
+ * 1. Demographic and contact data.
+ * 2. Clinical and medical history.
+ * 3. Emergency contacts hierarchy.
+ * 4. Paired IoT hardware telemetry status.
+ * 5. Integration with Express + MySQL backend and empty state handling.
  */
 
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { ElderlyProfile, ElderlyContextValue } from '@/types/elderly';
+import { useAuth } from '@/context/AuthContext';
+import {
+  apiGetElderlyProfiles,
+  apiCreateElderlyProfile,
+  apiCreateCaregiver,
+} from '@/services/elderlyService';
 
 /**
- * Baseline demonstration profile for Margaret Johnson (Age 78):
+ * Baseline demonstration profile for Margaret Thompson (Age 78):
  */
-const INITIAL_PROFILES: ElderlyProfile[] = [
-  {
-    id: 'eld-01',
-    fullName: 'Margaret Johnson',
-    preferredName: 'Margaret',
-    age: 78,
-    dateOfBirth: '1948-03-22',
-    gender: 'Female',
-    address: '142 Elm Street, Maplewood, NJ 07040',
-    phone: '+1 (555) 782-9012',
-    imageUrl: require('@/assets/images/elderly_margaret.jpg'),
-    parentManagerId: 'usr-parent-01', // Eleanor Vance
-    primaryCaregiverId: 'usr-caregiver-01', // David Miller
-    primaryCaregiverName: 'David Miller',
+const DEMO_MARGARET_PROFILE: ElderlyProfile = {
+  id: 'eld-01',
+  fullName: 'Margaret Thompson',
+  preferredName: 'Margaret',
+  age: 78,
+  dateOfBirth: '1948-03-22',
+  gender: 'Female',
+  address: '42 Maple Street, London, SW1A 2AA',
+  phone: '+44 7700 900123',
+  imageUrl: require('@/assets/images/elderly_margaret.jpg'),
+  parentManagerId: 'usr-parent-01',
+  primaryCaregiverId: 'usr-caregiver-01',
+  primaryCaregiverName: 'Sarah Mitchell',
 
-    // Clinical Information
-    medicalInfo: {
-      bloodType: 'O+',
-      allergies: ['Penicillin', 'Sulfa drugs'],
-      chronicConditions: ['Hypertension (Stage 1)', 'Mild Osteoarthritis'],
-      medicationNotes: 'Lisinopril 10mg every morning at 08:00 AM. Calcium supplement with lunch.',
-      physicianName: 'Dr. Robert Chen, MD',
-      physicianPhone: '+1 (555) 890-1234',
-      hospitalPreference: 'Saint Luke Memorial Medical Center',
-    },
-
-    // Emergency Contact Chain
-    emergencyContacts: [
-      {
-        id: 'ec-1',
-        name: 'Eleanor Vance',
-        relationship: 'Daughter (Primary Care Manager)',
-        phone: '+1 (555) 234-5678',
-        isPrimary: true,
-      },
-      {
-        id: 'ec-2',
-        name: 'James Johnson',
-        relationship: 'Son',
-        phone: '+1 (555) 678-9012',
-        isPrimary: false,
-      },
-    ],
-
-    // Hardware Telemetry & Pairing
-    deviceStatus: {
-      deviceId: 'EG-IOT-4892',
-      deviceName: 'ElderGuard Wearable Band V2',
-      connected: true,
-      batteryLevel: 87,
-      lastSync: '2 minutes ago',
-      signalStrength: 'strong',
-      firmwareVersion: 'v2.4.1',
-    },
-    createdAt: '2026-01-16T10:00:00.000Z',
-    updatedAt: '2026-09-02T14:30:00.000Z',
+  medicalInfo: {
+    bloodType: 'A+',
+    allergies: ['Penicillin', 'Sulfonamides'],
+    chronicConditions: ['Type 2 Diabetes', 'Hypertension', 'Mild Osteoporosis'],
+    medicationNotes: 'Lisinopril 10mg every morning at 08:00 AM. Metformin 500mg after lunch.',
+    physicianName: 'Dr. Arthur Hargreaves, MD',
+    physicianPhone: '+44 20 7946 0912',
+    hospitalPreference: 'St. Thomas Hospital London',
   },
-];
 
-// React Context definition for elderly profile management
+  emergencyContacts: [
+    {
+      id: 'ec-1',
+      name: 'Robert Thompson',
+      relationship: 'Son (Primary)',
+      phone: '+44 7700 900123',
+      isPrimary: true,
+    },
+  ],
+
+  deviceStatus: {
+    deviceId: 'EG-IOT-4892',
+    deviceName: 'ElderGuard Wearable Band V2',
+    connected: true,
+    batteryLevel: 84,
+    lastSync: '2 minutes ago',
+    signalStrength: 'strong',
+    firmwareVersion: 'v2.4.1',
+  },
+  createdAt: '2026-01-16T10:00:00.000Z',
+  updatedAt: '2026-09-02T14:30:00.000Z',
+};
+
 const ElderlyContext = createContext<ElderlyContextValue | undefined>(undefined);
 
-/**
- * ElderlyProvider Component
- * Exposes the active senior profile, list of profiles, and update/creation handlers.
- */
 export function ElderlyProvider({ children }: { children: React.ReactNode }) {
-  const [profiles, setProfiles] = useState<ElderlyProfile[]>(INITIAL_PROFILES);
-  const [activeProfileId, setActiveProfileId] = useState<string>('eld-01');
+  const { user, isAuthenticated } = useAuth();
 
-  // Currently selected senior profile
+  const [profiles, setProfiles] = useState<ElderlyProfile[]>([]);
+  const [activeProfileId, setActiveProfileId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const isDemoAccount =
+    user?.email === 'parent@elderguard.com' ||
+    user?.email === 'robert.thompson@email.com' ||
+    user?.email === 'caregiver@elderguard.com';
+
+  const refreshProfiles = useCallback(async () => {
+    if (!isAuthenticated || !user) {
+      setProfiles([]);
+      setActiveProfileId(null);
+      return;
+    }
+
+    setIsLoading(true);
+    const result = await apiGetElderlyProfiles();
+
+    if (result.success && result.profiles.length > 0) {
+      setProfiles(result.profiles);
+      setActiveProfileId(result.profiles[0].id);
+    } else if (result.success && result.profiles.length === 0) {
+      // If user is a known demo account, fallback to pre-seeded Margaret
+      if (isDemoAccount) {
+        setProfiles([DEMO_MARGARET_PROFILE]);
+        setActiveProfileId(DEMO_MARGARET_PROFILE.id);
+      } else {
+        // Real new user with no profiles created yet!
+        setProfiles([]);
+        setActiveProfileId(null);
+      }
+    } else {
+      // Backend not reached or offline: fallback to demo profile if demo user
+      if (isDemoAccount) {
+        setProfiles([DEMO_MARGARET_PROFILE]);
+        setActiveProfileId(DEMO_MARGARET_PROFILE.id);
+      }
+    }
+    setIsLoading(false);
+  }, [isAuthenticated, user, isDemoAccount]);
+
+  useEffect(() => {
+    refreshProfiles();
+  }, [refreshProfiles]);
+
   const activeProfile =
-    profiles.find((p) => p.id === activeProfileId) || profiles[0] || INITIAL_PROFILES[0];
+    profiles.find((p) => p.id === activeProfileId) || (profiles.length > 0 ? profiles[0] : null);
 
-  /**
-   * Updates an existing senior's profile with partial attributes.
-   */
+  const hasSenior = Boolean(activeProfile);
+  const hasCaregiver = Boolean(
+    activeProfile &&
+      (activeProfile.primaryCaregiverId || activeProfile.primaryCaregiverName)
+  );
+
   const updateProfile = (id: string, updates: Partial<ElderlyProfile>) => {
     setProfiles((prev) =>
       prev.map((profile) => {
@@ -113,29 +146,57 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
     );
   };
 
-  /**
-   * Creates and registers a new senior profile into the system.
-   */
-  const createProfile = (
+  const createProfile = async (
     data: Omit<ElderlyProfile, 'id' | 'createdAt' | 'updatedAt'>
-  ): ElderlyProfile => {
-    const newProfile: ElderlyProfile = {
-      ...data,
-      id: `eld-${Date.now()}`,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
+  ): Promise<ElderlyProfile | null> => {
+    // 1. Post to backend
+    const res = await apiCreateElderlyProfile({
+      fullName: data.fullName,
+      dateOfBirth: data.dateOfBirth || '1950-01-01',
+      gender: data.gender || 'Female',
+      address: data.address,
+      emergencyContact: data.phone || data.emergencyContacts?.[0]?.phone || '+1 555 000 0000',
+      medicalInformation: data.medicalInfo?.chronicConditions?.join(', ') || undefined,
+    });
+
+    const newProfile: ElderlyProfile = res.success && res.profile
+      ? res.profile
+      : {
+          ...data,
+          id: `eld-${Date.now()}`,
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+        };
 
     setProfiles((prev) => [newProfile, ...prev]);
     setActiveProfileId(newProfile.id);
     return newProfile;
   };
 
-  /**
-   * Retrieves the senior assigned to a specific professional caregiver.
-   */
+  const provisionCaregiver = async (data: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    password?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    const res = await apiCreateCaregiver(data);
+    if (!res.success) {
+      return { success: false, error: res.error || 'Failed to create caregiver.' };
+    }
+
+    // Automatically associate with active profile if active profile has no caregiver
+    if (activeProfile && !activeProfile.primaryCaregiverName && res.caregiver) {
+      updateProfile(activeProfile.id, {
+        primaryCaregiverId: `usr-${res.caregiver.user_id}`,
+        primaryCaregiverName: res.caregiver.full_name,
+      });
+    }
+
+    return { success: true };
+  };
+
   const getAssignedProfileForCaregiver = (caregiverId: string): ElderlyProfile | undefined => {
-    return profiles.find((p) => p.primaryCaregiverId === caregiverId) || profiles[0];
+    return profiles.find((p) => p.primaryCaregiverId === caregiverId) || (profiles[0] ?? undefined);
   };
 
   return (
@@ -143,8 +204,13 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
       value={{
         activeProfile,
         profiles,
+        hasSenior,
+        hasCaregiver,
+        assignedCaregiverName: activeProfile?.primaryCaregiverName,
         updateProfile,
         createProfile,
+        provisionCaregiver,
+        refreshProfiles,
         getAssignedProfileForCaregiver,
       }}
     >
@@ -153,10 +219,6 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
   );
 }
 
-/**
- * useElderly Custom Hook
- * Provides direct access to senior demographic, clinical, and hardware pairing state.
- */
 export function useElderly(): ElderlyContextValue {
   const context = useContext(ElderlyContext);
   if (!context) {

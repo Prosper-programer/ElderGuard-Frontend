@@ -35,7 +35,19 @@ export default function EditElderlyProfileScreen() {
     activeProfile?.medicalInfo?.medicationNotes || ''
   );
   const [physicianName, setPhysicianName] = useState(
-    activeProfile?.medicalInfo?.physicianName || ''
+    activeProfile?.doctorName || activeProfile?.medicalInfo?.physicianName || 'Dr. James Hargreaves'
+  );
+  const [doctorSpecialty, setDoctorSpecialty] = useState(
+    activeProfile?.doctorSpecialty || 'Geriatric Medicine'
+  );
+  const [doctorHospital, setDoctorHospital] = useState(
+    activeProfile?.doctorHospital || activeProfile?.medicalInfo?.hospitalPreference || "St. Thomas' Hospital, London"
+  );
+  const [doctorPhone, setDoctorPhone] = useState(
+    activeProfile?.doctorPhone || activeProfile?.medicalInfo?.physicianPhone || '+44 20 7946 0000'
+  );
+  const [doctorEmail, setDoctorEmail] = useState(
+    activeProfile?.doctorEmail || 'doctor@elderguard.com'
   );
 
   const [emergencyName, setEmergencyName] = useState(primaryContact.name);
@@ -84,6 +96,11 @@ export default function EditElderlyProfileScreen() {
       age: parseInt(age, 10) || activeProfile.age,
       address: address.trim(),
       phone: phone.trim(),
+      doctorName: physicianName.trim(),
+      doctorSpecialty: doctorSpecialty.trim(),
+      doctorHospital: doctorHospital.trim(),
+      doctorPhone: doctorPhone.trim(),
+      doctorEmail: doctorEmail.trim(),
       medicalInfo: {
         ...activeProfile.medicalInfo,
         bloodType: bloodType.trim(),
@@ -91,6 +108,8 @@ export default function EditElderlyProfileScreen() {
         chronicConditions: updatedConditions,
         medicationNotes: medicationNotes.trim(),
         physicianName: physicianName.trim(),
+        physicianPhone: doctorPhone.trim(),
+        hospitalPreference: doctorHospital.trim(),
       },
       emergencyContacts: updatedContacts,
     });
@@ -285,7 +304,46 @@ export default function EditElderlyProfileScreen() {
           label="Primary Physician"
           value={physicianName}
           onChangeText={setPhysicianName}
-          placeholder="e.g. Dr. Robert Chen, MD"
+          placeholder="e.g. Dr. James Hargreaves"
+        />
+
+        <View style={styles.spacing} />
+
+        <TextInput
+          label="Medical Specialty"
+          value={doctorSpecialty}
+          onChangeText={setDoctorSpecialty}
+          placeholder="e.g. Geriatric Medicine, Cardiology"
+        />
+
+        <View style={styles.spacing} />
+
+        <TextInput
+          label="Clinic / Hospital"
+          value={doctorHospital}
+          onChangeText={setDoctorHospital}
+          placeholder="e.g. St. Thomas' Hospital, London"
+        />
+
+        <View style={styles.spacing} />
+
+        <TextInput
+          label="Doctor Phone"
+          value={doctorPhone}
+          onChangeText={setDoctorPhone}
+          keyboardType="phone-pad"
+          placeholder="e.g. +44 20 7946 0000"
+        />
+
+        <View style={styles.spacing} />
+
+        <TextInput
+          label="Doctor Email"
+          value={doctorEmail}
+          onChangeText={setDoctorEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          placeholder="e.g. doctor@elderguard.com"
         />
       </Card>
 

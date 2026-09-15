@@ -29,6 +29,12 @@ export default function CreateElderlyProfileScreen() {
   const [emergencyRelation, setEmergencyRelation] = useState('Parent Manager');
   const [emergencyPhone, setEmergencyPhone] = useState('+1 (555) 234-5678');
 
+  const [doctorName, setDoctorName] = useState('Dr. James Hargreaves');
+  const [doctorSpecialty, setDoctorSpecialty] = useState('Geriatric Medicine');
+  const [doctorHospital, setDoctorHospital] = useState("St. Thomas' Hospital, London");
+  const [doctorPhone, setDoctorPhone] = useState('+44 20 7946 0000');
+  const [doctorEmail, setDoctorEmail] = useState('doctor@elderguard.com');
+
   const [deviceId, setDeviceId] = useState(`EG-IOT-${Math.floor(1000 + Math.random() * 9000)}`);
 
   const [loading, setLoading] = useState(false);
@@ -74,13 +80,19 @@ export default function CreateElderlyProfileScreen() {
       address: address.trim(),
       phone: phone.trim(),
       parentManagerId: user?.id || 'usr-parent-01',
+      doctorName: doctorName.trim() || 'Dr. James Hargreaves',
+      doctorSpecialty: doctorSpecialty.trim() || 'Geriatric Medicine',
+      doctorHospital: doctorHospital.trim() || "St. Thomas' Hospital, London",
+      doctorPhone: doctorPhone.trim() || '+44 20 7946 0000',
+      doctorEmail: doctorEmail.trim() || 'doctor@elderguard.com',
       medicalInfo: {
         bloodType: bloodType.trim(),
         allergies: parsedAllergies,
         chronicConditions: parsedConditions,
         medicationNotes: medicationNotes.trim(),
-        physicianName: 'Primary Care Physician',
-        hospitalPreference: 'Memorial Hospital',
+        physicianName: doctorName.trim() || 'Dr. James Hargreaves',
+        physicianPhone: doctorPhone.trim() || '+44 20 7946 0000',
+        hospitalPreference: doctorHospital.trim() || "St. Thomas' Hospital, London",
       },
       emergencyContacts: [
         {
@@ -322,7 +334,59 @@ export default function CreateElderlyProfileScreen() {
 
       <View style={{ height: Spacing.lg }} />
 
-      {/* ── 4. IoT Wearable Device ──────────────────────────── */}
+      {/* ── 4. Primary Doctor / Physician ────────────────────── */}
+      <Text style={styles.sectionLabel}>PRIMARY PHYSICIAN / DOCTOR</Text>
+      <Card style={styles.card}>
+        <TextInput
+          label="Doctor's Full Name"
+          value={doctorName}
+          onChangeText={setDoctorName}
+          placeholder="e.g. Dr. James Hargreaves"
+        />
+
+        <View style={styles.spacing} />
+
+        <TextInput
+          label="Medical Specialty"
+          value={doctorSpecialty}
+          onChangeText={setDoctorSpecialty}
+          placeholder="e.g. Geriatric Medicine, Cardiology"
+        />
+
+        <View style={styles.spacing} />
+
+        <TextInput
+          label="Clinic / Hospital"
+          value={doctorHospital}
+          onChangeText={setDoctorHospital}
+          placeholder="e.g. St. Thomas' Hospital, London"
+        />
+
+        <View style={styles.spacing} />
+
+        <TextInput
+          label="Emergency Phone"
+          value={doctorPhone}
+          onChangeText={setDoctorPhone}
+          keyboardType="phone-pad"
+          placeholder="e.g. +44 20 7946 0000"
+        />
+
+        <View style={styles.spacing} />
+
+        <TextInput
+          label="Doctor Email"
+          value={doctorEmail}
+          onChangeText={setDoctorEmail}
+          keyboardType="email-address"
+          autoCapitalize="none"
+          placeholder="e.g. doctor@elderguard.com"
+        />
+      </Card>
+
+      <View style={{ height: Spacing.lg }} />
+
+      {/* ── 5. IoT Wearable Device ──────────────────────────── */}
       <Text style={styles.sectionLabel}>WEARABLE IOT HARDWARE</Text>
       <Card style={styles.card}>
         <TextInput

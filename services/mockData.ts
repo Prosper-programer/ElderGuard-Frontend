@@ -27,6 +27,15 @@ export const MOCK_USERS: Record<string, User> = {
     assignedElderlyCount: 1,
     createdAt: '2026-02-01T09:30:00.000Z',
   },
+  doctor: {
+    id: 'usr-doctor-01',
+    name: 'Dr. James Hargreaves',
+    email: 'doctor@elderguard.com',
+    role: 'doctor',
+    phone: '+44 20 7946 0000',
+    assignedElderlyCount: 1,
+    createdAt: '2026-01-10T08:00:00.000Z',
+  },
 };
 
 export const MOCK_ELDERLY_PERSON = {

@@ -19,6 +19,7 @@ import {
   apiGetElderlyProfiles,
   apiCreateElderlyProfile,
   apiCreateCaregiver,
+  apiCreateDoctor,
 } from '@/services/elderlyService';
 
 /**
@@ -37,15 +38,21 @@ const DEMO_MARGARET_PROFILE: ElderlyProfile = {
   parentManagerId: 'usr-parent-01',
   primaryCaregiverId: 'usr-caregiver-01',
   primaryCaregiverName: 'Sarah Mitchell',
+  doctorId: 'usr-doctor-01',
+  doctorName: 'Dr. James Hargreaves',
+  doctorPhone: '+44 20 7946 0000',
+  doctorSpecialty: 'Geriatric Medicine',
+  doctorHospital: "St. Thomas' Hospital, London",
+  doctorEmail: 'doctor@elderguard.com',
 
   medicalInfo: {
     bloodType: 'A+',
     allergies: ['Penicillin', 'Sulfonamides'],
     chronicConditions: ['Type 2 Diabetes', 'Hypertension', 'Mild Osteoporosis'],
     medicationNotes: 'Lisinopril 10mg every morning at 08:00 AM. Metformin 500mg after lunch.',
-    physicianName: 'Dr. Arthur Hargreaves, MD',
-    physicianPhone: '+44 20 7946 0912',
-    hospitalPreference: 'St. Thomas Hospital London',
+    physicianName: 'Dr. James Hargreaves',
+    physicianPhone: '+44 20 7946 0000',
+    hospitalPreference: "St. Thomas' Hospital, London",
   },
 
   emergencyContacts: [
@@ -83,7 +90,8 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
   const isDemoAccount =
     user?.email === 'parent@elderguard.com' ||
     user?.email === 'robert.thompson@email.com' ||
-    user?.email === 'caregiver@elderguard.com';
+    user?.email === 'caregiver@elderguard.com' ||
+    user?.email === 'doctor@elderguard.com';
 
   const refreshProfiles = useCallback(async () => {
     if (!isAuthenticated || !user) {
@@ -130,6 +138,10 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
     activeProfile &&
       (activeProfile.primaryCaregiverId || activeProfile.primaryCaregiverName)
   );
+  const hasDoctor = Boolean(
+    activeProfile &&
+      (activeProfile.doctorId || activeProfile.doctorName)
+  );
 
   const updateProfile = (id: string, updates: Partial<ElderlyProfile>) => {
     setProfiles((prev) =>
@@ -160,7 +172,14 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
     });
 
     const newProfile: ElderlyProfile = res.success && res.profile
-      ? res.profile
+      ? {
+          ...res.profile,
+          doctorName: data.doctorName || res.profile.doctorName,
+          doctorPhone: data.doctorPhone || res.profile.doctorPhone,
+          doctorSpecialty: data.doctorSpecialty || res.profile.doctorSpecialty,
+          doctorHospital: data.doctorHospital || res.profile.doctorHospital,
+          doctorEmail: data.doctorEmail || res.profile.doctorEmail,
+        }
       : {
           ...data,
           id: `eld-${Date.now()}`,
@@ -195,6 +214,29 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
     return { success: true };
   };
 
+  const provisionDoctor = async (data: {
+    fullName: string;
+    email: string;
+    phoneNumber: string;
+    password?: string;
+  }): Promise<{ success: boolean; error?: string }> => {
+    const res = await apiCreateDoctor(data);
+    if (!res.success) {
+      return { success: false, error: res.error || 'Failed to create doctor account.' };
+    }
+
+    if (activeProfile && res.doctor) {
+      updateProfile(activeProfile.id, {
+        doctorId: `usr-${res.doctor.user_id}`,
+        doctorName: res.doctor.full_name,
+        doctorPhone: res.doctor.phone_number,
+        doctorEmail: res.doctor.email,
+      });
+    }
+
+    return { success: true };
+  };
+
   const getAssignedProfileForCaregiver = (caregiverId: string): ElderlyProfile | undefined => {
     return profiles.find((p) => p.primaryCaregiverId === caregiverId) || (profiles[0] ?? undefined);
   };
@@ -206,10 +248,13 @@ export function ElderlyProvider({ children }: { children: React.ReactNode }) {
         profiles,
         hasSenior,
         hasCaregiver,
+        hasDoctor,
         assignedCaregiverName: activeProfile?.primaryCaregiverName,
+        assignedDoctorName: activeProfile?.doctorName,
         updateProfile,
         createProfile,
         provisionCaregiver,
+        provisionDoctor,
         refreshProfiles,
         getAssignedProfileForCaregiver,
       }}

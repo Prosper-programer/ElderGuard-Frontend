@@ -29,6 +29,8 @@ export default function IndexGateway() {
       return <Redirect href="/(parent)" />;
     case 'caregiver':
       return <Redirect href="/(caregiver)" />;
+    case 'doctor':
+      return <Redirect href={"/(doctor)" as any} />;
     default:
       return <Redirect href="/(auth)/welcome" />;
   }

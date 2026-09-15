@@ -20,6 +20,7 @@ import {
   FileText,
   ChevronRight,
   LogOut,
+  Stethoscope,
 } from 'lucide-react-native';
 import { BottomTabBar } from '@/components/ui';
 import { useAuth } from '@/context/AuthContext';
@@ -185,6 +186,36 @@ export default function ParentSettingsScreen() {
               <Shield size={18} color="#16A34A" />
             </View>
             <Text style={styles.menuLabel}>+ Add / Provision Caregiver</Text>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Doctor Provisioning */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/doctors/create' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconWrap, { backgroundColor: '#F5F3FF' }]}>
+              <Stethoscope size={18} color="#7C3AED" />
+            </View>
+            <Text style={styles.menuLabel}>+ Add / Link Primary Doctor</Text>
+            <ChevronRight size={18} color="#CBD5E1" />
+          </TouchableOpacity>
+
+          <View style={styles.menuDivider} />
+
+          {/* Clinical Health Summary for Doctor */}
+          <TouchableOpacity
+            style={styles.menuRow}
+            onPress={() => router.push('/(parent)/health-report' as any)}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.menuIconWrap, { backgroundColor: '#EFF6FF' }]}>
+              <FileText size={18} color="#2563EB" />
+            </View>
+            <Text style={styles.menuLabel}>Clinical Health Summary (Doctor Report)</Text>
             <ChevronRight size={18} color="#CBD5E1" />
           </TouchableOpacity>
 

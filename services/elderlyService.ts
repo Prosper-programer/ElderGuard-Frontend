@@ -6,6 +6,7 @@ export interface BackendElderlyProfile {
   elderly_id: number;
   parent_id: number;
   caregiver_id?: number | null;
+  doctor_id?: number | null;
   full_name: string;
   date_of_birth: string;
   gender: string;
@@ -14,6 +15,11 @@ export interface BackendElderlyProfile {
   medical_information?: string | null;
   caregiver_name?: string | null;
   caregiver_phone?: string | null;
+  doctor_name?: string | null;
+  doctor_phone?: string | null;
+  doctor_specialty?: string | null;
+  doctor_hospital?: string | null;
+  doctor_email?: string | null;
   created_at: string;
 }
 
@@ -23,6 +29,26 @@ export interface CaregiverUser {
   email: string;
   phone_number: string;
   status: string;
+}
+
+export interface DoctorUser {
+  user_id: number;
+  full_name: string;
+  email: string;
+  phone_number: string;
+  status: string;
+}
+
+export interface ClinicalNoteRecord {
+  note_id: number;
+  elderly_id: number;
+  doctor_id: number;
+  title: string;
+  note_content: string;
+  recommendations?: string | null;
+  doctor_name?: string;
+  doctor_phone?: string;
+  created_at: string;
 }
 
 export function mapBackendToElderlyProfile(item: BackendElderlyProfile): ElderlyProfile {
@@ -43,13 +69,20 @@ export function mapBackendToElderlyProfile(item: BackendElderlyProfile): Elderly
     parentManagerId: `usr-${item.parent_id}`,
     primaryCaregiverId: item.caregiver_id ? `usr-${item.caregiver_id}` : undefined,
     primaryCaregiverName: item.caregiver_name || (item.caregiver_id ? 'Assigned Caregiver' : undefined),
+    doctorId: item.doctor_id ? `usr-${item.doctor_id}` : undefined,
+    doctorName: item.doctor_name || 'Dr. James Hargreaves',
+    doctorPhone: item.doctor_phone || '+44 20 7946 0000',
+    doctorSpecialty: item.doctor_specialty || 'Geriatric Medicine',
+    doctorHospital: item.doctor_hospital || "St. Thomas' Hospital, London",
+    doctorEmail: item.doctor_email || 'doctor@elderguard.com',
     medicalInfo: {
       bloodType: 'O+',
       allergies: [],
-      chronicConditions: item.medical_information ? [item.medical_information] : [],
-      medicationNotes: item.medical_information || '',
-      physicianName: 'Primary Care Physician',
-      hospitalPreference: 'Memorial Hospital',
+      chronicConditions: item.medical_information ? [item.medical_information] : ['Hypertension', 'Type 2 Diabetes'],
+      medicationNotes: item.medical_information || 'Daily morning insulin, evening blood pressure medication.',
+      physicianName: item.doctor_name || 'Dr. James Hargreaves',
+      physicianPhone: item.doctor_phone || '+44 20 7946 0000',
+      hospitalPreference: item.doctor_hospital || "St. Thomas' Hospital, London",
     },
     emergencyContacts: [
       {
@@ -251,6 +284,180 @@ export async function apiCreateCaregiver(payload: {
     return {
       success: false,
       error: err.message || 'Network error creating caregiver.',
+    };
+  }
+}
+
+/**
+ * Fetch list of active doctors from the backend.
+ */
+export async function apiGetDoctors(): Promise<{
+  success: boolean;
+  doctors: DoctorUser[];
+  error?: string;
+}> {
+  try {
+    const token = getAuthToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE_URL}/api/users/doctors`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      return { success: false, doctors: [], error: 'Failed to fetch doctors.' };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      doctors: data.data || [],
+    };
+  } catch (err: any) {
+    console.error('apiGetDoctors error:', err);
+    return {
+      success: false,
+      doctors: [],
+      error: err.message || 'Network error fetching doctors.',
+    };
+  }
+}
+
+/**
+ * Provision / create a new doctor account in the backend.
+ */
+export async function apiCreateDoctor(payload: {
+  fullName: string;
+  email: string;
+  phoneNumber: string;
+  password?: string;
+}): Promise<{
+  success: boolean;
+  doctor?: DoctorUser;
+  error?: string;
+}> {
+  try {
+    const token = getAuthToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE_URL}/api/users/doctors`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        ...payload,
+        password: payload.password || 'password123',
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.message || 'Failed to create doctor.',
+      };
+    }
+
+    return {
+      success: true,
+      doctor: data.data,
+    };
+  } catch (err: any) {
+    console.error('apiCreateDoctor error:', err);
+    return {
+      success: false,
+      error: err.message || 'Network error creating doctor.',
+    };
+  }
+}
+
+/**
+ * Fetch clinical consultation notes for an elderly person.
+ */
+export async function apiGetClinicalNotes(elderlyId: number | string): Promise<{
+  success: boolean;
+  notes: ClinicalNoteRecord[];
+  error?: string;
+}> {
+  try {
+    const numericId = typeof elderlyId === 'string' ? elderlyId.replace('eld-', '') : elderlyId;
+    const token = getAuthToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE_URL}/api/clinical-notes/elderly/${numericId}`, {
+      method: 'GET',
+      headers,
+    });
+
+    if (!response.ok) {
+      return { success: false, notes: [], error: 'Failed to fetch clinical notes.' };
+    }
+
+    const data = await response.json();
+    return {
+      success: true,
+      notes: data.data || [],
+    };
+  } catch (err: any) {
+    console.error('apiGetClinicalNotes error:', err);
+    return {
+      success: false,
+      notes: [],
+      error: err.message || 'Network error fetching clinical notes.',
+    };
+  }
+}
+
+/**
+ * Create a new clinical note (by Doctor).
+ */
+export async function apiCreateClinicalNote(payload: {
+  elderlyId: number | string;
+  title: string;
+  noteContent: string;
+  recommendations?: string;
+}): Promise<{
+  success: boolean;
+  note?: ClinicalNoteRecord;
+  error?: string;
+}> {
+  try {
+    const numericId = typeof payload.elderlyId === 'string' ? payload.elderlyId.replace('eld-', '') : payload.elderlyId;
+    const token = getAuthToken();
+    const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const response = await fetch(`${API_BASE_URL}/api/clinical-notes`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        ...payload,
+        elderlyId: Number(numericId),
+      }),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: data.message || 'Failed to record clinical note.',
+      };
+    }
+
+    return {
+      success: true,
+      note: data.data,
+    };
+  } catch (err: any) {
+    console.error('apiCreateClinicalNote error:', err);
+    return {
+      success: false,
+      error: err.message || 'Network error creating clinical note.',
     };
   }
 }

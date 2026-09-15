@@ -21,15 +21,32 @@ import {
   CheckSquare,
   ClipboardCheck,
 } from 'lucide-react-native';
+import { useElderly } from '@/context/ElderlyContext';
 
 export default function DoctorStatusScreen() {
   const router = useRouter();
+  const { activeProfile } = useElderly();
+
+  const doctorName = activeProfile?.doctorName || 'Dr. James Hargreaves';
+  const doctorSpecialty = activeProfile?.doctorSpecialty || 'Geriatric Medicine';
+  const doctorHospital = activeProfile?.doctorHospital || "St. Thomas' Hospital, London";
+  const doctorPhone = activeProfile?.doctorPhone || '+44 20 7946 0000';
+  const doctorInitials = doctorName
+    .replace('Dr.', '')
+    .trim()
+    .split(' ')
+    .map((w) => w[0])
+    .filter(Boolean)
+    .slice(0, 2)
+    .join('')
+    .toUpperCase() || 'DR';
 
   const handleCallDoctor = () => {
-    Linking.openURL('tel:+442079460000').catch(() => {
+    const cleanPhone = doctorPhone.replace(/[^\d+]/g, '');
+    Linking.openURL(`tel:${cleanPhone}`).catch(() => {
       Alert.alert(
-        'Call Dr. James Hargreaves',
-        'Direct line: +44 20 7946 0000 (Geriatric Medicine Department, St. Thomas Hospital)'
+        `Call ${doctorName}`,
+        `Direct line: ${doctorPhone} (${doctorHospital})`
       );
     });
   };
@@ -108,7 +125,7 @@ export default function DoctorStatusScreen() {
           <Text style={styles.statusOverline}>NOTIFICATION STATUS</Text>
           <Text style={styles.statusHeadline}>Doctor Notified</Text>
           <Text style={styles.statusSubtitle}>
-            Dr. James Hargreaves has been successfully notified.
+            {doctorName} has been successfully notified.
           </Text>
         </View>
 
@@ -116,12 +133,12 @@ export default function DoctorStatusScreen() {
         <View style={styles.doctorCard}>
           <View style={styles.doctorInfoRow}>
             <View style={styles.doctorAvatar}>
-              <Text style={styles.doctorAvatarText}>JH</Text>
+              <Text style={styles.doctorAvatarText}>{doctorInitials}</Text>
             </View>
             <View style={styles.doctorDetails}>
-              <Text style={styles.doctorName}>Dr. James Hargreaves</Text>
-              <Text style={styles.doctorSpecialty}>Geriatric Medicine</Text>
-              <Text style={styles.doctorHospital}>St. Thomas Hospital, London</Text>
+              <Text style={styles.doctorName}>{doctorName}</Text>
+              <Text style={styles.doctorSpecialty}>{doctorSpecialty}</Text>
+              <Text style={styles.doctorHospital}>{doctorHospital}</Text>
             </View>
           </View>
 
@@ -131,7 +148,7 @@ export default function DoctorStatusScreen() {
             activeOpacity={0.88}
           >
             <Phone size={18} color="#FFFFFF" />
-            <Text style={styles.callDoctorBtnText}>Call +44 20 7946 0000</Text>
+            <Text style={styles.callDoctorBtnText}>Call {doctorPhone}</Text>
           </TouchableOpacity>
         </View>
 

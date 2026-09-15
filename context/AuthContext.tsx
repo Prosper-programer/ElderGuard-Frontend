@@ -73,6 +73,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
       return { success: true, user: MOCK_USERS.caregiver };
     }
+    if (normalizedEmail === 'doctor@elderguard.com') {
+      setUser(MOCK_USERS.doctor);
+      setIsLoading(false);
+      return { success: true, user: MOCK_USERS.doctor };
+    }
 
     setIsLoading(false);
     return {

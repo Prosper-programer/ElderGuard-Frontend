@@ -2,7 +2,7 @@
  * ElderGuard Authentication & User Types
  */
 
-export type UserRole = 'parent' | 'caregiver';
+export type UserRole = 'parent' | 'caregiver' | 'doctor';
 
 export interface User {
   id: string;

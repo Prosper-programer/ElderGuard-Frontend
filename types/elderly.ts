@@ -43,6 +43,12 @@ export interface ElderlyProfile {
   parentManagerId: string;
   primaryCaregiverId?: string;
   primaryCaregiverName?: string;
+  doctorId?: string;
+  doctorName?: string;
+  doctorPhone?: string;
+  doctorSpecialty?: string;
+  doctorHospital?: string;
+  doctorEmail?: string;
   medicalInfo: MedicalInfo;
   emergencyContacts: EmergencyContact[];
   deviceStatus: DeviceStatus;
@@ -55,10 +61,13 @@ export interface ElderlyContextValue {
   profiles: ElderlyProfile[];
   hasSenior: boolean;
   hasCaregiver: boolean;
+  hasDoctor: boolean;
   assignedCaregiverName?: string;
+  assignedDoctorName?: string;
   updateProfile: (id: string, updates: Partial<ElderlyProfile>) => void;
   createProfile: (data: Omit<ElderlyProfile, 'id' | 'createdAt' | 'updatedAt'>) => Promise<ElderlyProfile | null>;
   getAssignedProfileForCaregiver: (caregiverId: string) => ElderlyProfile | undefined;
   refreshProfiles: () => Promise<void>;
   provisionCaregiver: (data: { fullName: string; email: string; phoneNumber: string; password?: string }) => Promise<{ success: boolean; error?: string }>;
+  provisionDoctor: (data: { fullName: string; email: string; phoneNumber: string; password?: string }) => Promise<{ success: boolean; error?: string }>;
 }

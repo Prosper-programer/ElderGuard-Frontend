@@ -7,6 +7,7 @@ import {
   Lock,
   Shield,
   HeartHandshake,
+  Stethoscope,
   AlertCircle,
   ChevronRight,
 } from 'lucide-react-native';
@@ -47,6 +48,16 @@ const ROLE_PRESETS: RolePreset[] = [
     accentColor: '#16A34A',
     accentBg: '#F0FDF4',
   },
+  {
+    role: 'doctor',
+    label: 'Doctor',
+    badge: 'Primary Physician',
+    name: 'Dr. James Hargreaves',
+    email: 'doctor@elderguard.com',
+    icon: Stethoscope,
+    accentColor: '#7C3AED',
+    accentBg: '#F5F3FF',
+  },
 ];
 
 export default function LoginScreen() {
@@ -78,7 +89,10 @@ export default function LoginScreen() {
   }, [selectedRole]);
 
   const handleToggleRole = () => {
-    const nextRole: UserRole = selectedRole === 'parent' ? 'caregiver' : 'parent';
+    let nextRole: UserRole = 'parent';
+    if (selectedRole === 'parent') nextRole = 'caregiver';
+    else if (selectedRole === 'caregiver') nextRole = 'doctor';
+    else nextRole = 'parent';
     setSelectedRole(nextRole);
   };
 
@@ -105,6 +119,8 @@ export default function LoginScreen() {
         router.replace('/(parent)');
       } else if (activeRole === 'caregiver') {
         router.replace('/(caregiver)');
+      } else if (activeRole === 'doctor') {
+        router.replace('/(doctor)' as any);
       } else {
         router.replace('/');
       }
@@ -145,7 +161,9 @@ export default function LoginScreen() {
         <Text style={styles.subtitle}>
           {selectedRole === 'parent'
             ? 'Sign in to monitor Margaret Thompson and access health telemetry.'
-            : 'Sign in to access your assigned care schedule and sensor alerts.'}
+            : selectedRole === 'caregiver'
+            ? 'Sign in to access your assigned care schedule and sensor alerts.'
+            : 'Sign in to monitor clinical vitals, manage prescriptions, and record consultation notes.'}
         </Text>
       </View>
 
@@ -224,7 +242,7 @@ export default function LoginScreen() {
             activeOpacity={0.7}
           >
             <Text style={styles.switchRoleText}>
-              Switch to {selectedRole === 'parent' ? 'Caregiver' : 'Parent'} sign in
+              Switch to {selectedRole === 'parent' ? 'Caregiver' : selectedRole === 'caregiver' ? 'Doctor' : 'Parent'} sign in
             </Text>
             <ChevronRight size={14} color="#64748B" />
           </TouchableOpacity>
@@ -232,10 +250,12 @@ export default function LoginScreen() {
       </View>
 
       {/* Switch to Sign Up (Only for Parents) */}
-      {selectedRole === 'caregiver' ? (
+      {selectedRole !== 'parent' ? (
         <View style={styles.caregiverNotice}>
           <Text style={styles.caregiverNoticeText}>
-            Caregiver accounts are created by the senior&apos;s family manager. Contact the parent if you need login credentials.
+            {selectedRole === 'caregiver'
+              ? 'Caregiver accounts are created by the senior\'s family manager. Contact the parent if you need login credentials.'
+              : 'Doctor accounts are provisioned by families or healthcare partners. Log in with your assigned clinical credentials.'}
           </Text>
         </View>
       ) : (

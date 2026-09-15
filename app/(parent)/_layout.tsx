@@ -22,6 +22,8 @@ export default function ParentLayout() {
       <Stack.Screen name="profile/edit" />
       <Stack.Screen name="profile/create" />
       <Stack.Screen name="caregivers/create" />
+      <Stack.Screen name="doctors/create" />
+      <Stack.Screen name="health-report" />
       <Stack.Screen name="reports/index" />
       <Stack.Screen name="settings" />
       <Stack.Screen name="more" />

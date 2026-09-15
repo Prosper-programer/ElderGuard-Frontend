@@ -174,12 +174,7 @@ export default function WelcomeScreen() {
             {/* Doctor Role Button */}
             <TouchableOpacity
               style={styles.doctorRoleButton}
-              onPress={() =>
-                router.push({
-                  pathname: '/(auth)/login',
-                  params: { role: 'doctor' },
-                } as any)
-              }
+              onPress={() => router.push('/(auth)/doctor-onboarding' as any)}
               activeOpacity={0.88}
             >
               <View style={styles.roleIconBoxDoctor}>

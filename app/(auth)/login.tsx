@@ -65,11 +65,16 @@ export default function LoginScreen() {
   const params = useLocalSearchParams<{ role?: string }>();
   const { login } = useAuth();
 
-  const initialRole: UserRole = params.role === 'caregiver' ? 'caregiver' : 'parent';
+  const initialRole: UserRole =
+    params.role === 'doctor'
+      ? 'doctor'
+      : params.role === 'caregiver'
+      ? 'caregiver'
+      : 'parent';
   const [selectedRole, setSelectedRole] = useState<UserRole>(initialRole);
 
   useEffect(() => {
-    if (params.role === 'caregiver' || params.role === 'parent') {
+    if (params.role === 'doctor' || params.role === 'caregiver' || params.role === 'parent') {
       setSelectedRole(params.role);
     }
   }, [params.role]);

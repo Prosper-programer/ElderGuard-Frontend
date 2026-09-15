@@ -1,4 +1,4 @@
-﻿import React from 'react';
+import React from 'react';
 import {
   View,
   Text,
@@ -20,7 +20,7 @@ import {
   Sparkles,
   Users,
 } from 'lucide-react-native';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 
 const CLINICAL_FEATURES = [

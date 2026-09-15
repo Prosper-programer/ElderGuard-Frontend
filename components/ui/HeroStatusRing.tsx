@@ -108,7 +108,11 @@ export function HeroStatusRing({
         {/* Center Avatar Image or Initials Fallback */}
         <View style={styles.avatarWrap}>
           {imageUrl ? (
-            <Image source={imageUrl} style={styles.avatarImage} resizeMode="cover" />
+            <Image
+              source={typeof imageUrl === 'string' ? { uri: imageUrl } : imageUrl}
+              style={styles.avatarImage}
+              resizeMode="cover"
+            />
           ) : (
             <Text style={styles.avatarInitials}>{name.slice(0, 2).toUpperCase()}</Text>
           )}

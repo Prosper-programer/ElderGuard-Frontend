@@ -80,7 +80,10 @@ export default function ParentElderlyProfileScreen() {
 
         <View style={styles.profileBody}>
           <View style={styles.avatarRow}>
-            <Image source={{ uri: photo }} style={styles.avatarImage} />
+            <Image
+              source={typeof photo === 'string' ? { uri: photo } : photo}
+              style={styles.avatarImage}
+            />
             <View style={styles.statusBadgeWrap}>
               <StatusBadge status="safe" size="md" />
             </View>

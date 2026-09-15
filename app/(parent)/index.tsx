@@ -132,7 +132,10 @@ export default function ParentDashboardScreen() {
               {/* Senior Photo with Live Green Ring */}
               <View style={styles.avatarWrap}>
                 <View style={styles.avatarHalo} />
-                <Image source={{ uri: seniorPhoto }} style={styles.seniorAvatar} />
+                <Image
+                  source={typeof seniorPhoto === 'string' ? { uri: seniorPhoto } : seniorPhoto}
+                  style={styles.seniorAvatar}
+                />
                 <View style={styles.safeLiveDot} />
               </View>
 

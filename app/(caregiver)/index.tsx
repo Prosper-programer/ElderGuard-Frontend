@@ -56,6 +56,9 @@ export default function CaregiverHomeScreen() {
 
   const caregiverName = user?.name || MOCK_CAREGIVER.name;
   const caregiverFirstName = caregiverName.split(' ')[0];
+  const seniorPhoto = activeProfile?.imageUrl || MOCK_ELDERLY_PERSON.photo;
+  const seniorName = activeProfile?.fullName || MOCK_ELDERLY_PERSON.fullName;
+  const seniorAge = activeProfile?.age || MOCK_ELDERLY_PERSON.age;
 
   return (
     <ScreenContainer
@@ -114,16 +117,16 @@ export default function CaregiverHomeScreen() {
           <View style={styles.heroTopRow}>
             <View style={styles.avatarWrap}>
               <Image
-                source={{ uri: MOCK_ELDERLY_PERSON.photo }}
+                source={typeof seniorPhoto === 'string' ? { uri: seniorPhoto } : seniorPhoto}
                 style={styles.seniorAvatar}
               />
               <View style={styles.safeLiveDot} />
             </View>
 
             <View style={styles.heroMeta}>
-              <Text style={styles.seniorNameText}>{MOCK_ELDERLY_PERSON.fullName}</Text>
+              <Text style={styles.seniorNameText}>{seniorName}</Text>
               <Text style={styles.seniorSubText}>
-                {MOCK_ELDERLY_PERSON.age} yrs · {MOCK_ELDERLY_PERSON.conditions[0]}
+                {seniorAge} yrs · {activeProfile?.medicalInfo?.chronicConditions?.[0] || MOCK_ELDERLY_PERSON.conditions[0]}
               </Text>
 
               <View style={styles.heroBadgeRow}>

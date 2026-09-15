@@ -5,38 +5,40 @@ import {
   StyleSheet,
   TouchableOpacity,
   Image,
+  Linking,
+  Platform,
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import {
   Bell,
   ChevronRight,
   AlertTriangle,
-  Plus,
   MapPin,
   CheckCircle,
   Pill,
   RefreshCw,
-  Clock,
+  Heart,
+  Activity,
+  Thermometer,
+  Phone,
+  Stethoscope,
+  CheckSquare,
 } from 'lucide-react-native';
 import {
   ScreenContainer,
   BottomTabBar,
   Card,
-  StatusBadge,
-  DeviceIndicator,
-  SectionHeader,
 } from '@/components/ui';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useAuth } from '@/context/AuthContext';
 import { useElderly } from '@/context/ElderlyContext';
 import { useVitals } from '@/context/VitalsContext';
 import { useAlerts } from '@/context/AlertContext';
-import { useCare } from '@/context/CareContext';
 import {
   MOCK_ELDERLY_PERSON,
   MOCK_CAREGIVER,
-  MOCK_PROGRAMME,
   MOCK_CARE_ACTIVITIES,
+  MOCK_USERS,
 } from '@/services/mockData';
 
 export default function CaregiverHomeScreen() {
@@ -45,20 +47,44 @@ export default function CaregiverHomeScreen() {
   const { activeProfile } = useElderly();
   const { vitals } = useVitals();
   const { activeAlerts } = useAlerts();
-  const { todayDoses } = useCare();
 
   const todayStr = new Date().toLocaleDateString('en-GB', {
     weekday: 'short',
     day: 'numeric',
     month: 'short',
     year: 'numeric',
-  });
+  }).toUpperCase();
 
   const caregiverName = user?.name || MOCK_CAREGIVER.name;
   const caregiverFirstName = caregiverName.split(' ')[0];
+  const caregiverInitials = caregiverName
+    .split(' ')
+    .map((n) => n[0])
+    .join('')
+    .slice(0, 2)
+    .toUpperCase();
+
   const seniorPhoto = activeProfile?.imageUrl || MOCK_ELDERLY_PERSON.photo;
   const seniorName = activeProfile?.fullName || MOCK_ELDERLY_PERSON.fullName;
   const seniorAge = activeProfile?.age || MOCK_ELDERLY_PERSON.age;
+
+  const hrValue = vitals.heartRate?.value || 72;
+  const spo2Value = vitals.spo2?.value || 97;
+  const tempValue = vitals.temperature?.value || 36.8;
+
+  const handleCallParent = () => {
+    const phone = activeProfile?.emergencyContacts?.[0]?.phone || MOCK_USERS.parent.phone || '+447700900123';
+    const cleanPhone = phone.replace(/[^0-9+]/g, '');
+    const url = Platform.OS === 'ios' ? `telprompt:${cleanPhone}` : `tel:${cleanPhone}`;
+    Linking.openURL(url).catch(() => {});
+  };
+
+  const handleCallDoctor = () => {
+    const phone = activeProfile?.doctorPhone || MOCK_USERS.doctor.phone || '+442079460000';
+    const cleanPhone = phone.replace(/[^0-9+]/g, '');
+    const url = Platform.OS === 'ios' ? `telprompt:${cleanPhone}` : `tel:${cleanPhone}`;
+    Linking.openURL(url).catch(() => {});
+  };
 
   return (
     <ScreenContainer
@@ -67,17 +93,14 @@ export default function CaregiverHomeScreen() {
       backgroundColor="#F0F4FA"
       bottomBar={<BottomTabBar activeTab="home" role="caregiver" />}
     >
-      {/* ── 1. Header with Shift Status ─────────────────────── */}
+      {/* ── 1. Top Header Bar (Matching Parent Design System) ── */}
       <View style={styles.topHeader}>
         <View>
           <Text style={styles.dateLabel}>{todayStr}</Text>
           <Text style={styles.greetingTitle}>Good morning, {caregiverFirstName} 👋</Text>
-
-          <View style={styles.shiftBadge}>
-            <View style={styles.shiftPulseDot} />
-            <Text style={styles.shiftText}>
-              On shift · {MOCK_CAREGIVER.shiftStart}–{MOCK_CAREGIVER.shiftEnd}
-            </Text>
+          <View style={styles.shiftPillRow}>
+            <View style={styles.shiftGreenDot} />
+            <Text style={styles.shiftPillText}>ON DUTY · {MOCK_CAREGIVER.shiftStart}–{MOCK_CAREGIVER.shiftEnd}</Text>
           </View>
         </View>
 
@@ -88,9 +111,11 @@ export default function CaregiverHomeScreen() {
             activeOpacity={0.7}
           >
             <Bell size={18} color="#475569" />
-            <View style={styles.notificationBadge}>
-              <Text style={styles.notificationBadgeText}>1</Text>
-            </View>
+            {activeAlerts.length > 0 && (
+              <View style={styles.notificationBadge}>
+                <Text style={styles.notificationBadgeText}>{activeAlerts.length}</Text>
+              </View>
+            )}
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -98,24 +123,27 @@ export default function CaregiverHomeScreen() {
             style={styles.avatarButton}
             activeOpacity={0.8}
           >
-            <Text style={styles.avatarButtonText}>
-              {caregiverFirstName.substring(0, 2).toUpperCase()}
-            </Text>
+            <View style={styles.avatarInner}>
+              <Text style={styles.avatarButtonText}>{caregiverInitials}</Text>
+            </View>
           </TouchableOpacity>
         </View>
       </View>
 
-      {/* ── 2. Margaret Status Hero Green Gradient Card ─────── */}
+      {/* ── 2. Senior Status Hero Emerald Gradient Card ──────── */}
       <TouchableOpacity
-        onPress={() => router.push('/(caregiver)/location' as any)}
+        onPress={() => router.push('/(caregiver)/profile' as any)}
         activeOpacity={0.92}
         style={styles.heroCardContainer}
       >
         <View style={styles.heroGreenGradient}>
+          {/* Subtle Ambient Radial Glow */}
           <View style={styles.ambientGlow} />
 
           <View style={styles.heroTopRow}>
+            {/* Senior Photo with Live Green Ring */}
             <View style={styles.avatarWrap}>
+              <View style={styles.avatarHalo} />
               <Image
                 source={typeof seniorPhoto === 'string' ? { uri: seniorPhoto } : seniorPhoto}
                 style={styles.seniorAvatar}
@@ -126,55 +154,63 @@ export default function CaregiverHomeScreen() {
             <View style={styles.heroMeta}>
               <Text style={styles.seniorNameText}>{seniorName}</Text>
               <Text style={styles.seniorSubText}>
-                {seniorAge} yrs · {activeProfile?.medicalInfo?.chronicConditions?.[0] || MOCK_ELDERLY_PERSON.conditions[0]}
+                {seniorAge} years · 42 Maple St, London
               </Text>
 
               <View style={styles.heroBadgeRow}>
                 <View style={styles.safeStatusPill}>
-                  <View style={styles.whiteDot} />
+                  <View style={styles.greenDot} />
                   <Text style={styles.safeStatusText}>SAFE</Text>
                 </View>
 
-                <DeviceIndicator
-                  connected={true}
-                  battery={vitals.batteryLevel || 84}
-                  compact
-                />
+                <View style={styles.batteryPill}>
+                  <View style={styles.cyanDot} />
+                  <Text style={styles.batteryText}>84%</Text>
+                </View>
               </View>
             </View>
 
-            <ChevronRight size={18} color="rgba(255, 255, 255, 0.5)" />
+            <ChevronRight size={20} color="rgba(255, 255, 255, 0.5)" />
           </View>
 
-          {/* 3-Col Vitals Row */}
+          {/* Mini Vitals 4-Col Grid (Matching Parent Layout) */}
           <View style={styles.miniVitalsGrid}>
             <View style={styles.miniVitalCell}>
               <Text style={styles.miniVitalValue}>
-                {vitals.heartRate?.value || 72}
-                <Text style={styles.miniVitalUnit}> bpm</Text>
+                {hrValue}<Text style={styles.miniVitalUnit}>bpm</Text>
               </Text>
-              <Text style={styles.miniVitalLabel}>Heart Rate</Text>
+              <Text style={styles.miniVitalLabel}>HR</Text>
             </View>
+
+            <View style={styles.miniVitalDivider} />
 
             <View style={styles.miniVitalCell}>
               <Text style={styles.miniVitalValue}>
-                {vitals.spo2?.value || 97}
-                <Text style={styles.miniVitalUnit}> %</Text>
+                {spo2Value}<Text style={styles.miniVitalUnit}>%</Text>
               </Text>
               <Text style={styles.miniVitalLabel}>SpO₂</Text>
             </View>
 
+            <View style={styles.miniVitalDivider} />
+
             <View style={styles.miniVitalCell}>
               <Text style={styles.miniVitalValue}>
-                {vitals.temperature?.value || 36.8}
-                <Text style={styles.miniVitalUnit}> °C</Text>
+                {tempValue}<Text style={styles.miniVitalUnit}>°C</Text>
               </Text>
               <Text style={styles.miniVitalLabel}>Temp</Text>
             </View>
+
+            <View style={styles.miniVitalDivider} />
+
+            <View style={styles.miniVitalCell}>
+              <Text style={styles.miniVitalValue}>1.2k</Text>
+              <Text style={styles.miniVitalLabel}>Steps</Text>
+            </View>
           </View>
 
+          {/* Sync Timestamp Footer */}
           <View style={styles.heroFooterRow}>
-            <RefreshCw size={10} color="rgba(255, 255, 255, 0.7)" />
+            <RefreshCw size={11} color="rgba(255, 255, 255, 0.65)" />
             <Text style={styles.heroFooterText}>
               Live · Updated {vitals.lastSyncTime || '2 min ago'}
             </Text>
@@ -182,129 +218,329 @@ export default function CaregiverHomeScreen() {
         </View>
       </TouchableOpacity>
 
-      {/* ── 3. Active Incident Notice Banner ────────────────── */}
-      <TouchableOpacity
-        onPress={() => router.push('/(caregiver)/alerts' as any)}
-        activeOpacity={0.85}
-        style={{ marginBottom: 14 }}
-      >
-        <Card style={styles.activeNoticeCard}>
-          <View style={styles.noticeIconWrap}>
-            <AlertTriangle size={18} color="#EA580C" />
-          </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.noticeTitle}>Elevated heart rate detected</Text>
-            <Text style={styles.noticeDesc}>
-              09:32 AM · Heart rate reached 91 bpm — please check on Margaret
-            </Text>
-          </View>
-          <ChevronRight size={16} color="#FB923C" />
-        </Card>
-      </TouchableOpacity>
+      {/* ── 3. Active Incident Notice Banner (if any alerts) ─── */}
+      {activeAlerts.length > 0 && (
+        <TouchableOpacity
+          onPress={() => router.push('/(caregiver)/alerts' as any)}
+          activeOpacity={0.85}
+          style={{ marginBottom: 18 }}
+        >
+          <Card style={styles.activeNoticeCard}>
+            <View style={styles.noticeIconWrap}>
+              <AlertTriangle size={18} color="#EA580C" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.noticeTitle}>{activeAlerts[0]?.title || 'Elevated heart rate detected'}</Text>
+              <Text style={styles.noticeDesc}>
+                {activeAlerts[0]?.description || 'Check vitals and confirm senior condition'}
+              </Text>
+            </View>
+            <ChevronRight size={16} color="#FB923C" />
+          </Card>
+        </TouchableOpacity>
+      )}
 
-      {/* ── 4. Quick Actions ────────────────────────────────── */}
+      {/* ── 4. Quick Actions (4-Button Grid Matching Parent) ─── */}
       <View style={styles.sectionWrap}>
-        <SectionHeader title="Quick Actions" />
+        <Text style={styles.sectionOverline}>QUICK ACTIONS</Text>
         <View style={styles.quickActionsGrid}>
           {[
-            {
-              icon: Plus,
-              label: 'Log activity',
-              route: '/(caregiver)/care',
-              color: '#3C6FDB',
-              bg: '#EEF5FF',
-            },
             {
               icon: MapPin,
               label: 'Location',
               route: '/(caregiver)/location',
-              color: '#8B5CF6',
-              bg: '#F5F3FF',
+              color: '#3C6FDB',
+              bg: '#EEF5FF',
             },
             {
               icon: Bell,
               label: 'Alerts',
               route: '/(caregiver)/alerts',
-              color: '#EA580C',
+              color: '#F97316',
               bg: '#FFF7ED',
             },
-          ].map(({ icon: Icon, label, route, color, bg }) => (
-            <TouchableOpacity
-              key={label}
-              onPress={() => router.push(route as any)}
-              style={styles.quickActionBtn}
-              activeOpacity={0.8}
-            >
-              <View style={[styles.quickActionIconWrap, { backgroundColor: bg }]}>
-                <Icon size={20} color={color} />
-              </View>
-              <Text style={styles.quickActionLabel}>{label}</Text>
-            </TouchableOpacity>
-          ))}
+            {
+              icon: CheckSquare,
+              label: 'Care Tasks',
+              route: '/(caregiver)/care',
+              color: '#16A34A',
+              bg: '#F0FDF4',
+            },
+            {
+              icon: Phone,
+              label: 'Call Family',
+              action: handleCallParent,
+              color: '#EF4444',
+              bg: '#FEF2F2',
+            },
+          ].map((item) => {
+            const Icon = item.icon;
+            return (
+              <TouchableOpacity
+                key={item.label}
+                onPress={() => (item.action ? item.action() : router.push(item.route as any))}
+                style={styles.quickActionBtn}
+                activeOpacity={0.82}
+              >
+                <View style={[styles.quickActionIconWrap, { backgroundColor: item.bg }]}>
+                  <Icon size={20} color={item.color} />
+                </View>
+                <Text style={styles.quickActionLabel}>{item.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       </View>
 
-      {/* ── 5. Today's Schedule ─────────────────────────────── */}
+      {/* ── 5. Live Vitals (2x2 Grid Matching Parent) ───────── */}
       <View style={styles.sectionWrap}>
-        <SectionHeader
-          title="Today's Schedule"
-          action="Full view"
-          onAction={() => router.push('/(caregiver)/care' as any)}
-        />
-        <Card style={styles.scheduleCard}>
-          {MOCK_PROGRAMME.slice(3, 7).map((item, i) => (
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionOverline}>LIVE VITALS</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(caregiver)/alerts' as any)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sectionActionText}>Alert logs →</Text>
+          </TouchableOpacity>
+        </View>
+
+        <View style={styles.vitals2ColGrid}>
+          {/* Heart Rate */}
+          <Card style={styles.vitalCardItem}>
+            <View style={[styles.vitalAccentBar, { backgroundColor: '#10B981' }]} />
+            <View style={styles.vitalCardInner}>
+              <View style={styles.vitalCardHeader}>
+                <View style={[styles.vitalIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                  <Heart size={14} color="#10B981" />
+                </View>
+                <Text style={styles.vitalTypeLabel}>HEART RATE</Text>
+                <View style={styles.cyanLiveDot} />
+              </View>
+
+              <View style={styles.vitalValueRow}>
+                <Text style={styles.vitalValueText}>{hrValue}</Text>
+                <Text style={styles.vitalUnitText}> bpm</Text>
+              </View>
+
+              <View style={styles.vitalStatusRow}>
+                <View style={[styles.statusDotSmall, { backgroundColor: '#10B981' }]} />
+                <Text style={[styles.vitalStatusText, { color: '#10B981' }]}>Safe</Text>
+              </View>
+            </View>
+          </Card>
+
+          {/* Blood Oxygen */}
+          <Card style={styles.vitalCardItem}>
+            <View style={[styles.vitalAccentBar, { backgroundColor: '#10B981' }]} />
+            <View style={styles.vitalCardInner}>
+              <View style={styles.vitalCardHeader}>
+                <View style={[styles.vitalIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                  <Activity size={14} color="#10B981" />
+                </View>
+                <Text style={styles.vitalTypeLabel}>SPO₂ OXYGEN</Text>
+                <View style={styles.cyanLiveDot} />
+              </View>
+
+              <View style={styles.vitalValueRow}>
+                <Text style={styles.vitalValueText}>{spo2Value}</Text>
+                <Text style={styles.vitalUnitText}> %</Text>
+              </View>
+
+              <View style={styles.vitalStatusRow}>
+                <View style={[styles.statusDotSmall, { backgroundColor: '#10B981' }]} />
+                <Text style={[styles.vitalStatusText, { color: '#10B981' }]}>Safe</Text>
+              </View>
+            </View>
+          </Card>
+
+          {/* Temperature */}
+          <Card style={styles.vitalCardItem}>
+            <View style={[styles.vitalAccentBar, { backgroundColor: '#10B981' }]} />
+            <View style={styles.vitalCardInner}>
+              <View style={styles.vitalCardHeader}>
+                <View style={[styles.vitalIconWrap, { backgroundColor: 'rgba(16, 185, 129, 0.12)' }]}>
+                  <Thermometer size={14} color="#10B981" />
+                </View>
+                <Text style={styles.vitalTypeLabel}>TEMPERATURE</Text>
+                <View style={styles.cyanLiveDot} />
+              </View>
+
+              <View style={styles.vitalValueRow}>
+                <Text style={styles.vitalValueText}>{tempValue}</Text>
+                <Text style={styles.vitalUnitText}> °C</Text>
+              </View>
+
+              <View style={styles.vitalStatusRow}>
+                <View style={[styles.statusDotSmall, { backgroundColor: '#10B981' }]} />
+                <Text style={[styles.vitalStatusText, { color: '#10B981' }]}>Safe</Text>
+              </View>
+            </View>
+          </Card>
+
+          {/* Activity / Steps */}
+          <Card style={styles.vitalCardItem}>
+            <View style={[styles.vitalAccentBar, { backgroundColor: '#16A34A' }]} />
+            <View style={styles.vitalCardInner}>
+              <View style={styles.vitalCardHeader}>
+                <View style={[styles.vitalIconWrap, { backgroundColor: 'rgba(22, 163, 74, 0.12)' }]}>
+                  <Activity size={14} color="#16A34A" />
+                </View>
+                <Text style={styles.vitalTypeLabel}>ACTIVITY</Text>
+              </View>
+
+              <View style={styles.vitalValueRow}>
+                <Text style={[styles.vitalValueText, { fontSize: 22 }]}>Active</Text>
+              </View>
+
+              <Text style={styles.stepsSubText}>1,247 steps recorded</Text>
+            </View>
+          </Card>
+        </View>
+      </View>
+
+      {/* ── 6. Care Team & Emergency Coordination ────────────── */}
+      <View style={styles.sectionWrap}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionOverline}>CARE TEAM CONTACTS</Text>
+        </View>
+
+        <View style={styles.contactsColumn}>
+          {/* Family Manager Card */}
+          <Card style={styles.contactCard}>
+            <View style={[styles.contactIconWrap, { backgroundColor: '#EFF6FF' }]}>
+              <Heart size={20} color="#2563EB" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.contactName}>Robert Thompson</Text>
+              <Text style={styles.contactRole}>Son · Primary Family Manager</Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.callBtn, { backgroundColor: '#EFF6FF', borderColor: '#BFDBFE' }]}
+              onPress={handleCallParent}
+              activeOpacity={0.8}
+            >
+              <Phone size={15} color="#2563EB" />
+              <Text style={[styles.callBtnText, { color: '#2563EB' }]}>Call</Text>
+            </TouchableOpacity>
+          </Card>
+
+          {/* Attending Physician Card */}
+          <Card style={styles.contactCard}>
+            <View style={[styles.contactIconWrap, { backgroundColor: '#F5F3FF' }]}>
+              <Stethoscope size={20} color="#7C3AED" />
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.contactName}>
+                {activeProfile?.doctorName || 'Dr. James Hargreaves'}
+              </Text>
+              <Text style={styles.contactRole}>
+                {activeProfile?.doctorSpecialty || 'Geriatric Specialist'} · {activeProfile?.doctorHospital || "St. Thomas'"}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={[styles.callBtn, { backgroundColor: '#F5F3FF', borderColor: '#DDD6FE' }]}
+              onPress={handleCallDoctor}
+              activeOpacity={0.8}
+            >
+              <Phone size={15} color="#7C3AED" />
+              <Text style={[styles.callBtnText, { color: '#7C3AED' }]}>Call</Text>
+            </TouchableOpacity>
+          </Card>
+        </View>
+      </View>
+
+      {/* ── 7. Today's Programme (Matching Parent Timeline Card) ── */}
+      <View style={styles.sectionWrap}>
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionOverline}>TODAY'S CARE SCHEDULE</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(caregiver)/care' as any)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sectionActionText}>Full schedule →</Text>
+          </TouchableOpacity>
+        </View>
+
+        <Card style={styles.programmeCard}>
+          {[
+            { id: 1, title: 'Light walk — garden', time: '10:30', done: true },
+            { id: 2, title: 'Lunch & Hydration', time: '12:30', done: false, current: true },
+            { id: 3, title: 'Midday medication (Metformin)', time: '13:00', done: false, isMed: true },
+            { id: 4, title: 'Rest / Afternoon nap', time: '14:00', done: false },
+          ].map((item, i) => (
             <View
-              key={i}
+              key={item.id}
               style={[
-                styles.scheduleRow,
-                item.current && styles.scheduleRowCurrent,
+                styles.programmeRow,
+                item.current && styles.programmeRowCurrent,
                 i === 3 && { borderBottomWidth: 0 },
               ]}
             >
               <View
                 style={[
-                  styles.scheduleDot,
+                  styles.programmeDotCircle,
                   item.done
-                    ? styles.scheduleDotDone
+                    ? styles.programmeDotDone
                     : item.current
-                    ? styles.scheduleDotCurrent
-                    : styles.scheduleDotPending,
+                    ? styles.programmeDotCurrent
+                    : styles.programmeDotPending,
                 ]}
               >
                 {item.done ? (
-                  <CheckCircle size={13} color={Colors.safe} />
+                  <CheckCircle size={14} color="#16A34A" />
                 ) : item.current ? (
-                  <View style={styles.currentDot} />
+                  <View style={styles.programmeCurrentRadio}>
+                    <View style={styles.programmeCurrentRadioInner} />
+                  </View>
                 ) : (
-                  <View style={styles.pendingDot} />
+                  <View style={styles.programmeDotInner} />
                 )}
               </View>
 
-              <Text
-                style={[
-                  styles.scheduleLabel,
-                  item.done && styles.scheduleLabelDone,
-                  item.current && styles.scheduleLabelCurrent,
-                ]}
-              >
-                {item.label}
-              </Text>
+              <View style={styles.programmeTextCol}>
+                <Text
+                  style={[
+                    styles.programmeTitle,
+                    item.done && styles.programmeTitleDone,
+                    item.current && styles.programmeTitleCurrent,
+                  ]}
+                >
+                  {item.title}
+                </Text>
+              </View>
 
-              {item.isMed && <Pill size={13} color="#8B5CF6" style={{ marginRight: 6 }} />}
+              {item.isMed && (
+                <Pill size={13} color="#C084FC" style={{ marginRight: 6 }} />
+              )}
 
-              <Text style={styles.scheduleTime}>{item.time}</Text>
+              <View style={styles.programmeTimeCol}>
+                <Text
+                  style={[
+                    styles.programmeTimeText,
+                    item.done && styles.programmeTitleDone,
+                    item.current && styles.programmeTitleCurrent,
+                  ]}
+                >
+                  {item.time}
+                </Text>
+              </View>
             </View>
           ))}
         </Card>
       </View>
 
-      {/* ── 6. My Recent Care Activities ─────────────────────── */}
+      {/* ── 8. Recent Logged Care Activities ─────────────────── */}
       <View style={styles.sectionWrap}>
-        <SectionHeader
-          title="My Recent Activities"
-          action="All"
-          onAction={() => router.push('/(caregiver)/history' as any)}
-        />
+        <View style={styles.sectionHeaderRow}>
+          <Text style={styles.sectionOverline}>RECENT LOGGED ACTIVITIES</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/(caregiver)/history' as any)}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.sectionActionText}>History log →</Text>
+          </TouchableOpacity>
+        </View>
+
         <Card style={styles.cardZeroPadding}>
           {MOCK_CARE_ACTIVITIES.slice(0, 3).map((act, i) => (
             <View
@@ -312,7 +548,7 @@ export default function CaregiverHomeScreen() {
               style={[styles.activityRow, i === 2 && { borderBottomWidth: 0 }]}
             >
               <View style={styles.activityIconCircle}>
-                <CheckCircle size={15} color={Colors.safe} />
+                <CheckCircle size={15} color="#16A34A" />
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={styles.activityTitle}>{act.title}</Text>
@@ -334,47 +570,42 @@ export default function CaregiverHomeScreen() {
 const styles = StyleSheet.create({
   topHeader: {
     flexDirection: 'row',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: 12,
-    marginBottom: 8,
+    marginBottom: 12,
   },
   dateLabel: {
     fontSize: 11,
+    fontWeight: '700',
     color: '#94A3B8',
-    fontWeight: '600',
+    letterSpacing: 0.8,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
   },
   greetingTitle: {
     fontSize: 18,
     fontWeight: '800',
     color: '#0F172A',
     marginTop: 2,
+    letterSpacing: -0.3,
   },
-  shiftBadge: {
+  shiftPillRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    backgroundColor: '#DCFCE7',
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    marginTop: 6,
-    alignSelf: 'flex-start',
-    borderWidth: 1,
-    borderColor: '#BBF7D0',
+    gap: 6,
+    marginTop: 4,
   },
-  shiftPulseDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: '#22C55E',
+  shiftGreenDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 3.5,
+    backgroundColor: '#16A34A',
   },
-  shiftText: {
+  shiftPillText: {
     fontSize: 11,
     fontWeight: '700',
     color: '#15803D',
+    letterSpacing: 0.3,
   },
   headerRightActions: {
     flexDirection: 'row',
@@ -385,9 +616,9 @@ const styles = StyleSheet.create({
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: '#FFFFFF',
     borderWidth: 1,
     borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
     alignItems: 'center',
     justifyContent: 'center',
     position: 'relative',
@@ -396,46 +627,57 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -2,
-    minWidth: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 17,
+    height: 17,
+    borderRadius: 9,
     backgroundColor: '#EF4444',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingHorizontal: 2,
   },
   notificationBadgeText: {
     color: '#FFFFFF',
-    fontSize: 9,
+    fontSize: 9.5,
     fontWeight: '800',
   },
   avatarButton: {
     width: 38,
     height: 38,
     borderRadius: 12,
-    backgroundColor: Colors.safe,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarInner: {
+    width: 28,
+    height: 28,
+    borderRadius: 8,
+    backgroundColor: '#16A34A',
     alignItems: 'center',
     justifyContent: 'center',
   },
   avatarButtonText: {
     color: '#FFFFFF',
-    fontSize: 13,
-    fontWeight: '800',
+    fontSize: 11,
+    fontWeight: '700',
   },
   heroCardContainer: {
-    marginBottom: 14,
-  },
-  heroGreenGradient: {
+    width: '100%',
     borderRadius: 24,
-    backgroundColor: '#15803D',
-    padding: 16,
     overflow: 'hidden',
-    position: 'relative',
-    shadowColor: '#15803D',
+    marginBottom: 20,
+    shadowColor: '#16A34A',
     shadowOffset: { width: 0, height: 8 },
     shadowOpacity: 0.25,
-    shadowRadius: 16,
-    elevation: 8,
+    shadowRadius: 18,
+    elevation: 6,
+  },
+  heroGreenGradient: {
+    backgroundColor: '#16A34A',
+    padding: 16,
+    borderRadius: 24,
+    position: 'relative',
   },
   ambientGlow: {
     position: 'absolute',
@@ -444,21 +686,35 @@ const styles = StyleSheet.create({
     width: 180,
     height: 180,
     borderRadius: 90,
-    backgroundColor: 'rgba(0, 251, 251, 0.08)',
+    backgroundColor: 'rgba(255, 255, 255, 0.15)',
   },
   heroTopRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 14,
+    marginBottom: 16,
   },
   avatarWrap: {
     position: 'relative',
+    width: 54,
+    height: 54,
+    borderRadius: 27,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  avatarHalo: {
+    position: 'absolute',
+    top: -3,
+    left: -3,
+    right: -3,
+    bottom: -3,
+    borderRadius: 30,
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
   },
   seniorAvatar: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
+    width: 52,
+    height: 52,
+    borderRadius: 26,
     borderWidth: 2,
     borderColor: 'rgba(255, 255, 255, 0.6)',
   },
@@ -466,93 +722,123 @@ const styles = StyleSheet.create({
     position: 'absolute',
     bottom: -1,
     right: -1,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
+    width: 15,
+    height: 15,
+    borderRadius: 8,
     backgroundColor: '#22C55E',
-    borderWidth: 2,
-    borderColor: '#14532d',
+    borderWidth: 2.5,
+    borderColor: '#16A34A',
   },
   heroMeta: {
     flex: 1,
   },
   seniorNameText: {
+    color: '#FFFFFF',
     fontSize: 17,
     fontWeight: '800',
-    color: '#FFFFFF',
+    letterSpacing: -0.3,
   },
   seniorSubText: {
-    fontSize: 12,
     color: 'rgba(255, 255, 255, 0.75)',
+    fontSize: 12,
     marginTop: 2,
   },
   heroBadgeRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
-    marginTop: 6,
+    marginTop: 8,
   },
   safeStatusPill: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    gap: 5,
     paddingHorizontal: 8,
     paddingVertical: 3,
-    borderRadius: 10,
+    borderRadius: 999,
+    backgroundColor: 'rgba(255, 255, 255, 0.25)',
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.3)',
+    borderColor: 'rgba(255, 255, 255, 0.4)',
   },
-  whiteDot: {
-    width: 5,
-    height: 5,
+  greenDot: {
+    width: 6,
+    height: 6,
     borderRadius: 3,
     backgroundColor: '#FFFFFF',
   },
   safeStatusText: {
+    color: '#FFFFFF',
     fontSize: 10,
     fontWeight: '800',
+    letterSpacing: 0.8,
+  },
+  batteryPill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 999,
+    backgroundColor: 'rgba(0, 0, 0, 0.2)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.25)',
+  },
+  cyanDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00FBFB',
+  },
+  batteryText: {
     color: '#FFFFFF',
+    fontSize: 10,
+    fontWeight: '800',
     letterSpacing: 0.5,
   },
   miniVitalsGrid: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 10,
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.18)',
+    borderRadius: 16,
+    paddingVertical: 10,
+    paddingHorizontal: 6,
+    marginBottom: 12,
   },
   miniVitalCell: {
     flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.15)',
-    borderRadius: 12,
-    paddingVertical: 8,
-    paddingHorizontal: 6,
     alignItems: 'center',
   },
+  miniVitalDivider: {
+    width: 1,
+    height: 22,
+    backgroundColor: 'rgba(255, 255, 255, 0.18)',
+  },
   miniVitalValue: {
-    fontSize: 15,
-    fontWeight: '800',
     color: '#FFFFFF',
+    fontSize: 14.5,
+    fontWeight: '800',
   },
   miniVitalUnit: {
-    fontSize: 9,
+    fontSize: 10,
     fontWeight: '500',
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.8)',
   },
   miniVitalLabel: {
+    color: 'rgba(255, 255, 255, 0.7)',
     fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.75)',
     fontWeight: '600',
     marginTop: 2,
   },
   heroFooterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 5,
-    marginTop: 2,
+    justifyContent: 'center',
+    gap: 6,
+    paddingTop: 2,
   },
   heroFooterText: {
-    fontSize: 10,
-    color: 'rgba(255, 255, 255, 0.7)',
+    color: 'rgba(255, 255, 255, 0.8)',
+    fontSize: 11,
     fontWeight: '500',
   },
   activeNoticeCard: {
@@ -560,134 +846,308 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     padding: 14,
-    backgroundColor: '#FFF7ED',
     borderWidth: 1,
     borderColor: '#FED7AA',
+    backgroundColor: '#FFF7ED',
+    borderRadius: 16,
   },
   noticeIconWrap: {
-    width: 38,
-    height: 38,
-    borderRadius: 12,
+    width: 36,
+    height: 36,
+    borderRadius: 10,
     backgroundColor: '#FFEDD5',
     alignItems: 'center',
     justifyContent: 'center',
   },
   noticeTitle: {
-    fontSize: 13,
+    fontSize: 13.5,
     fontWeight: '700',
     color: '#9A3412',
   },
   noticeDesc: {
-    fontSize: 11,
+    fontSize: 12,
     color: '#C2410C',
-    marginTop: 2,
-    lineHeight: 15,
+    marginTop: 1,
   },
   sectionWrap: {
-    marginBottom: 16,
+    marginBottom: 20,
+  },
+  sectionOverline: {
+    fontSize: 11.5,
+    fontWeight: '800',
+    color: '#94A3B8',
+    letterSpacing: 0.8,
+    textTransform: 'uppercase',
+    marginBottom: 10,
+  },
+  sectionHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  sectionActionText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#16A34A',
   },
   quickActionsGrid: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 10,
   },
   quickActionBtn: {
     flex: 1,
     backgroundColor: '#FFFFFF',
-    borderRadius: 16,
-    paddingVertical: 14,
-    alignItems: 'center',
-    gap: 6,
+    borderRadius: 18,
     borderWidth: 1,
     borderColor: '#E2E8F0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.04,
-    shadowRadius: 2,
+    paddingVertical: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#64748B',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
     elevation: 2,
   },
   quickActionIconWrap: {
     width: 42,
     height: 42,
-    borderRadius: 12,
+    borderRadius: 14,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 8,
   },
   quickActionLabel: {
-    fontSize: 11,
-    fontWeight: '700',
+    fontSize: 11.5,
+    fontWeight: '600',
     color: '#475569',
   },
-  scheduleCard: {
-    padding: 0,
-    overflow: 'hidden',
+  vitals2ColGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
   },
-  scheduleRow: {
+  vitalCardItem: {
+    width: '48.5%',
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    overflow: 'hidden',
+    position: 'relative',
+    padding: 0,
+  },
+  vitalAccentBar: {
+    position: 'absolute',
+    left: 0,
+    top: 0,
+    bottom: 0,
+    width: 3.5,
+  },
+  vitalCardInner: {
+    padding: 12,
+    paddingLeft: 14,
+  },
+  vitalCardHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
+    gap: 6,
+    marginBottom: 8,
   },
-  scheduleRowCurrent: {
-    backgroundColor: '#F0FDF4',
-  },
-  scheduleDot: {
-    width: 20,
-    height: 20,
-    borderRadius: 10,
+  vitalIconWrap: {
+    width: 24,
+    height: 24,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: 10,
   },
-  scheduleDotDone: {
+  vitalTypeLabel: {
+    fontSize: 10,
+    fontWeight: '800',
+    color: '#64748B',
+    letterSpacing: 0.5,
+    flex: 1,
+  },
+  cyanLiveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: '#00FBFB',
+  },
+  vitalValueRow: {
+    flexDirection: 'row',
+    alignItems: 'baseline',
+    marginBottom: 4,
+  },
+  vitalValueText: {
+    fontSize: 25,
+    fontWeight: '800',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+  },
+  vitalUnitText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#64748B',
+  },
+  vitalStatusRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+  },
+  statusDotSmall: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+  },
+  vitalStatusText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+  },
+  stepsSubText: {
+    fontSize: 11,
+    fontWeight: '500',
+    color: '#64748B',
+    marginTop: 2,
+  },
+  contactsColumn: {
+    gap: 10,
+  },
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 14,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    backgroundColor: '#FFFFFF',
+    gap: 12,
+  },
+  contactIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  contactName: {
+    fontSize: 14.5,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  contactRole: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 1,
+  },
+  callBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 5,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 12,
+    borderWidth: 1,
+  },
+  callBtnText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  programmeCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    padding: 12,
+  },
+  programmeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    gap: 10,
+  },
+  programmeRowCurrent: {
+    backgroundColor: '#F0FDF4',
+    borderRadius: 12,
+    paddingHorizontal: 8,
+  },
+  programmeDotCircle: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  programmeDotDone: {
     backgroundColor: '#DCFCE7',
   },
-  scheduleDotCurrent: {
-    backgroundColor: '#D1FAE5',
+  programmeDotCurrent: {
+    backgroundColor: 'transparent',
   },
-  scheduleDotPending: {
+  programmeDotPending: {
     backgroundColor: '#F1F5F9',
   },
-  currentDot: {
+  programmeCurrentRadio: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    borderColor: '#16A34A',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  programmeCurrentRadioInner: {
     width: 8,
     height: 8,
     borderRadius: 4,
     backgroundColor: '#16A34A',
   },
-  pendingDot: {
+  programmeDotInner: {
     width: 6,
     height: 6,
     borderRadius: 3,
-    backgroundColor: '#CBD5E1',
+    backgroundColor: '#94A3B8',
   },
-  scheduleLabel: {
+  programmeTextCol: {
     flex: 1,
-    fontSize: 13,
-    color: '#334155',
-    fontWeight: '500',
   },
-  scheduleLabelDone: {
+  programmeTitle: {
+    fontSize: 13.5,
+    fontWeight: '600',
+    color: '#1E293B',
+  },
+  programmeTitleDone: {
     color: '#94A3B8',
     textDecorationLine: 'line-through',
   },
-  scheduleLabelCurrent: {
+  programmeTitleCurrent: {
     color: '#15803D',
     fontWeight: '700',
   },
-  scheduleTime: {
-    fontSize: 11,
+  programmeTimeCol: {
+    alignItems: 'flex-end',
+  },
+  programmeTimeText: {
+    fontSize: 12,
     fontWeight: '600',
-    color: '#94A3B8',
+    color: '#64748B',
   },
   cardZeroPadding: {
     padding: 0,
+    borderRadius: 18,
     overflow: 'hidden',
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
   },
   activityRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
     borderBottomWidth: 1,
     borderBottomColor: '#F1F5F9',
     gap: 12,
@@ -696,22 +1156,22 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 10,
-    backgroundColor: Colors.safeBg,
+    backgroundColor: '#DCFCE7',
     alignItems: 'center',
     justifyContent: 'center',
   },
   activityTitle: {
-    fontSize: 13,
-    fontWeight: '700',
+    fontSize: 13.5,
+    fontWeight: '600',
     color: '#0F172A',
   },
   activityNotes: {
-    fontSize: 11,
+    fontSize: 11.5,
     color: '#64748B',
-    marginTop: 2,
+    marginTop: 1,
   },
   activityTime: {
-    fontSize: 11,
+    fontSize: 11.5,
     fontWeight: '600',
     color: '#94A3B8',
   },

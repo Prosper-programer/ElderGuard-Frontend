@@ -156,11 +156,10 @@ export default function CaregiverLocationScreen() {
         <Button
           variant="outline"
           fullWidth
-          onClick={handleCallParent}
-        >
-          <Phone size={16} color={Colors.primary} />
-          Call Family ({MOCK_USERS.parent.name})
-        </Button>
+          onPress={handleCallParent}
+          leftIcon={<Phone size={16} color={Colors.primary} />}
+          title={`Call Family (${MOCK_USERS.parent.name})`}
+        />
       </View>
 
       <View style={{ height: Spacing.xl }} />

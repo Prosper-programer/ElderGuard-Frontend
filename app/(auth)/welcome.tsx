@@ -6,10 +6,10 @@ import {
   Image,
   ScrollView,
   TouchableOpacity,
-  SafeAreaView,
   StatusBar,
   Dimensions,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useRouter } from 'expo-router';
 import Svg, { Defs, LinearGradient, Stop, Rect } from 'react-native-svg';
 import {
@@ -19,6 +19,7 @@ import {
   Bell,
   Brain,
   ArrowRight,
+  Stethoscope,
 } from 'lucide-react-native';
 
 const { height: WINDOW_HEIGHT, width: WINDOW_WIDTH } = Dimensions.get('window');
@@ -169,18 +170,28 @@ export default function WelcomeScreen() {
               </View>
               <ArrowRight size={18} color="rgba(255, 255, 255, 0.35)" />
             </TouchableOpacity>
-          </View>
 
-          {/* Admin link */}
-          <TouchableOpacity
-            style={styles.adminAccessRow}
-            onPress={() => router.push('/(auth)/login')}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.adminAccessText}>
-              Admin access · <Text style={styles.adminAccessBold}>Sign in here</Text>
-            </Text>
-          </TouchableOpacity>
+            {/* Doctor Role Button */}
+            <TouchableOpacity
+              style={styles.doctorRoleButton}
+              onPress={() =>
+                router.push({
+                  pathname: '/(auth)/login',
+                  params: { role: 'doctor' },
+                } as any)
+              }
+              activeOpacity={0.88}
+            >
+              <View style={styles.roleIconBoxDoctor}>
+                <Stethoscope size={20} color="#A78BFA" />
+              </View>
+              <View style={styles.roleTextGroup}>
+                <Text style={styles.roleMainTitleLight}>I'm a Doctor</Text>
+                <Text style={styles.roleSubTitleLight}>Clinical vitals & medical portal</Text>
+              </View>
+              <ArrowRight size={18} color="rgba(255, 255, 255, 0.35)" />
+            </TouchableOpacity>
+          </View>
 
           {/* Create Account Banner */}
           <TouchableOpacity
@@ -415,17 +426,24 @@ const styles = StyleSheet.create({
     fontSize: 11.5,
     marginTop: 1,
   },
-  adminAccessRow: {
+  doctorRoleButton: {
+    backgroundColor: 'rgba(124, 58, 237, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(167, 139, 250, 0.28)',
+    height: 58,
+    borderRadius: 18,
+    flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 4,
+    paddingHorizontal: 16,
+    gap: 14,
   },
-  adminAccessText: {
-    color: 'rgba(255, 255, 255, 0.35)',
-    fontSize: 12,
-  },
-  adminAccessBold: {
-    color: 'rgba(255, 255, 255, 0.68)',
-    fontWeight: '600',
+  roleIconBoxDoctor: {
+    width: 38,
+    height: 38,
+    borderRadius: 12,
+    backgroundColor: 'rgba(124, 58, 237, 0.25)',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   createAccountCard: {
     backgroundColor: 'rgba(60, 111, 219, 0.12)',

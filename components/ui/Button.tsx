@@ -80,7 +80,7 @@ export function Button({
         leftIcon && <>{leftIcon}</>
       )}
       {children ? (
-        typeof children === 'string' ? (
+        typeof children === 'string' || typeof children === 'number' ? (
           <Text
             numberOfLines={2}
             style={[
@@ -91,6 +91,23 @@ export function Button({
           >
             {children}
           </Text>
+        ) : Array.isArray(children) ? (
+          React.Children.map(children, (child) =>
+            typeof child === 'string' || typeof child === 'number' ? (
+              <Text
+                numberOfLines={2}
+                style={[
+                  size === 'sm' ? Typography.buttonSmall : Typography.button,
+                  styles.buttonText,
+                  { color: textColor },
+                ]}
+              >
+                {child}
+              </Text>
+            ) : (
+              child
+            )
+          )
         ) : (
           children
         )
